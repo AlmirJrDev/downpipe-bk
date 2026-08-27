@@ -1,0 +1,41 @@
+# Blueprint do Render. Com este arquivo no repositório, o Render monta o
+# serviço sozinho — não é preciso preencher build/start command na mão.
+#
+# Usa o runtime Node, e não o Dockerfile que existe na raiz: o build fica
+# mais rápido e o Dockerfile continua ali só para portabilidade (Fly,
+# Railway) caso o Render deixe de servir.
+services:
+  - type: web
+    name: downpipe-api
+    runtime: node
+    plan: free
+    # Sem região na América do Sul; Virginia é a de menor latência pro Brasil.
+    region: virginia
+
+    # npm ci (e não --omit=dev) porque typescript e tsc-alias são
+    # devDependencies e o build precisa dos dois.
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # sync: false = o Render NÃO lê o valor daqui; você preenche no painel.
+      # É o que mantém as chaves fora do repositório.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: STATUS_SECRET
+        sync: false
+
+    # PORT não entra aqui: o Render injeta a porta e o env.ts já a lê.
+    # DATABASE_URL também não: só o runner de migrations usa, e migrations
+    # continuam rodando da sua máquina, não do servidor.
