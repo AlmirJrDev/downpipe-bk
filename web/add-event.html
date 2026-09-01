@@ -2,6 +2,16 @@
   html, body, #root { background-color: #131313; }
   body { overscroll-behavior-y: none; }
 
+  /* Altura pela área realmente visível, não pelo viewport de layout.
+     O Expo deixa html/body/#root em height:100%, e no Safari em modo
+     standalone isso resolve contra um viewport mais alto que a tela — o app
+     fica maior do que cabe e sobra uma faixa embaixo da barra de navegação.
+     Só aparecia no iPhone; no Android o 100% já batia com a tela.
+     O dvh acompanha a área visível de verdade. */
+  @supports (height: 100dvh) {
+    html, body, #root { height: 100dvh; }
+  }
+
   /* Nada de padding de safe-area aqui.
      O app já reserva o espaço do notch e da barra de gestos por conta
      própria (useSafeAreaInsets no cabeçalho e na barra de abas), e o
