@@ -44,7 +44,11 @@ body {
   overflow-x: hidden;
 }
 
-.faixa { padding: 0 20px; }
+/* Só as laterais, e nunca o atalho "padding".
+   .faixa é classe e section é elemento, então o atalho aqui vencia por
+   especificidade e zerava o padding vertical das seções — todas ficavam
+   coladas, separadas só pela linha de 1px. */
+.faixa { padding-left: 20px; padding-right: 20px; }
 .centro { width: 100%; max-width: 1080px; margin: 0 auto; }
 .estreito { max-width: 720px; margin: 0 auto; }
 
@@ -80,7 +84,14 @@ body {
 .largo { display: block; width: 100%; }
 
 /* ---------- hero ---------- */
-.hero { padding: clamp(52px, 11vw, 104px) 0 clamp(40px, 7vw, 64px); text-align: center; position: relative; }
+.hero {
+  padding: clamp(52px, 11vw, 104px) 0 clamp(40px, 7vw, 64px);
+  text-align: center;
+  position: relative;
+  /* O brilho abaixo usa inset negativo pra sangrar nas laterais; sem isto
+     ele alarga o documento e a página ganha rolagem horizontal. */
+  overflow: hidden;
+}
 /* brilho vermelho de fundo, bem discreto — dá profundidade sem virar gradiente de banco */
 .hero::before {
   content: ""; position: absolute; inset: -10% -20% auto; height: 460px;
@@ -88,7 +99,7 @@ body {
   pointer-events: none;
 }
 .hero > * { position: relative; }
-.hero .marca { width: min(560px, 84vw); height: auto; margin: 0 auto 34px; display: block; }
+.hero .marca { width: min(440px, 76vw); height: auto; margin: 0 auto 30px; display: block; }
 
 .selo {
   display: inline-flex; align-items: center; gap: 8px;
@@ -109,7 +120,7 @@ h1 em { color: var(--marca); font-style: normal; }
   margin: 0 auto 32px; max-width: 30em;
 }
 
-.acoes { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto; }
+.acoes { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 28px auto 0; }
 @media (min-width: 620px) { .acoes { flex-direction: row; justify-content: center; } .acoes .botao { min-width: 210px; } }
 
 .instrucoes {
