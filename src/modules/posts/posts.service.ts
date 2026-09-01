@@ -6,6 +6,7 @@ import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { carsRepository } from '@/modules/cars/cars.repository';
 import { followsRepository } from '@/modules/follows/follows.repository';
+import { eventsRepository } from '@/modules/events/events.repository';
 import { notificationsService } from '@/modules/notifications/notifications.service';
 import { postsRepository, PostRow } from './posts.repository';
 import { CreatePostInput, UpdatePostInput } from './posts.schema';
@@ -13,6 +14,43 @@ import { CreatePostInput, UpdatePostInput } from './posts.schema';
 interface UploadedFile {
   buffer: Buffer;
   mimetype: string;
+}
+
+/**
+ * Antecedência tolerada para marcar um rolê numa publicação.
+ *
+ * A regra é "só marca rolê que já aconteceu", mas cravar no horário exato
+ * barraria a foto de quem chega antes — e o estacionamento enchendo é
+ * justamente a primeira foto que o pessoal posta. Duas horas cobrem isso
+ * sem deixar marcar um encontro do fim de semana que vem.
+ *
+ * Não há limite pra frente de propósito: foto de encontro costuma ser
+ * postada dias depois, quando a pessoa senta pra escolher as melhores.
+ */
+const ANTECEDENCIA_TOLERADA_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Um rolê que ainda não começou não tem foto — se tem, alguma coisa está
+ * errada. Isso já apareceu no app: encontros futuros exibindo fotos na
+ * própria página, o que faz o rolê parecer que já rolou.
+ *
+ * O app também deixa de oferecer rolê futuro no compositor, mas a checagem
+ * mora aqui porque o app é só a tela: qualquer cliente pode mandar um
+ * eventId. Esta função é a única coisa que de fato impede.
+ */
+async function assertEventTaggable(eventId: string) {
+  const event = await eventsRepository.findById(eventId);
+
+  if (!event) {
+    throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+  }
+
+  const comeca = new Date(event.starts_at).getTime();
+  if (Date.now() + ANTECEDENCIA_TOLERADA_MS < comeca) {
+    throw AppError.validation(
+      'Este rolê ainda não começou. Dá pra marcar a partir do dia do encontro.'
+    );
+  }
 }
 
 function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolean | null) {
@@ -236,6 +274,10 @@ export const postsService = {
      * A publicação em si sai imediatamente. Segurar a foto inteira só pra
      * validar uma marcação faria o fotógrafo desistir de postar aqui.
      */
+    if (input.eventId) {
+      await assertEventTaggable(input.eventId);
+    }
+
     let carTagStatus: 'approved' | 'pending' | undefined;
     let carOwnerId: string | null = null;
 
