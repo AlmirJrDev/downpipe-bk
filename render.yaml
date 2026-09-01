@@ -12,9 +12,12 @@ services:
     # Sem região na América do Sul; Virginia é a de menor latência pro Brasil.
     region: virginia
 
-    # npm ci (e não --omit=dev) porque typescript e tsc-alias são
-    # devDependencies e o build precisa dos dois.
-    buildCommand: npm ci && npm run build
+    # --include=dev é obrigatório, e não redundante: o NODE_ENV=production
+    # declarado abaixo vale também durante o build, e faz o npm pular todas
+    # as devDependencies — entre elas o typescript e o tsc-alias, que são
+    # justamente o que compila. Sem a flag, o tsc do projeto não é instalado
+    # e o build cai num TypeScript qualquer de fora, com outra versão.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
 
     healthCheckPath: /health
