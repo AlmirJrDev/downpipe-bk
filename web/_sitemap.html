@@ -107,22 +107,32 @@
     document.body.appendChild(p);
   }
 
-  // Dois caminhos pra abrir: ?diag=1 no navegador, ou cinco toques rápidos
-  // no topo da tela — que é o único que funciona dentro do PWA instalado,
-  // onde não dá pra digitar endereço.
+  // Botão visível, e não gesto.
+  //
+  // Dentro do PWA instalado não dá pra digitar endereço (o ?diag=1 não
+  // sobrevive ao atalho) e o toque no topo da tela não chega até a página.
+  // Um botão resolve os dois. É temporário e sai junto com este bloco.
+  function botao() {
+    if (document.getElementById('botaoDiag')) return;
+    var b = document.createElement('button');
+    b.id = 'botaoDiag';
+    b.textContent = 'medir';
+    b.style.cssText =
+      'position:fixed;left:10px;bottom:96px;z-index:99998;' +
+      'background:#0f0;color:#000;border:none;border-radius:14px;' +
+      'font:700 11px ui-monospace,Menlo,monospace;padding:7px 12px;' +
+      'opacity:.85;box-shadow:0 2px 10px rgba(0,0,0,.6);cursor:pointer;';
+    b.onclick = function (e) { e.stopPropagation(); mostrar(); };
+    document.body.appendChild(b);
+  }
+
+  if (document.readyState === 'complete') botao();
+  else window.addEventListener('load', botao);
+
+  // Continua valendo no navegador, pra dar pra comparar com o standalone.
   if (location.search.indexOf('diag=1') !== -1) {
     window.addEventListener('load', function () { setTimeout(mostrar, 1200); });
   }
-
-  var toques = 0, ultimo = 0;
-  document.addEventListener('touchstart', function (e) {
-    var y = e.touches && e.touches[0] ? e.touches[0].clientY : 999;
-    if (y > 70) { toques = 0; return; }
-    var agora = Date.now();
-    toques = (agora - ultimo < 800) ? toques + 1 : 1;
-    ultimo = agora;
-    if (toques >= 5) { toques = 0; mostrar(); }
-  }, { passive: true });
 })();
 </script><script>
   window.__promptInstalar = null;
