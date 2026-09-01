@@ -1,4 +1,8 @@
 node_modules/
+# O export do PWA traz ícones da interface (voltar, fechar, buscar) sob
+# web/assets/node_modules/. Sem esta exceção o padrão acima os engole em
+# silêncio, e eles somem só no servidor.
+!web/assets/node_modules/
 dist/
 .env
 .env.local

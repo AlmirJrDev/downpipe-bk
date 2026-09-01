@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Downpipe — a rede do seu carro e dos seus rolês</title>
+<meta name="description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá. O Downpipe é a rede social de quem vive carro.">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0E0E0E">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Downpipe">
+<meta property="og:title" content="Downpipe — a rede do seu carro e dos seus rolês">
+<meta property="og:description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá.">
+<meta property="og:image" content="/og-banner.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --preto: #0E0E0E;
+  --carbono: #161616;
+  --carbono2: #1C1C1C;
+  --borda: #2A2A2A;
+  --texto: #FFFFFF;
+  --apagado: #A8A8A8;
+  --fraco: #6E6E6E;
+  --marca: #E53935;
+  --verde: #4CAF50;
+  --topo: 64px;
+}
+
+html { scroll-behavior: smooth; }
+html, body { margin: 0; padding: 0; background: var(--preto); }
+body {
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+.faixa { padding: 0 20px; }
+.centro { width: 100%; max-width: 1080px; margin: 0 auto; }
+.estreito { max-width: 720px; margin: 0 auto; }
+
+/* ---------- cabeçalho fixo ---------- */
+.cabecalho {
+  position: sticky; top: 0; z-index: 60;
+  height: var(--topo);
+  display: flex; align-items: center;
+  background: rgba(14,14,14,.82);
+  backdrop-filter: saturate(140%) blur(12px);
+  -webkit-backdrop-filter: saturate(140%) blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .25s ease;
+}
+.cabecalho.rolou { border-bottom-color: var(--borda); }
+.cabecalho .centro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.cabecalho img { height: 20px; width: auto; display: block; }
+
+/* ---------- botões ---------- */
+.botao {
+  display: inline-block; text-align: center; text-decoration: none;
+  padding: 14px 22px; font-size: 13px; font-weight: 700; letter-spacing: 1.4px;
+  border: 1px solid transparent; cursor: pointer; font-family: inherit;
+  transition: transform .12s ease, background-color .2s ease, border-color .2s ease;
+}
+.botao:active { transform: translateY(1px); }
+.botao-principal { background: var(--marca); color: #fff; }
+.botao-principal:hover { background: #F04A46; }
+.botao-secundario { background: transparent; color: var(--texto); border-color: var(--borda); }
+.botao-secundario:hover { border-color: #454545; }
+.botao-pequeno { padding: 9px 16px; font-size: 11px; letter-spacing: 1.2px; }
+.botao:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
+.largo { display: block; width: 100%; }
+
+/* ---------- hero ---------- */
+.hero { padding: clamp(52px, 11vw, 104px) 0 clamp(40px, 7vw, 64px); text-align: center; position: relative; }
+/* brilho vermelho de fundo, bem discreto — dá profundidade sem virar gradiente de banco */
+.hero::before {
+  content: ""; position: absolute; inset: -10% -20% auto; height: 460px;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(229,57,53,.16), transparent 70%);
+  pointer-events: none;
+}
+.hero > * { position: relative; }
+.hero .marca { width: min(560px, 84vw); height: auto; margin: 0 auto 34px; display: block; }
+
+.selo {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--borda); background: var(--carbono);
+  padding: 6px 13px; font-size: 11px; letter-spacing: 1.4px;
+  color: var(--apagado); text-transform: uppercase; margin-bottom: 24px;
+}
+.selo .ponto { width: 6px; height: 6px; background: var(--marca); border-radius: 50%; }
+
+h1 {
+  font-size: clamp(30px, 6.4vw, 58px);
+  line-height: 1.06; font-weight: 800; letter-spacing: -0.03em;
+  margin: 0 0 18px; text-wrap: balance;
+}
+h1 em { color: var(--marca); font-style: normal; }
+.chamada-sub {
+  color: var(--apagado); font-size: clamp(15px, 2.4vw, 19px);
+  margin: 0 auto 32px; max-width: 30em;
+}
+
+.acoes { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto; }
+@media (min-width: 620px) { .acoes { flex-direction: row; justify-content: center; } .acoes .botao { min-width: 210px; } }
+
+.instrucoes {
+  border: 1px solid var(--borda); background: var(--carbono);
+  padding: 16px 18px; margin: 16px auto 0; max-width: 420px; text-align: left;
+}
+.instrucoes h2 { margin: 0 0 4px; font-size: 15px; }
+.instrucoes p { margin: 0; color: var(--apagado); font-size: 13px; }
+.instrucoes ol { margin: 10px 0 0; padding-left: 20px; color: var(--apagado); font-size: 13px; list-style: decimal; }
+.instrucoes li { margin-bottom: 3px; }
+.oculto { display: none !important; }
+.aviso { color: var(--fraco); font-size: 12px; margin: 18px 0 0; }
+
+/* ---------- carrossel de rolês ---------- */
+.esteira { padding: 34px 0 10px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.trilho { display: flex; gap: 12px; width: max-content; animation: correr 46s linear infinite; }
+.esteira:hover .trilho { animation-play-state: paused; }
+@keyframes correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.role {
+  flex: 0 0 auto; width: 250px;
+  border: 1px solid var(--borda); background: var(--carbono);
+  padding: 13px 15px; display: flex; gap: 13px; align-items: center;
+}
+.role .data {
+  flex: 0 0 auto; width: 46px; text-align: center; border: 1px solid var(--borda);
+  padding: 5px 0; background: var(--carbono2);
+}
+.role .data .dia { font-size: 17px; font-weight: 800; line-height: 1; }
+.role .data .mes { font-size: 9px; letter-spacing: 1.4px; color: var(--marca); font-weight: 700; }
+.role .nome { font-size: 13px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.role .info { font-size: 11px; color: var(--fraco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.role .info b { color: var(--apagado); font-weight: 600; }
+
+/* ---------- seções ---------- */
+section { padding: clamp(56px, 9vw, 96px) 0; border-top: 1px solid var(--borda); }
+.rotulo {
+  font-size: 11px; letter-spacing: 2.4px; text-transform: uppercase;
+  color: var(--marca); font-weight: 700; margin: 0 0 12px;
+}
+h2.titulo {
+  font-size: clamp(24px, 4.4vw, 38px); line-height: 1.13; font-weight: 800;
+  letter-spacing: -0.02em; margin: 0 0 14px; text-wrap: balance;
+}
+.linha { color: var(--apagado); font-size: clamp(15px, 2vw, 17px); margin: 0; max-width: 34em; }
+
+/* passos */
+.passos { display: grid; gap: 14px; margin-top: 38px; }
+@media (min-width: 760px) { .passos { grid-template-columns: repeat(3, 1fr); } }
+.passo { border: 1px solid var(--borda); background: var(--carbono); padding: 22px 20px; position: relative; overflow: hidden; }
+.passo .n {
+  font-size: 46px; font-weight: 800; line-height: 1; color: transparent;
+  -webkit-text-stroke: 1.5px var(--borda); position: absolute; top: 12px; right: 16px;
+}
+.passo h3 { margin: 0 0 7px; font-size: 17px; font-weight: 700; }
+.passo p { margin: 0; color: var(--apagado); font-size: 14px; }
+
+/* grade de recursos */
+.grade { display: grid; gap: 14px; margin-top: 38px; }
+@media (min-width: 700px) { .grade { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .grade { grid-template-columns: repeat(3, 1fr); } }
+.carta {
+  border: 1px solid var(--borda); background: var(--carbono);
+  padding: 22px 20px; transition: border-color .22s ease, transform .22s ease;
+}
+.carta:hover { border-color: #3D3D3D; transform: translateY(-2px); }
+.carta .icone { width: 30px; height: 30px; margin-bottom: 14px; color: var(--marca); }
+.carta h3 { margin: 0 0 7px; font-size: 16px; font-weight: 700; }
+.carta p { margin: 0; color: var(--apagado); font-size: 14px; }
+
+/* ---------- telas do app ---------- */
+.telas { display: grid; gap: 34px; margin-top: 44px; align-items: center; }
+@media (min-width: 900px) { .telas { grid-template-columns: repeat(3, 1fr); gap: 26px; } }
+.tela-bloco { text-align: center; }
+.tela-bloco h3 { font-size: 16px; margin: 20px 0 5px; font-weight: 700; }
+.tela-bloco p { color: var(--apagado); font-size: 13.5px; margin: 0 auto; max-width: 26em; }
+
+.celular {
+  width: 232px; margin: 0 auto; border: 8px solid #242424; border-radius: 30px;
+  background: var(--preto); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.6);
+  animation: flutuar 7s ease-in-out infinite;
+}
+.celular:nth-of-type(1) { animation-delay: -1s; }
+@keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+.celular .topo-tela { height: 22px; display: flex; align-items: center; justify-content: center; background: var(--preto); }
+.celular .entalhe { width: 62px; height: 5px; background: #242424; border-radius: 4px; }
+.celular .conteudo { height: 372px; padding: 10px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+
+.mini { border: 1px solid var(--borda); background: var(--carbono); padding: 9px 10px; }
+.mini .cabeca { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.bolinha { width: 21px; height: 21px; border-radius: 50%; background: #303030; flex: 0 0 auto; }
+.mini .quem { font-size: 10px; font-weight: 700; }
+.mini .carro { font-size: 8.5px; color: var(--fraco); }
+.foto { height: 92px; background: linear-gradient(135deg, #3a2a2a, #262a33 55%, #2c2c30); position: relative; overflow: hidden; }
+.foto::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.09) 50%, transparent 65%);
+  transform: translateX(-100%); animation: brilho 4.5s ease-in-out infinite;
+}
+@keyframes brilho { 0%, 62% { transform: translateX(-100%); } 88%, 100% { transform: translateX(100%); } }
+.acoes-mini { display: flex; gap: 10px; margin-top: 7px; align-items: center; }
+.acoes-mini span { font-size: 9px; color: var(--fraco); }
+.marca-carro {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 7px;
+  border: 1px solid var(--borda); padding: 3px 7px; font-size: 8.5px; color: var(--apagado);
+}
+.marca-carro .pt { width: 4px; height: 4px; background: var(--marca); }
+
+.mini-role { display: flex; gap: 9px; align-items: center; }
+.mini-role .d { width: 34px; text-align: center; border: 1px solid var(--borda); padding: 3px 0; }
+.mini-role .d .dd { font-size: 13px; font-weight: 800; line-height: 1; }
+.mini-role .d .mm { font-size: 7px; color: var(--marca); letter-spacing: 1px; font-weight: 700; }
+.mini-role .nn { font-size: 10.5px; font-weight: 700; }
+.mini-role .ii { font-size: 8.5px; color: var(--fraco); }
+.btn-mini { margin-top: 7px; background: var(--marca); color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: .8px; text-align: center; padding: 6px; }
+.btn-mini.indo { background: transparent; border: 1px solid var(--verde); color: var(--verde); }
+
+.mapa { flex: 1; position: relative; background: #101216; overflow: hidden; }
+.mapa .rua { position: absolute; background: #1E2129; }
+.pino {
+  position: absolute; transform: translate(-50%, -50%);
+  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+  background: var(--marca); color: #fff; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  animation: pulsar 3.2s ease-in-out infinite;
+}
+.pino.vou { background: var(--verde); }
+@keyframes pulsar { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.13); } }
+
+/* ---------- perguntas ---------- */
+.perguntas { margin-top: 34px; border-top: 1px solid var(--borda); }
+.pergunta { border-bottom: 1px solid var(--borda); }
+.pergunta summary {
+  list-style: none; cursor: pointer; padding: 19px 42px 19px 0; position: relative;
+  font-size: 16px; font-weight: 600;
+}
+.pergunta summary::-webkit-details-marker { display: none; }
+.pergunta summary::after {
+  content: "+"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  color: var(--marca); font-size: 21px; font-weight: 400; line-height: 1;
+  transition: transform .2s ease;
+}
+.pergunta[open] summary::after { content: "−"; }
+.pergunta .resposta { padding: 0 0 19px; color: var(--apagado); font-size: 14.5px; margin: 0; max-width: 44em; }
+
+/* ---------- fecho ---------- */
+.fecho { text-align: center; }
+.fecho .acoes { margin-top: 28px; }
+footer { border-top: 1px solid var(--borda); padding: 32px 0 52px; }
+footer .centro { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+footer img { height: 17px; width: auto; opacity: .55; }
+footer p { color: var(--fraco); font-size: 12px; margin: 0; }
+
+/* ---------- revelação no scroll ---------- */
+.revela { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+.revela.visivel { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .revela { opacity: 1; transform: none; transition: none; }
+  .trilho, .celular, .foto::after, .pino { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="cabecalho" id="cabecalho">
+  <div class="centro faixa">
+    <a href="#topo" aria-label="Downpipe"><img src="/logo-lp.png" alt="Downpipe"></a>
+    <a href="/app/" class="botao botao-principal botao-pequeno">ENTRAR</a>
+  </div>
+</header>
+
+<main id="topo">
+
+  <!-- ================= HERO ================= -->
+  <div class="hero faixa">
+    <div class="centro">
+      <img class="marca" src="/logo-lp.png" alt="Downpipe">
+
+      <div class="selo"><span class="ponto"></span> Rede social automotiva</div>
+
+      <h1>A rede do seu carro <em>e dos seus rolês</em></h1>
+      <p class="chamada-sub">
+        Sua garagem, os encontros perto de você e as fotos de quem esteve lá.
+        Feito pra quem vive carro — e pra quem vive os rolês sem ter um.
+      </p>
+
+      <div class="acoes">
+        <button id="instalar" class="botao botao-principal oculto">INSTALAR O APP</button>
+        <a href="/app/" class="botao botao-secundario">ENTRAR NO DOWNPIPE</a>
+      </div>
+
+      <div id="instrucoes" class="instrucoes oculto">
+        <h2 id="instrucoesTitulo"></h2>
+        <p id="instrucoesTexto"></p>
+        <ol id="instrucoesPassos"></ol>
+        <button id="copiar" class="botao botao-secundario largo oculto" style="margin-top:12px">COPIAR ENDEREÇO</button>
+      </div>
+
+      <p class="aviso">Grátis. Abre no navegador, sem precisar de loja.</p>
+    </div>
+  </div>
+
+  <!-- ============ CARROSSEL DE ROLÊS ============ -->
+  <div class="esteira" aria-hidden="true">
+    <div class="trilho" id="trilho"></div>
+  </div>
+
+  <!-- ================= PASSOS ================= -->
+  <section class="faixa">
+    <div class="centro">
+      <p class="rotulo revela">Como funciona</p>
+      <h2 class="titulo revela">Três coisas, e você já está dentro</h2>
+      <p class="linha revela">Sem cadastro longo, sem esperar aprovação de ninguém.</p>
+
+      <div class="passos">
+        <div class="passo revela">
+          <div class="n">01</div>
+          <h3>Monte sua garagem</h3>
+          <p>Escolha o carro pelo catálogo da FIPE e registre o que já fez nele — com o que custou.</p>
+        </div>
+        <div class="passo revela">
+          <div class="n">02</div>
+          <h3>Ache um rolê</h3>
+          <p>Veja os encontros perto de você no mapa, confirme presença e diga qual carro vai levar.</p>
+        </div>
+        <div class="passo revela">
+          <div class="n">03</div>
+          <h3>Registre o que rolou</h3>
+          <p>Suas fotos entram na página do encontro, junto com as de todo mundo que estava lá.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RECURSOS ================= -->
+  <section class="faixa">
+    <div class="centro">
+      <p class="rotulo revela">O que tem dentro</p>
+      <h2 class="titulo revela">Feito pra quem realmente vai</h2>
+      <p class="linha revela">
+        Cada coisa aqui nasceu de uma dor de quem anda em encontro — não de uma
+        lista de recursos.
+      </p>
+
+      <div class="grade">
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 17h14M6.5 17V9l1.8-4h7.4l1.8 4v8"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+          <h3>Garagem com histórico</h3>
+          <p>Cada modificação com data e custo. Quem chega depois vê o caminho todo, não só o resultado.</p>
+        </div>
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <h3>Rolês no mapa</h3>
+          <p>Local exato marcado pelo organizador, com a distância de onde você está. Nada de "é ali por perto".</p>
+        </div>
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h3l1.5-2h7L17 7h3v12H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          <h3>As fotos do encontro</h3>
+          <p>Todo mundo que foi joga as fotos no mesmo lugar. O rolê vira memória coletiva, não 40 álbuns soltos.</p>
+        </div>
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6 9 17l-5-5"/></svg>
+          <h3>Marcação com consentimento</h3>
+          <p>Fotografou o carro de alguém? Marca. A foto sai na hora, e o vínculo só vale quando o dono aceita.</p>
+        </div>
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 11.5a3 3 0 1 0-1.6-5.5M18 20a5.5 5.5 0 0 0-2.2-4.4"/></svg>
+          <h3>Quem vai, e com o quê</h3>
+          <p>A lista de confirmados mostra o carro de cada um. Você já sabe o que vai estar lá antes de sair de casa.</p>
+        </div>
+        <div class="carta revela">
+          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 21 3l-8 18-2-7-8-3z"/></svg>
+          <h3>Como chegar, no seu app</h3>
+          <p>Abre no Waze, Google Maps ou Apple Maps — você escolhe. Sem endereço copiado errado.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELAS ================= -->
+  <section class="faixa">
+    <div class="centro">
+      <p class="rotulo revela">Por dentro</p>
+      <h2 class="titulo revela">Como é usar</h2>
+      <p class="linha revela">Escuro por padrão, porque rolê bom é de noite.</p>
+
+      <div class="telas">
+        <!-- feed -->
+        <div class="tela-bloco revela">
+          <div class="celular">
+            <div class="topo-tela"><div class="entalhe"></div></div>
+            <div class="conteudo">
+              <div class="mini">
+                <div class="cabeca">
+                  <div class="bolinha"></div>
+                  <div><div class="quem">@fotografa</div><div class="carro">Honda Civic Si 2018</div></div>
+                </div>
+                <div class="foto"></div>
+                <div class="marca-carro"><span class="pt"></span> Encontro da Marginal</div>
+                <div class="acoes-mini"><span>♥ 128</span><span>💬 14</span></div>
+              </div>
+              <div class="mini">
+                <div class="cabeca">
+                  <div class="bolinha"></div>
+                  <div><div class="quem">@garagem_v8</div><div class="carro">Ford Mustang GT</div></div>
+                </div>
+                <div class="foto" style="height:70px"></div>
+              </div>
+            </div>
+          </div>
+          <h3>O feed</h3>
+          <p>Carros de gente real, com o rolê onde a foto foi tirada marcado embaixo.</p>
+        </div>
+
+        <!-- mapa -->
+        <div class="tela-bloco revela">
+          <div class="celular">
+            <div class="topo-tela"><div class="entalhe"></div></div>
+            <div class="conteudo" style="padding:0">
+              <div class="mapa">
+                <div class="rua" style="left:0;top:32%;width:100%;height:2px"></div>
+                <div class="rua" style="left:0;top:64%;width:100%;height:2px"></div>
+                <div class="rua" style="left:28%;top:0;width:2px;height:100%"></div>
+                <div class="rua" style="left:71%;top:0;width:2px;height:100%"></div>
+                <div class="rua" style="left:10%;top:12%;width:62%;height:2px;transform:rotate(29deg);transform-origin:left"></div>
+                <div class="pino" style="left:30%;top:26%">7</div>
+                <div class="pino vou" style="left:63%;top:40%">5</div>
+                <div class="pino" style="left:44%;top:58%">4</div>
+                <div class="pino vou" style="left:74%;top:74%">6</div>
+                <div class="pino" style="left:20%;top:80%">3</div>
+              </div>
+            </div>
+          </div>
+          <h3>Os rolês</h3>
+          <p>Cada pino é um encontro com quantos já confirmaram. Verde é onde você vai.</p>
+        </div>
+
+        <!-- evento -->
+        <div class="tela-bloco revela">
+          <div class="celular">
+            <div class="topo-tela"><div class="entalhe"></div></div>
+            <div class="conteudo">
+              <div class="mini">
+                <div class="mini-role">
+                  <div class="d"><div class="dd">05</div><div class="mm">SET</div></div>
+                  <div><div class="nn">Encontro JDM</div><div class="ii">Parque da cidade · 19h</div></div>
+                </div>
+                <div class="btn-mini">EU VOU</div>
+              </div>
+              <div class="mini">
+                <div class="quem" style="margin-bottom:7px">CARROS CONFIRMADOS</div>
+                <div class="mini-role" style="margin-bottom:6px">
+                  <div class="bolinha"></div>
+                  <div><div class="nn" style="font-size:9.5px">@jdm_diego</div><div class="ii">Nissan 350Z Track</div></div>
+                </div>
+                <div class="mini-role" style="margin-bottom:6px">
+                  <div class="bolinha"></div>
+                  <div><div class="nn" style="font-size:9.5px">@boxer_thiago</div><div class="ii">Subaru WRX STI</div></div>
+                </div>
+                <div class="mini-role">
+                  <div class="bolinha"></div>
+                  <div><div class="nn" style="font-size:9.5px">@mari_euro</div><div class="ii">BMW 320i M Sport</div></div>
+                </div>
+              </div>
+              <div class="btn-mini indo">✓ VOCÊ VAI</div>
+            </div>
+          </div>
+          <h3>O encontro</h3>
+          <p>Quem confirmou, qual carro cada um leva, e como chegar até lá.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SEM CARRO ================= -->
+  <section class="faixa">
+    <div class="centro estreito">
+      <p class="rotulo revela">Sem carro</p>
+      <h2 class="titulo revela">Também é o seu lugar</h2>
+      <p class="linha revela" style="max-width:none">
+        Tem gente que vai em encontro pra fotografar, não pra expor. Aqui isso é
+        um perfil completo, não uma conta pela metade — e não existe "conta de
+        fotógrafo": um dia você tem carro, e continua sendo o mesmo perfil.
+      </p>
+      <p class="linha revela" style="max-width:none;margin-top:14px">
+        Quando você fotografa o carro de alguém e marca, a foto entra na página
+        daquele carro <b style="color:var(--texto)">com o seu crédito</b>. É o
+        seu trabalho aparecendo onde ele importa.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= PERGUNTAS ================= -->
+  <section class="faixa">
+    <div class="centro estreito">
+      <p class="rotulo revela">Dúvidas</p>
+      <h2 class="titulo revela">O que costumam perguntar</h2>
+
+      <div class="perguntas revela">
+        <details class="pergunta">
+          <summary>Preciso baixar da loja?</summary>
+          <p class="resposta">Não. O Downpipe abre no navegador e você pode instalar na tela inicial — vira um ícone como qualquer outro app, sem passar por loja nenhuma.</p>
+        </details>
+        <details class="pergunta">
+          <summary>É grátis?</summary>
+          <p class="resposta">É. Sem cobrança, sem versão paga escondida.</p>
+        </details>
+        <details class="pergunta">
+          <summary>Preciso ter carro pra usar?</summary>
+          <p class="resposta">Não. Dá pra usar só pelos rolês e pelas fotos. Seu perfil fica completo do mesmo jeito, sem garagem vazia anunciada.</p>
+        </details>
+        <details class="pergunta">
+          <summary>Qualquer um pode marcar o meu carro numa foto?</summary>
+          <p class="resposta">Marcar sim, mas a marcação só vale depois que você aceita. Você recebe a notificação e decide. Se recusar, a foto continua existindo — ela é de quem tirou —, só não fica ligada ao seu carro.</p>
+        </details>
+        <details class="pergunta">
+          <summary>Quem pode criar um rolê?</summary>
+          <p class="resposta">Qualquer pessoa. Dá pra deixar o encontro aberto no app ou só por link, pra quem você mandar.</p>
+        </details>
+        <details class="pergunta">
+          <summary>Vocês mostram meu endereço?</summary>
+          <p class="resposta">O local marcado é o do encontro, escolhido por quem organiza. Seu perfil não expõe onde você mora.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FECHO ================= -->
+  <section class="faixa fecho">
+    <div class="centro estreito">
+      <h2 class="titulo revela">O próximo rolê já tem gente confirmada</h2>
+      <p class="linha revela" style="margin:0 auto;max-width:26em">
+        Leva dois minutos pra entrar e ver quem vai estar lá.
+      </p>
+      <div class="acoes revela">
+        <button id="instalar2" class="botao botao-principal oculto">INSTALAR O APP</button>
+        <a href="/app/" class="botao botao-principal">COMEÇAR AGORA</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="faixa">
+  <div class="centro">
+    <img src="/logo-lp.png" alt="Downpipe">
+    <p>Rede social automotiva · feito no Brasil</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var ua = navigator.userAgent || '';
+  var promptInstalar = null;
+
+  // Quem já entrou não precisa da apresentação: vai direto pro app.
+  try {
+    if (localStorage.getItem('gearhead_session')) { location.replace('/app/'); return; }
+  } catch (e) { /* navegação privada: segue mostrando a landing */ }
+
+  /* ---------- carrossel: rolês de verdade, vindos da API ----------
+   * Nada aqui é escrito à mão. Uma landing que anuncia encontro que não
+   * existe queima a confiança no primeiro clique — se não houver rolê
+   * marcado, a faixa some inteira em vez de inventar. */
+  var MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+  var esteira = document.querySelector('.esteira');
+  var trilho = document.getElementById('trilho');
+
+  function sumirEsteira() { if (esteira && esteira.parentNode) esteira.parentNode.removeChild(esteira); }
+
+  function cartaoRole(ev) {
+    var d = new Date(ev.startsAt);
+    var el = document.createElement('div');
+    el.className = 'role';
+    el.innerHTML =
+      '<div class="data"><div class="dia"></div><div class="mes"></div></div>' +
+      '<div style="min-width:0"><div class="nome"></div><div class="info"><b></b> · <span></span></div></div>';
+    el.querySelector('.dia').textContent = String(d.getDate()).padStart(2, '0');
+    el.querySelector('.mes').textContent = MESES[d.getMonth()];
+    el.querySelector('.nome').textContent = ev.name;
+    var n = ev.attendeesCount || 0;
+    el.querySelector('.info b').textContent = n === 1 ? '1 confirmado' : n + ' confirmados';
+    el.querySelector('.info span').textContent = ev.city || '';
+    return el;
+  }
+
+  fetch('/events?limit=20')
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (j) {
+      var agora = Date.now();
+      var lista = (j.data || []).filter(function (e) { return new Date(e.startsAt).getTime() > agora; });
+      if (!lista.length) { sumirEsteira(); return; }
+
+      // Com poucos rolês a faixa ficaria vazia: repete até encher a tela,
+      // e duplica o conjunto porque a animação anda -50% e precisa emendar.
+      var base = [];
+      while (base.length < 8) base = base.concat(lista);
+      for (var volta = 0; volta < 2; volta++) {
+        base.forEach(function (ev) { trilho.appendChild(cartaoRole(ev)); });
+      }
+    })
+    .catch(sumirEsteira);
+
+  /* ---------- revelação no scroll ---------- */
+  var alvos = document.querySelectorAll('.revela');
+  if ('IntersectionObserver' in window) {
+    var obs = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e, i) {
+        if (!e.isIntersecting) return;
+        // escalona os irmãos, pra grade não aparecer toda de uma vez
+        e.target.style.transitionDelay = (i * 70) + 'ms';
+        e.target.classList.add('visivel');
+        obs.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    alvos.forEach(function (a) { obs.observe(a); });
+
+    // Rede de segurança: o conteúdo nasce invisível esperando o observer.
+    // Se ele falhar por qualquer motivo, a landing fica em branco — que é
+    // pior do que não ter animação nenhuma. Passados 2s, revela tudo.
+    setTimeout(function () {
+      alvos.forEach(function (a) { a.classList.add('visivel'); });
+    }, 2000);
+  } else {
+    alvos.forEach(function (a) { a.classList.add('visivel'); });
+  }
+
+  /* ---------- borda do cabeçalho ao rolar ---------- */
+  var cab = document.getElementById('cabecalho');
+  var aoRolar = function () { cab.classList.toggle('rolou', window.scrollY > 12); };
+  window.addEventListener('scroll', aoRolar, { passive: true });
+  aoRolar();
+
+  /* ---------- instalar ---------- */
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault(); promptInstalar = e; mostrar();
+  });
+
+  function standalone() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+      || navigator.standalone === true;
+  }
+
+  function situacao() {
+    if (standalone()) return 'nenhuma';
+    // "; wv)" é o WebView do Android — o navegador do WhatsApp.
+    if (/FBAN|FBAV|Instagram|Line\//i.test(ua) || /; wv\)/i.test(ua)) return 'navegadorInterno';
+    if (/iPad|iPhone|iPod/.test(ua)) {
+      // Só o Safari de verdade instala. O navegador interno do WhatsApp no
+      // iPhone parece Safari mas não manda Version/ nem Safari/.
+      var safariReal = /Version\//.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+      return safariReal ? 'ios' : 'iosOutroNavegador';
+    }
+    if (promptInstalar) return 'instalando';
+    return /Android/i.test(ua) ? 'android' : 'desktop';
+  }
+
+  var conteudo = {
+    ios: { titulo: 'Coloque na tela inicial',
+      texto: 'Três toques e o Downpipe vira um ícone como qualquer outro app.',
+      passos: ['Toque em Compartilhar, na barra de baixo', 'Role e escolha "Adicionar à Tela de Início"', 'Confirme em "Adicionar"'] },
+    iosOutroNavegador: { titulo: 'Abra no Safari',
+      texto: 'No iPhone, só o Safari coloca um site na tela inicial.',
+      passos: ['Toque em COPIAR ENDEREÇO aqui embaixo', 'Abra o Safari e cole na barra de endereço', 'Compartilhar → Adicionar à Tela de Início'], copiar: true },
+    navegadorInterno: { titulo: 'Abra fora do WhatsApp',
+      texto: 'Este navegador não instala apps. Leve o endereço pro Chrome ou Safari.',
+      passos: ['Toque em COPIAR ENDEREÇO aqui embaixo', 'Abra o Chrome (ou o Safari, no iPhone)', 'Cole o endereço e siga o convite de lá'], copiar: true },
+    android: { titulo: 'Coloque na tela inicial',
+      texto: 'Pelo menu do navegador, o Downpipe vira um ícone como qualquer app.',
+      passos: ['Toque nos três pontinhos do navegador', 'Escolha "Instalar app" ou "Adicionar à tela inicial"', 'Confirme, e o ícone aparece junto dos seus apps'] },
+    desktop: { titulo: 'Instale no computador',
+      texto: 'Dá pra instalar aqui, mas o app foi feito pro celular — vale abrir lá.',
+      passos: ['Clique no ícone de instalar, na barra de endereço do navegador'] }
+  };
+
+  function mostrar() {
+    var s = situacao();
+    if (s === 'nenhuma') return;
+
+    var botoes = [document.getElementById('instalar'), document.getElementById('instalar2')];
+    if (s === 'instalando') {
+      botoes.forEach(function (b) {
+        b.classList.remove('oculto');
+        b.onclick = function () {
+          promptInstalar.prompt();
+          promptInstalar.userChoice.then(function () { promptInstalar = null; });
+        };
+      });
+      return;
+    }
+
+    var c = conteudo[s];
+    document.getElementById('instrucoesTitulo').textContent = c.titulo;
+    document.getElementById('instrucoesTexto').textContent = c.texto;
+    var ol = document.getElementById('instrucoesPassos');
+    ol.innerHTML = '';
+    c.passos.forEach(function (p) {
+      var li = document.createElement('li');
+      li.textContent = p;
+      ol.appendChild(li);
+    });
+
+    if (c.copiar) {
+      var copiar = document.getElementById('copiar');
+      copiar.classList.remove('oculto');
+      copiar.onclick = function () {
+        var endereco = location.origin;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(endereco).then(function () {
+            copiar.textContent = 'ENDEREÇO COPIADO';
+            setTimeout(function () { copiar.textContent = 'COPIAR ENDEREÇO'; }, 2500);
+          }, function () { window.prompt('Copie o endereço:', endereco); });
+        } else { window.prompt('Copie o endereço:', endereco); }
+      };
+    }
+    document.getElementById('instrucoes').classList.remove('oculto');
+  }
+
+  mostrar();
+})();
+</script>
+
+</body>
+</html>

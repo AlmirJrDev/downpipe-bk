@@ -3,7 +3,6 @@ import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
-import { assertCarOwnership } from '@/modules/cars/cars.service';
 import { carsRepository } from '@/modules/cars/cars.repository';
 import { followsRepository } from '@/modules/follows/follows.repository';
 import { notificationsService } from '@/modules/notifications/notifications.service';
@@ -36,6 +35,9 @@ function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolea
     car: row.cars
       ? {
           id: row.cars.id,
+          // Quem é o dono precisa vir junto: é o único jeito de a tela saber
+          // a quem oferecer aceitar/recusar a marcação.
+          ownerId: row.cars.owner_id,
           version: row.cars.version,
           photoUrl: row.cars.photo_url,
           vehicle: row.cars.vehicle_versions
@@ -48,6 +50,16 @@ function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolea
             : null,
         }
       : null,
+    // Rolê marcado na publicação. Vem embutido pra o card do feed poder
+    // dizer "no Encontro JDM Marginal" sem uma requisição por post.
+    event: row.events
+      ? {
+          id: row.events.id,
+          name: row.events.name,
+          startsAt: row.events.starts_at,
+          city: row.events.city,
+        }
+      : null,
     media: (row.post_media ?? [])
       .slice()
       .sort((a, b) => a.position - b.position)
@@ -56,6 +68,10 @@ function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolea
     commentsCount: row.comments?.[0]?.count ?? 0,
     likedByMe,
     savedByMe,
+    // "pending" = alguém marcou este carro e o dono ainda não respondeu.
+    // A tela usa isso pra mostrar aceitar/recusar pro dono, e um aviso
+    // discreto pra quem publicou.
+    carTagStatus: row.car_tag_status,
   };
 }
 
@@ -100,7 +116,7 @@ async function buildPostsResponse(rows: PostRow[], total: number, viewerId: stri
 
 export const postsService = {
   async list(
-    filters: { authorId?: string; carId?: string; idIn?: string[] },
+    filters: { authorId?: string; carId?: string; eventId?: string; idIn?: string[] },
     pagination: PaginationParams,
     viewerId?: string
   ) {
@@ -166,6 +182,11 @@ export const postsService = {
     return this.list({ authorId: profile.id }, pagination, viewerId);
   },
 
+  /** Publicações marcadas com um rolê — a memória coletiva do encontro. */
+  async listByEvent(eventId: string, pagination: PaginationParams, viewerId?: string) {
+    return this.list({ eventId }, pagination, viewerId);
+  },
+
   async listByCar(carId: string, pagination: PaginationParams, viewerId?: string) {
     const car = await carsRepository.findById(carId);
 
@@ -194,11 +215,29 @@ export const postsService = {
   },
 
   async create(authorId: string, input: CreatePostInput, files: UploadedFile[]) {
+    /**
+     * Marcar carro alheio passou a ser permitido — é o que abre o app pra
+     * quem fotografa o carro dos outros em encontro. Mas o vínculo não vale
+     * na hora: fica pendente até o dono aceitar, e só então a foto aparece
+     * na página do carro dele.
+     *
+     * A publicação em si sai imediatamente. Segurar a foto inteira só pra
+     * validar uma marcação faria o fotógrafo desistir de postar aqui.
+     */
+    let carTagStatus: 'approved' | 'pending' | undefined;
+    let carOwnerId: string | null = null;
+
     if (input.carId) {
-      await assertCarOwnership(input.carId, authorId);
+      const car = await carsRepository.findById(input.carId);
+      if (!car) {
+        throw AppError.notFound('CAR_NOT_FOUND', 'Carro não encontrado');
+      }
+      const ehDono = car.owner_id === authorId;
+      carTagStatus = ehDono ? 'approved' : 'pending';
+      if (!ehDono) carOwnerId = car.owner_id;
     }
 
-    const postId = await postsRepository.create(authorId, input);
+    const postId = await postsRepository.create(authorId, { ...input, carTagStatus });
 
     if (files.length > 0) {
       const uploaded = await Promise.all(
@@ -232,6 +271,12 @@ export const postsService = {
       await notificationsService.notifyProjectUpdate(followerIds, authorId, postId);
     }
 
+    // Sem este aviso a marcação pendente morre em silêncio: o dono nunca
+    // saberia que tem uma foto do carro dele esperando resposta.
+    if (carOwnerId) {
+      await notificationsService.notifyCarTag(carOwnerId, authorId, postId);
+    }
+
     // Post recém-criado: ninguém curtiu nem salvou ainda, nem o autor.
     return toPublicPost(post as PostRow, false, false);
   },
@@ -245,6 +290,40 @@ export const postsService = {
       postsRepository.findSavedPostIds([id], userId).then((set) => set.has(id)),
     ]);
     return toPublicPost(updated as PostRow, likedByMe, savedByMe);
+  },
+
+  /**
+   * Dono do carro responde a uma marcação pendente.
+   *
+   * Quem decide é o dono do CARRO, não o autor da publicação — é a página
+   * dele que recebe a foto. O autor não é avisado da recusa: o vínculo
+   * simplesmente não acontece, e criar uma notificação de "recusaram você"
+   * só geraria atrito entre duas pessoas que vão se ver no próximo rolê.
+   */
+  async respondToCarTag(postId: string, userId: string, aceitar: boolean) {
+    const post = await postsRepository.findById(postId);
+
+    if (!post) {
+      throw AppError.notFound('POST_NOT_FOUND', 'Post não encontrado');
+    }
+
+    if (!post.car_id || post.car_tag_status !== 'pending') {
+      throw AppError.validation('Esta publicação não tem marcação pendente');
+    }
+
+    const car = await carsRepository.findById(post.car_id);
+    if (!car || car.owner_id !== userId) {
+      throw AppError.forbidden('Só o dono do carro pode responder a marcação');
+    }
+
+    if (aceitar) {
+      await postsRepository.approveCarTag(postId);
+    } else {
+      await postsRepository.rejectCarTag(postId);
+    }
+
+    const atualizado = await postsRepository.findById(postId);
+    return toPublicPost(atualizado as PostRow, null, null);
   },
 
   async remove(id: string, userId: string) {

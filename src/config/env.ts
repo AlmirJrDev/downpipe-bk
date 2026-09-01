@@ -20,6 +20,9 @@ const envSchema = z.object({
 
   FIPE_API_URL: z.string().url().default('https://parallelum.com.br/fipe/api/v1'),
 
+  /** Pasta do PWA exportado. Vazio = backend serve só a API. */
+  WEB_DIST_PATH: z.string().optional(),
+
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:19006')

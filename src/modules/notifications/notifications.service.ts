@@ -8,6 +8,7 @@ function toPublicNotification(row: NotificationRow) {
     type: row.type,
     postId: row.post_id,
     commentId: row.comment_id,
+    eventId: row.event_id,
     createdAt: row.created_at,
     readAt: row.read_at,
     actor: row.actor
@@ -66,6 +67,33 @@ export const notificationsService = {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificações de project_update:', err);
+    }
+  },
+
+  /**
+   * "Alguém que você segue vai nesse evento" — vai para os seguidores de
+   * quem confirmou, não para o organizador. É o gancho que transforma uma
+   * agenda em motivo pra ir: o valor está em saber que a sua turma vai.
+   */
+  async notifyEventAttend(followerIds: string[], actorId: string, eventId: string) {
+    try {
+      await notificationsRepository.createMany(
+        followerIds.map((recipientId) => ({ recipientId, actorId, type: 'event_attend', eventId }))
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('Falha ao criar notificações de event_attend:', err);
+    }
+  },
+
+  /** Marcaram o carro de alguém numa foto — o aviso que faz a marcação
+   * pendente não morrer em silêncio. */
+  async notifyCarTag(recipientId: string, actorId: string, postId: string) {
+    try {
+      await notificationsRepository.create({ recipientId, actorId, type: 'car_tag', postId });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('Falha ao criar notificação de car_tag:', err);
     }
   },
 

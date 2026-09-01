@@ -11,6 +11,7 @@ function toPublicProfile(row: ProfileRow) {
     bio: row.bio,
     avatarUrl: row.avatar_url,
     gearheadSince: row.gearhead_since,
+    isOrganizer: row.is_organizer,
     createdAt: row.created_at,
   };
 }
@@ -35,12 +36,14 @@ export const profilesService = {
       bio: profile.bio,
       avatarUrl: profile.avatar_url,
       gearheadSince: profile.gearhead_since,
+      isOrganizer: profile.is_organizer,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
       followersCount: counts.followersCount,
       followingCount: counts.followingCount,
       carsCount: counts.carsCount,
       projectsCount: counts.projectsCount,
+      eventsAttendedCount: counts.eventsAttendedCount,
     };
   },
 
@@ -61,6 +64,7 @@ export const profilesService = {
       bio: updated.bio,
       avatarUrl: updated.avatar_url,
       gearheadSince: updated.gearhead_since,
+      isOrganizer: updated.is_organizer,
       updatedAt: updated.updated_at,
     };
   },
@@ -87,6 +91,7 @@ export const profilesService = {
       followingCount: counts.followingCount,
       carsCount: counts.carsCount,
       projectsCount: counts.projectsCount,
+      eventsAttendedCount: counts.eventsAttendedCount,
       isFollowing,
     };
   },

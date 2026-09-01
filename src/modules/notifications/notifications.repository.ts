@@ -1,7 +1,13 @@
 import { supabaseAdmin } from '@/config/supabase';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 
-export type NotificationType = 'like' | 'comment' | 'follow' | 'project_update';
+export type NotificationType =
+  | 'like'
+  | 'comment'
+  | 'follow'
+  | 'project_update'
+  | 'event_attend'
+  | 'car_tag';
 
 export interface NotificationRow {
   id: string;
@@ -10,13 +16,14 @@ export interface NotificationRow {
   type: NotificationType;
   post_id: string | null;
   comment_id: string | null;
+  event_id: string | null;
   created_at: string;
   read_at: string | null;
   actor: { username: string; display_name: string; avatar_url: string | null } | null;
 }
 
 const NOTIFICATION_SELECT = `
-  id, recipient_id, actor_id, type, post_id, comment_id, created_at, read_at,
+  id, recipient_id, actor_id, type, post_id, comment_id, event_id, created_at, read_at,
   actor:profiles!notifications_actor_id_fkey ( username, display_name, avatar_url )
 `;
 
@@ -27,6 +34,7 @@ export const notificationsRepository = {
     type: NotificationType;
     postId?: string | null;
     commentId?: string | null;
+    eventId?: string | null;
   }): Promise<void> {
     // Um usuário não recebe notificação de uma ação feita por ele mesmo
     // (ex.: comentar no próprio post).
@@ -38,6 +46,7 @@ export const notificationsRepository = {
       type: params.type,
       post_id: params.postId ?? null,
       comment_id: params.commentId ?? null,
+      event_id: params.eventId ?? null,
     });
 
     if (error) throw error;
@@ -49,6 +58,7 @@ export const notificationsRepository = {
       actorId: string;
       type: NotificationType;
       postId?: string | null;
+      eventId?: string | null;
     }[]
   ): Promise<void> {
     const rows = items
@@ -58,6 +68,7 @@ export const notificationsRepository = {
         actor_id: item.actorId,
         type: item.type,
         post_id: item.postId ?? null,
+        event_id: item.eventId ?? null,
       }));
 
     if (rows.length === 0) return;

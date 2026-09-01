@@ -49,6 +49,29 @@ const CAR_SELECT = `
   )
 `;
 
+/**
+ * Em quantos rolês o carro já apareceu.
+ *
+ * Não existe vínculo direto entre carro e evento — o que existe é a
+ * publicação, que carrega os dois. Então "esse carro esteve nesse rolê"
+ * significa: há foto dele marcada com aquele encontro. É um sinal honesto e
+ * de graça; um vínculo explícito exigiria perguntar "vai com qual carro?" na
+ * hora de confirmar presença, o que encheria de atrito um toque que hoje é
+ * único.
+ *
+ * Conta eventos DISTINTOS: cinco fotos do mesmo rolê continuam sendo um rolê.
+ */
+export async function countEventsForCar(carId: string): Promise<number> {
+  const { data, error } = await supabaseAdmin
+    .from('posts')
+    .select('event_id')
+    .eq('car_id', carId)
+    .not('event_id', 'is', null);
+
+  if (error) throw error;
+  return new Set((data ?? []).map((row) => row.event_id)).size;
+}
+
 function toDbPayload(input: CreateCarInput | UpdateCarInput): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
 

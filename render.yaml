@@ -6,7 +6,7 @@
 # Railway) caso o Render deixe de servir.
 services:
   - type: web
-    name: downpipe-api
+    name: downpipe
     runtime: node
     plan: free
     # Sem região na América do Sul; Virginia é a de menor latência pro Brasil.
@@ -35,6 +35,13 @@ services:
         sync: false
       - key: STATUS_SECRET
         sync: false
+
+      # Pasta do PWA dentro deste repositório. É o que faz o mesmo serviço
+      # entregar a landing, o app e a API na mesma origem — sem CORS e sem
+      # um segundo serviço pra manter. O conteúdo vem do "npm run build:web"
+      # do projeto do app.
+      - key: WEB_DIST_PATH
+        value: ./web
 
     # PORT não entra aqui: o Render injeta a porta e o env.ts já a lê.
     # DATABASE_URL também não: só o runner de migrations usa, e migrations

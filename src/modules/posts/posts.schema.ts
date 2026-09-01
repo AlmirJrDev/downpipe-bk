@@ -8,7 +8,9 @@ export const postTypeEnum = z.enum(['normal', 'project_update', 'evolution']);
  * faz parte deste schema, que valida apenas req.body.
  */
 const postBaseSchema = {
-  carId: z.string().uuid('carId inválido').nullable().optional(),
+  carId: z.string().uuid("carId inválido").nullable().optional(),
+  /** Rolê onde a foto foi tirada — é o que junta as memórias do encontro. */
+  eventId: z.string().uuid("eventId inválido").nullable().optional(),
   type: postTypeEnum.optional(),
   title: z.string().max(120).nullable().optional(),
   subtitle: z.string().max(200).nullable().optional(),
@@ -34,6 +36,7 @@ const multipartNumberOrNull = (schema: z.ZodNumber) =>
 export const createPostSchema = z
   .object({
     carId: postBaseSchema.carId,
+    eventId: postBaseSchema.eventId,
     type: postBaseSchema.type,
     title: postBaseSchema.title,
     subtitle: postBaseSchema.subtitle,
@@ -70,3 +73,11 @@ export const carIdParamSchema = z.object({
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;
+
+export const eventIdParamSchema = z.object({
+  eventId: z.string().uuid('eventId inválido'),
+});
+
+export const carTagResponseSchema = z.object({
+  accept: z.boolean(),
+});

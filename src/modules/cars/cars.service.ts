@@ -4,7 +4,7 @@ import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { vehicleCatalogRepository } from '@/modules/vehicle-catalog/vehicle-catalog.repository';
-import { carsRepository, CarRow } from './cars.repository';
+import { carsRepository, CarRow, countEventsForCar } from './cars.repository';
 import { CreateCarInput, UpdateCarInput, ListCarsQuery } from './cars.schema';
 
 export function toPublicCar(row: CarRow) {
@@ -93,10 +93,14 @@ export const carsService = {
     const car = await carsRepository.findById(id);
 
     if (!car) {
-      throw AppError.notFound('CAR_NOT_FOUND', 'Carro não encontrado');
+      throw AppError.notFound("CAR_NOT_FOUND", "Carro não encontrado");
     }
 
-    return toPublicCar(car);
+    // Só no detalhe: na listagem seria uma consulta por card (N+1), e o
+    // número não aparece lá.
+    const eventsCount = await countEventsForCar(id);
+
+    return { ...toPublicCar(car), eventsCount };
   },
 
   async create(ownerId: string, input: CreateCarInput) {

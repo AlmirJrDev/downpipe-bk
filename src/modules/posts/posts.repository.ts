@@ -13,6 +13,8 @@ export interface PostRow {
   id: string;
   author_id: string;
   car_id: string | null;
+  car_tag_status: "approved" | "pending" | null;
+  event_id: string | null;
   type: string;
   title: string | null;
   subtitle: string | null;
@@ -23,6 +25,7 @@ export interface PostRow {
   updated_at: string;
   profiles: { username: string; display_name: string; avatar_url: string | null } | null;
   cars: {
+    owner_id: string;
     id: string;
     version: string | null;
     photo_url: string | null;
@@ -32,6 +35,7 @@ export interface PostRow {
       vehicle_models: { name: string; vehicle_brands: { name: string } };
     } | null;
   } | null;
+  events: { id: string; name: string; starts_at: string; city: string } | null;
   post_media: PostMediaRow[];
   post_likes: { count: number }[];
   comments: { count: number }[];
@@ -42,19 +46,27 @@ export interface PostRow {
 // (direto via author_id, e many-to-many via post_likes) e recusa a query
 // como ambígua sem essa qualificação explícita.
 const POST_SELECT = `
-  id, author_id, car_id, type, title, subtitle, caption, cost, progress_percent,
+  id, author_id, car_id, car_tag_status, event_id, type, title, subtitle, caption, cost, progress_percent,
   created_at, updated_at,
   profiles!posts_author_id_fkey ( username, display_name, avatar_url ),
-  cars ( id, version, photo_url, vehicle_versions ( name, year, vehicle_models ( name, vehicle_brands ( name ) ) ) ),
+  cars ( id, owner_id, version, photo_url, vehicle_versions ( name, year, vehicle_models ( name, vehicle_brands ( name ) ) ) ),
   post_media ( id, media_url, media_type, position ),
+  events!posts_event_id_fkey ( id, name, starts_at, city ),
   post_likes ( count ),
   comments ( count )
 `;
 
-function toDbPayload(input: CreatePostInput): Record<string, unknown> {
+/** O status da marcação não vem do cliente: quem decide é o service, olhando
+ * se quem publicou é o dono do carro. */
+type CreateWithTag = CreatePostInput & { carTagStatus?: 'approved' | 'pending' };
+
+function toDbPayload(input: CreateWithTag): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
 
   if (input.carId !== undefined) payload.car_id = input.carId;
+  // O status vem calculado pelo service (dono = aprovado, terceiro = pendente).
+  if (input.carTagStatus !== undefined) payload.car_tag_status = input.carTagStatus;
+  if (input.eventId !== undefined) payload.event_id = input.eventId;
   if (input.type !== undefined) payload.type = input.type;
   if (input.title !== undefined) payload.title = input.title;
   if (input.subtitle !== undefined) payload.subtitle = input.subtitle;
@@ -79,13 +91,26 @@ function toUpdateDbPayload(input: UpdatePostInput): Record<string, unknown> {
 
 export const postsRepository = {
   async list(
-    filters: { authorId?: string; carId?: string; authorIdIn?: string[]; excludeIds?: string[]; idIn?: string[] },
+    filters: {
+      authorId?: string;
+      carId?: string;
+      eventId?: string;
+      authorIdIn?: string[];
+      excludeIds?: string[];
+      idIn?: string[];
+    },
     { limit, offset }: PaginationParams
   ): Promise<{ rows: PostRow[]; total: number }> {
     let query = supabaseAdmin.from('posts').select(POST_SELECT, { count: 'exact' });
 
     if (filters.authorId) query = query.eq('author_id', filters.authorId);
-    if (filters.carId) query = query.eq('car_id', filters.carId);
+    if (filters.carId) {
+      query = query.eq("car_id", filters.carId);
+      // A página do carro mostra só o que o dono aprovou. Marcação pendente
+      // existe no post de quem fotografou, não no carro dos outros.
+      query = query.eq("car_tag_status", "approved");
+    }
+    if (filters.eventId) query = query.eq("event_id", filters.eventId);
     if (filters.authorIdIn) query = query.in('author_id', filters.authorIdIn);
     if (filters.idIn) query = query.in('id', filters.idIn);
     if (filters.excludeIds && filters.excludeIds.length > 0) {
@@ -113,7 +138,7 @@ export const postsRepository = {
     return data as unknown as PostRow | null;
   },
 
-  async create(authorId: string, input: CreatePostInput): Promise<string> {
+  async create(authorId: string, input: CreateWithTag): Promise<string> {
     const { data, error } = await supabaseAdmin
       .from('posts')
       .insert({ author_id: authorId, ...toDbPayload(input) })
@@ -131,6 +156,30 @@ export const postsRepository = {
 
   async delete(id: string): Promise<void> {
     const { error } = await supabaseAdmin.from('posts').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  /** Dono aceitou a marcação: a foto passa a aparecer na página do carro. */
+  async approveCarTag(postId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('posts')
+      .update({ car_tag_status: 'approved' })
+      .eq('id', postId);
+
+    if (error) throw error;
+  },
+
+  /**
+   * Dono recusou: some o vínculo, mas a publicação continua — ela é de quem
+   * fotografou. Não guarda "recusado": o dado não teria uso e só serviria
+   * pra alguém ficar remoendo.
+   */
+  async rejectCarTag(postId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('posts')
+      .update({ car_id: null, car_tag_status: null })
+      .eq('id', postId);
+
     if (error) throw error;
   },
 

@@ -19,6 +19,12 @@ export const updateProfileSchema = z
       .max(new Date().getFullYear())
       .nullable()
       .optional(),
+    /**
+     * Marca de organizador de eventos. É uma marca no perfil que já existe,
+     * e não um segundo tipo de conta: quem organiza encontro costuma ter
+     * carro também, e duas contas obrigariam a manter dois logins.
+     */
+    isOrganizer: z.boolean().optional(),
   })
   .strict()
   // impede explicitamente qualquer tentativa de sobrescrever o id via body
