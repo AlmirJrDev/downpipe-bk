@@ -1,0 +1,46 @@
+# Roda o mesmo build que o Render vai rodar, antes que ele rode.
+#
+# O primeiro deploy quebrou porque o NODE_ENV=production do blueprint fazia
+# o npm pular as devDependencies — e o typescript é uma delas. Reproduzir o
+# ambiente aqui faz esse tipo de falha aparecer no GitHub, em segundos, e
+# não no meio de um deploy.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    name: Build igual ao do Render
+    runs-on: ubuntu-latest
+    env:
+      # A mesma variável declarada no render.yaml: é ela que causou a falha.
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Mesma versão pinada em engines.node.
+          node-version: '24'
+          cache: npm
+
+      # --include=dev pelo mesmo motivo do blueprint: com NODE_ENV=production
+      # o npm ignora as devDependencies, e o compilador é uma delas.
+      - run: npm ci --include=dev
+
+      - run: npm run build
+
+      - name: Confere a saída
+        run: test -f dist/server.js
+
+      # A pasta web/ é o PWA publicado pelo repositório do app. Se ela sumir,
+      # o Render sobe só a API e a landing responde 404 — falha silenciosa
+      # que só aparece quando alguém abre o site.
+      - name: Confere que o PWA está no repositório
+        run: |
+          test -f web/index.html
+          test -f web/landing.html
+          echo "arquivos do PWA: $(find web -type f | wc -l)"
