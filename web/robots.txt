@@ -1,0 +1,29 @@
+# O que os buscadores devem e não devem indexar.
+
+User-agent: *
+
+# A landing e as páginas legais são o que faz sentido aparecer numa busca.
+Allow: /$
+Allow: /privacidade
+Allow: /termos
+
+# O app não. /app/ é a casca de um aplicativo: sem o JavaScript rodando, a
+# página é vazia — e o que tem dentro é conteúdo de gente logada, que não
+# deve virar resultado de busca.
+Disallow: /app/
+
+# Rotas da API não são páginas.
+Disallow: /auth/
+Disallow: /posts/
+Disallow: /profiles/
+Disallow: /profile/
+Disallow: /cars/
+Disallow: /events/
+Disallow: /feed
+Disallow: /reports
+Disallow: /search
+Disallow: /status
+Disallow: /vehicles/
+Disallow: /notifications
+
+Sitemap: https://downpipe.onrender.com/sitemap.xml

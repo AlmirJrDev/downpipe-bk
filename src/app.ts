@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Response } from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import helmet from 'helmet';
@@ -175,7 +175,24 @@ export function createApp() {
      * pinga-pinga entre os dois. O baseUrl do Expo resolve na origem: as
      * rotas e os assets já saem do build prefixados com /app.
      */
-    app.use('/app', express.static(dist, { extensions: ['html'] }));
+    /**
+     * Cache dos arquivos que já têm hash no nome.
+     *
+     * entry-0cfca625.js muda de NOME a cada build e nunca muda de conteúdo,
+     * então guardar pra sempre é seguro — e é o que faz a segunda abertura
+     * do app ser instantânea em vez de rebaixar 785 KB de novo. O padrão do
+     * express.static é max-age=0, que obriga a revalidar tudo toda vez.
+     *
+     * Só vale pra /_expo/static/: o HTML e o manifest continuam sem cache,
+     * senão um deploy novo não chegaria em quem já abriu.
+     */
+    const cacheDosAssets = (res: Response, caminho: string) => {
+      if (caminho.includes('_expo') && caminho.includes('static')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    };
+
+    app.use('/app', express.static(dist, { extensions: ['html'], setHeaders: cacheDosAssets }));
 
     // Rota dinâmica (/app/event/abc) não tem HTML próprio: devolve a casca
     // e o expo-router resolve o caminho no navegador.
@@ -188,7 +205,26 @@ export function createApp() {
     // extensions: ['html'] pra /privacidade e /termos funcionarem sem o
     // ".html" no fim — são endereços que vão em loja de app e em e-mail,
     // e ninguém digita extensão.
-    app.use(express.static(dist, { index: false, extensions: ['html'] }));
+    app.use(
+      express.static(dist, { index: false, extensions: ['html'], setHeaders: cacheDosAssets })
+    );
+
+    /**
+     * Página 404 para quem chegou pelo navegador.
+     *
+     * Antes qualquer endereço errado devolvia o JSON de erro da API na cara
+     * da pessoa. Cliente de API continua recebendo JSON — a diferença é o
+     * Accept do pedido, não o caminho.
+     */
+    app.use((req, res, next) => {
+      // Exige "text/html" declarado, e não req.accepts(): com Accept: */*
+      // — que é o que o fetch do app manda por padrão — o accepts() casa
+      // com html e devolveria a página no lugar do JSON. Navegador sempre
+      // declara text/html; cliente de API, quase nunca.
+      const querHtml = (req.headers.accept ?? '').includes('text/html');
+      if (req.method !== 'GET' || !querHtml) return next();
+      res.status(404).sendFile(path.join(dist, '404.html'));
+    });
   }
 
   app.use(notFoundHandler);
