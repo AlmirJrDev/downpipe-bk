@@ -23,6 +23,14 @@ const envSchema = z.object({
   /** Pasta do PWA exportado. Vazio = backend serve só a API. */
   WEB_DIST_PATH: z.string().optional(),
 
+  /**
+   * Endereço público do app, usado no link do e-mail de recuperação de
+   * senha. Sem ele o Supabase manda pro "Site URL" configurado no painel
+   * dele, que pode não ser o nosso — e a pessoa clica no link e não chega
+   * a lugar nenhum.
+   */
+  APP_URL: z.string().url().optional(),
+
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:19006')

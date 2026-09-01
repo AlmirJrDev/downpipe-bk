@@ -1,8 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabaseAnon, createUserScopedClient } from '@/config/supabase';
+import { supabaseAnon, supabaseAdmin, createUserScopedClient } from '@/config/supabase';
+import { env } from '@/config/env';
 import { sendSuccess } from '@/shared/utils/apiResponse';
 import { AppError } from '@/shared/utils/AppError';
-import { registerSchema, loginSchema, forgotPasswordSchema, refreshSchema } from './auth.schema';
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  refreshSchema,
+} from './auth.schema';
 
 /**
  * O módulo auth NÃO reimplementa autenticação: apenas expõe uma API REST
@@ -114,11 +121,40 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/**
+ * Define a senha nova.
+ *
+ * O token do e-mail de recuperação é um access token comum, então o
+ * requireAuth já o valida e nos diz de quem é. Daí basta trocar a senha
+ * desse usuário — sem pedir a senha antiga, que é justamente o que a
+ * pessoa não tem.
+ */
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { password } = resetPasswordSchema.parse(req.body);
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(req.user!.id, { password });
+
+    if (error) {
+      throw new AppError('RESET_PASSWORD_FAILED', error.message, 400);
+    }
+
+    sendSuccess(res, { message: 'Senha alterada. Entre com a nova senha.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
 
-    const { error } = await supabaseAnon.auth.resetPasswordForEmail(email);
+    const { error } = await supabaseAnon.auth.resetPasswordForEmail(
+      email,
+      // Sem redirectTo o Supabase usa o "Site URL" do painel dele. Apontar
+      // explicitamente evita que o link do e-mail leve pra lugar nenhum.
+      env.APP_URL ? { redirectTo: `${env.APP_URL}/app/nova-senha` } : undefined
+    );
 
     if (error) {
       throw new AppError('FORGOT_PASSWORD_FAILED', error.message, 400);

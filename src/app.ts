@@ -21,6 +21,7 @@ import notificationsRoutes from '@/modules/notifications/notifications.routes';
 import searchRoutes from '@/modules/search/search.routes';
 import advertisementsRoutes from '@/modules/advertisements/advertisements.routes';
 import statusRoutes from '@/modules/status/status.routes';
+import { reportsRouter, blocksRouter, myBlocksRouter } from '@/modules/moderation/moderation.routes';
 import { eventsRouter, profileEventsRouter } from '@/modules/events/events.routes';
 import { eventPostsRouter } from '@/modules/posts/posts.routes';
 import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
@@ -132,6 +133,11 @@ export function createApp() {
   // Página de status da sessão de testes (não faz parte da API do produto).
   app.use('/status', statusRoutes);
 
+  // Moderação: denunciar conteúdo e bloquear pessoas.
+  app.use('/reports', reportsRouter);
+  app.use('/profiles', blocksRouter);
+  app.use('/profile', myBlocksRouter);
+
   /**
    * PWA servido pelo próprio backend, quando WEB_DIST_PATH aponta pro dist
    * do `expo export --platform web`.
@@ -179,7 +185,10 @@ export function createApp() {
     // Assets soltos da landing e do PWA (logo, ícones, manifest, sw.js),
     // que moram na raiz de propósito: o service worker precisa estar em "/"
     // pra valer no site inteiro.
-    app.use(express.static(dist, { index: false }));
+    // extensions: ['html'] pra /privacidade e /termos funcionarem sem o
+    // ".html" no fim — são endereços que vão em loja de app e em e-mail,
+    // e ninguém digita extensão.
+    app.use(express.static(dist, { index: false, extensions: ['html'] }));
   }
 
   app.use(notFoundHandler);

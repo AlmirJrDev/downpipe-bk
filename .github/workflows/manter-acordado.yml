@@ -1,0 +1,43 @@
+# Mantém o serviço do Render acordado.
+#
+# O plano grátis hiberna depois de ~15 minutos sem visita, e a próxima
+# pessoa espera o serviço subir. Num link de divulgação isso derruba gente
+# na porta: ela clica, vê tela branca e fecha.
+#
+# ISTO É PALIATIVO, NÃO SOLUÇÃO. O certo é o plano pago, que não hiberna.
+# Duas coisas a saber antes de manter isto ligado:
+#
+#  1. O grátis dá 750 horas de instância por mês. Acordado o tempo todo, um
+#     serviço consome ~730 — cabe, mas só se este for o ÚNICO serviço grátis
+#     da conta. Criar um segundo estoura o limite e os dois caem.
+#
+#  2. Manter acordado por ping vai contra a intenção do plano grátis. Não é
+#     proibido, mas é conhecidamente mal visto — e a Render pode mudar isso.
+#
+# Para desligar: apague este arquivo, ou desative o workflow na aba Actions.
+name: Manter acordado
+
+on:
+  schedule:
+    # A cada 10 minutos. O corte da Render é 15, então há folga pra um ping
+    # atrasar sem o serviço dormir. O cron do GitHub não é pontual — atrasos
+    # de alguns minutos são normais, e é por isso que a margem existe.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acorda o serviço
+        run: |
+          # /health é a rota mais barata que existe: responde um JSON e não
+          # toca no banco.
+          codigo=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 \
+            https://downpipe.onrender.com/health)
+          echo "resposta: $codigo"
+          # Não falha o workflow por um ping perdido: uma falha isolada aqui
+          # vira e-mail de alerta e ruído, sem significar nada.
+          if [ "$codigo" != "200" ]; then
+            echo "::warning::O serviço respondeu $codigo. Se repetir, veja o Render."
+          fi

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidade — Downpipe</title>
+<meta name="description" content="O que o Downpipe coleta, por quê, e o que você pode pedir a qualquer momento.">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<meta name="theme-color" content="#0E0E0E">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{--preto:#0E0E0E;--carbono:#161616;--borda:#2A2A2A;--texto:#fff;--apagado:#A8A8A8;--fraco:#6E6E6E;--marca:#E53935}
+  html,body{margin:0;padding:0;background:var(--preto)}
+  body{color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding:0 20px 80px}
+  header{padding:44px 0 8px}
+  header img{height:22px;width:auto;display:block}
+  h1{font-size:clamp(26px,5vw,38px);line-height:1.15;font-weight:800;letter-spacing:-.02em;margin:32px 0 8px}
+  .data{color:var(--fraco);font-size:13px;margin:0 0 34px}
+  h2{font-size:clamp(18px,3vw,22px);font-weight:700;letter-spacing:-.01em;margin:38px 0 10px;padding-top:24px;border-top:1px solid var(--borda)}
+  h3{font-size:15px;font-weight:700;margin:22px 0 6px}
+  p,li{color:var(--apagado);font-size:15px;margin:0 0 12px}
+  ul{padding-left:20px;margin:0 0 16px}
+  li{margin-bottom:6px}
+  strong{color:var(--texto);font-weight:600}
+  a{color:var(--marca)}
+  .aviso{border:1px solid var(--borda);background:var(--carbono);padding:16px 18px;margin:0 0 30px}
+  .aviso p{margin:0;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:14px}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--borda);vertical-align:top}
+  th{color:var(--texto);font-size:12px;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+  td{color:var(--apagado)}
+  footer{border-top:1px solid var(--borda);margin-top:44px;padding-top:22px}
+  footer a{margin-right:18px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><a href="/"><img src="/logo-lp.png" alt="Downpipe"></a></header>
+
+  <h1>Privacidade</h1>
+  <p class="data">Última atualização: 1º de setembro de 2026</p>
+
+  <div class="aviso">
+    <p>
+      O Downpipe é uma rede social de carros. Quase tudo que você põe aqui é
+      <strong>público por natureza</strong> — é o ponto: seu carro aparecer pros
+      outros. Esta página explica o que é público, o que não é, e o que fica
+      guardado.
+    </p>
+  </div>
+
+  <h2>O que a gente guarda</h2>
+
+  <table>
+    <tr><th>Dado</th><th>Por quê</th><th>Quem vê</th></tr>
+    <tr><td>E-mail</td><td>Entrar na conta e recuperar a senha</td><td>Só você e a gente</td></tr>
+    <tr><td>@, nome, bio, foto de perfil</td><td>Te identificar no app</td><td>Qualquer pessoa</td></tr>
+    <tr><td>Carros, modificações, custos</td><td>É a sua garagem</td><td>Qualquer pessoa</td></tr>
+    <tr><td>Publicações e fotos</td><td>É o feed</td><td>Qualquer pessoa</td></tr>
+    <tr><td>Rolês e presença confirmada</td><td>Mostrar quem vai ao encontro</td><td>Qualquer pessoa</td></tr>
+    <tr><td>Curtidas, comentários, quem você segue</td><td>Funcionamento do app</td><td>Qualquer pessoa</td></tr>
+    <tr><td>Publicações salvas</td><td>Sua lista de referência</td><td><strong>Só você</strong></td></tr>
+    <tr><td>Denúncias e bloqueios</td><td>Moderação e segurança</td><td>Só a gente</td></tr>
+  </table>
+
+  <h3>Sua senha</h3>
+  <p>
+    Não guardamos. A autenticação é feita pelo Supabase, que armazena só um
+    resumo criptográfico dela — nem nós conseguimos ler a sua senha.
+  </p>
+
+  <h2>Localização</h2>
+  <p>
+    <strong>Não rastreamos você.</strong> O app pede sua localização em duas
+    situações, sempre com você pedindo primeiro:
+  </p>
+  <ul>
+    <li>
+      Quando você toca em <strong>“rolês perto de mim”</strong>: sua posição é
+      usada naquele momento para calcular a distância dos encontros, e não fica
+      guardada.
+    </li>
+    <li>
+      Quando você <strong>cria um rolê</strong> e usa o GPS para marcar o local:
+      aí a coordenada é do <em>encontro</em>, é pública, e fica guardada — é o
+      que faz as pessoas conseguirem chegar lá.
+    </li>
+  </ul>
+  <p>
+    Se você recusar a permissão, tudo continua funcionando: dá para buscar por
+    cidade e marcar o local no mapa com o dedo.
+  </p>
+
+  <h2>Quem mais toca nos seus dados</h2>
+  <p>Não vendemos nada a ninguém. Usamos estes serviços para o app existir:</p>
+  <ul>
+    <li><strong>Supabase</strong> — banco de dados, contas e armazenamento das fotos</li>
+    <li><strong>Render</strong> — servidor onde o app roda</li>
+    <li><strong>CARTO e OpenStreetMap</strong> — os mapas. Recebem só a área do mapa que está sendo desenhada</li>
+    <li><strong>Nominatim (OpenStreetMap)</strong> — transforma o endereço do rolê em coordenada</li>
+  </ul>
+  <p>
+    Não usamos rastreadores de publicidade nem cookies de terceiros. O app guarda
+    no seu navegador apenas o necessário para manter você logado.
+  </p>
+
+  <h2>O que você pode pedir</h2>
+  <p>
+    A LGPD te dá esses direitos, e a gente cumpre sem burocracia. Escreva para
+    o contato no fim da página:
+  </p>
+  <ul>
+    <li><strong>Ver</strong> tudo que temos sobre você</li>
+    <li><strong>Corrigir</strong> o que estiver errado</li>
+    <li><strong>Apagar sua conta</strong> e o que veio com ela</li>
+    <li><strong>Levar seus dados</strong> num arquivo</li>
+  </ul>
+
+  <h3>Sobre apagar a conta</h3>
+  <p>
+    Apagar a conta remove seu perfil, seus carros, suas publicações e suas fotos.
+    Duas exceções, e é justo você saber antes:
+  </p>
+  <ul>
+    <li>
+      Comentários seus em publicações de outras pessoas podem continuar, sem seu
+      nome, para a conversa não ficar sem sentido.
+    </li>
+    <li>
+      Fotos que <em>outra pessoa</em> tirou e marcou o seu carro continuam sendo
+      dela — o registro é de quem fotografou. Você pode desfazer a marcação a
+      qualquer momento.
+    </li>
+  </ul>
+
+  <h2>Menores de idade</h2>
+  <p>
+    O Downpipe é para maiores de 16 anos. Se soubermos de uma conta de alguém
+    mais novo sem consentimento dos responsáveis, ela é removida.
+  </p>
+
+  <h2>Mudanças</h2>
+  <p>
+    Se algo importante aqui mudar, avisamos dentro do app antes de valer. A data
+    no topo mostra a última revisão.
+  </p>
+
+  <h2>Falar com a gente</h2>
+  <p>
+    Dúvida, pedido ou reclamação sobre seus dados:
+    <a href="mailto:almir.gomes@grancoffee.com.br">almir.gomes@grancoffee.com.br</a>
+  </p>
+
+  <footer>
+    <a href="/">Início</a>
+    <a href="/termos">Termos de uso</a>
+    <a href="/app/">Abrir o app</a>
+  </footer>
+</div>
+</body>
+</html>

@@ -19,6 +19,10 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email('E-mail inválido'),
 });
 
+export const resetPasswordSchema = z.object({
+  password: z.string().min(8, 'A senha deve ter ao menos 8 caracteres'),
+});
+
 export const refreshSchema = z.object({
   refreshToken: z.string().min(1, 'refreshToken é obrigatório'),
 });
@@ -26,4 +30,5 @@ export const refreshSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type RefreshInput = z.infer<typeof refreshSchema>;

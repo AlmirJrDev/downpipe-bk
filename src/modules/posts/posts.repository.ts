@@ -98,6 +98,8 @@ export const postsRepository = {
       authorIdIn?: string[];
       excludeIds?: string[];
       idIn?: string[];
+      /** Autores a esconder — bloqueio, valendo nos dois sentidos. */
+      authorIdNotIn?: string[];
     },
     { limit, offset }: PaginationParams
   ): Promise<{ rows: PostRow[]; total: number }> {
@@ -113,6 +115,9 @@ export const postsRepository = {
     if (filters.eventId) query = query.eq("event_id", filters.eventId);
     if (filters.authorIdIn) query = query.in('author_id', filters.authorIdIn);
     if (filters.idIn) query = query.in('id', filters.idIn);
+    if (filters.authorIdNotIn && filters.authorIdNotIn.length > 0) {
+      query = query.not('author_id', 'in', `(${filters.authorIdNotIn.join(',')})`);
+    }
     if (filters.excludeIds && filters.excludeIds.length > 0) {
       query = query.not('id', 'in', `(${filters.excludeIds.join(',')})`);
     }

@@ -1,4 +1,5 @@
 import { AppError } from '@/shared/utils/AppError';
+import { moderationService } from '@/modules/moderation/moderation.service';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
@@ -120,7 +121,14 @@ export const postsService = {
     pagination: PaginationParams,
     viewerId?: string
   ) {
-    const { rows, total } = await postsRepository.list(filters, pagination);
+    // Bloqueio aplicado aqui, e não em cada chamador: este list() é o
+    // caminho do feed paginado, do perfil, da página do carro e do rolê.
+    // Filtrar num lugar só evita a peneira com furo.
+    const escondidos = await moderationService.hiddenIdsFor(viewerId);
+    const { rows, total } = await postsRepository.list(
+      { ...filters, authorIdNotIn: escondidos },
+      pagination
+    );
     return buildPostsResponse(rows, total, viewerId);
   },
 
@@ -137,7 +145,11 @@ export const postsService = {
    */
   async getFeed(pagination: PaginationParams, viewerId?: string) {
     if (viewerId && pagination.page === 1) {
-      const followingIds = await followsRepository.listFollowingIds(viewerId);
+      const escondidos = await moderationService.hiddenIdsFor(viewerId);
+      const todosOsSeguidos = await followsRepository.listFollowingIds(viewerId);
+      // Bloquear já desfaz o seguir, mas quem me bloqueou depois pode ter
+      // ficado na lista — filtrar aqui fecha essa brecha.
+      const followingIds = todosOsSeguidos.filter((id) => !escondidos.includes(id));
 
       if (followingIds.length > 0) {
         const followed = await postsRepository.list(
@@ -151,7 +163,7 @@ export const postsService = {
 
         const remaining = pagination.limit - followed.rows.length;
         const recent = await postsRepository.list(
-          { excludeIds: followed.rows.map((row) => row.id) },
+          { excludeIds: followed.rows.map((row) => row.id), authorIdNotIn: escondidos },
           { limit: remaining, offset: 0, page: 1 }
         );
 

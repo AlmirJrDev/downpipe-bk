@@ -46,6 +46,12 @@ services:
       - key: WEB_DIST_PATH
         value: ./web
 
+      # Endereço público, usado no link do e-mail de recuperação de senha.
+      # Sem ele o Supabase manda pro Site URL do painel dele, que pode não
+      # ser o nosso — e o link do e-mail leva a pessoa pra lugar nenhum.
+      - key: APP_URL
+        value: https://downpipe.onrender.com
+
     # PORT não entra aqui: o Render injeta a porta e o env.ts já a lê.
     # DATABASE_URL também não: só o runner de migrations usa, e migrations
     # continuam rodando da sua máquina, não do servidor.

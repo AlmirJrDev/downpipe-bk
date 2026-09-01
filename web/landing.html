@@ -274,6 +274,8 @@ footer { border-top: 1px solid var(--borda); padding: 32px 0 52px; }
 footer .centro { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
 footer img { height: 17px; width: auto; opacity: .55; }
 footer p { color: var(--fraco); font-size: 12px; margin: 0; }
+footer .legal a { color: var(--apagado); text-decoration: none; margin: 0 10px; font-size: 12px; }
+footer .legal a:hover { color: var(--texto); text-decoration: underline; }
 
 /* ---------- revelação no scroll ---------- */
 .revela { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
@@ -571,6 +573,10 @@ footer p { color: var(--fraco); font-size: 12px; margin: 0; }
   <div class="centro">
     <img src="/logo-lp.png" alt="Downpipe">
     <p>Rede social automotiva · feito no Brasil</p>
+    <p class="legal">
+      <a href="/privacidade">Privacidade</a>
+      <a href="/termos">Termos de uso</a>
+    </p>
   </div>
 </footer>
 
