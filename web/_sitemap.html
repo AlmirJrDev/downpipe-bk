@@ -3,13 +3,26 @@
   body { overscroll-behavior-y: none; }
 
   /* Altura pela área realmente visível, não pelo viewport de layout.
-     O Expo deixa html/body/#root em height:100%, e no Safari em modo
-     standalone isso resolve contra um viewport mais alto que a tela — o app
-     fica maior do que cabe e sobra uma faixa embaixo da barra de navegação.
-     Só aparecia no iPhone; no Android o 100% já batia com a tela.
-     O dvh acompanha a área visível de verdade. */
+     O Expo deixa html/body/#root em height:100%, que resolve contra um
+     viewport mais alto que a tela. O dvh acompanha a área visível. */
   @supports (height: 100dvh) {
     html, body, #root { height: 100dvh; }
+  }
+
+  /* Instalado na tela inicial não existe barra de navegador para recolher,
+     então a área visível É a tela inteira: dvh e lvh deveriam dar o mesmo
+     número. No iPhone 13 não dão. O iOS devolve dvh = tela menos a
+     safe-area do topo (797 de 844) mesmo posicionando a página no y=0 —
+     ela começa embaixo do relógio e termina 47px antes do fim da tela.
+     Essa é a faixa preta embaixo da barra de abas.
+
+     Em standalone o lvh é a medida certa por definição, já que não existe
+     interface do navegador para retrair. Onde o iOS acerta, os dois valores
+     são iguais e esta regra não muda nada. */
+  @media (display-mode: standalone) {
+    @supports (height: 100lvh) {
+      html, body, #root { height: 100lvh; }
+    }
   }
 
   /* Nada de padding de safe-area aqui.
