@@ -62,16 +62,27 @@
     var raiz = document.getElementById('root');
     var vv = window.visualViewport;
 
-    // A barra de abas: o bloco largo e baixo mais próximo do fim da página.
-    var barra = null, maiorTopo = -1;
+    // A barra de abas, achada pelo que ela tem de único: fundo #0a0a0a,
+    // largura cheia e exatamente cinco ícones. As duas tentativas anteriores
+    // — "o bloco mais baixo" — pegavam o rodapé de um post do feed rolado.
+    var barra = null;
     var todos = document.querySelectorAll('div');
     for (var i = 0; i < todos.length; i++) {
-      var r = todos[i].getBoundingClientRect();
-      if (r.height > 40 && r.height < 160 && r.width > window.innerWidth * 0.9 && r.top > maiorTopo) {
-        maiorTopo = r.top; barra = todos[i];
-      }
+      var e = todos[i];
+      if (e.querySelectorAll('svg').length !== 5) continue;
+      var r = e.getBoundingClientRect();
+      if (r.width < window.innerWidth * 0.9) continue;
+      if (r.height < 20 || r.height > 200) continue;
+      barra = e;
     }
     var rb = barra ? barra.getBoundingClientRect() : null;
+
+    // O que existe embaixo da barra, se existir alguma coisa.
+    var abaixo = 'n/d';
+    if (rb) {
+      var alvo = document.elementFromPoint(window.innerWidth / 2, Math.min(rb.bottom + 12, window.innerHeight - 1));
+      abaixo = alvo ? (alvo.tagName.toLowerCase() + ' ' + getComputedStyle(alvo).backgroundColor) : 'nada';
+    }
 
     return [
       ['standalone', (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? 'SIM' : 'nao'],
@@ -86,9 +97,11 @@
       ['inset topo', inset('top')],
       ['inset baixo', inset('bottom')],
       ['barra topo', rb ? Math.round(rb.top) : 'n/d'],
-      ['barra fim', rb ? Math.round(rb.bottom) : 'n/d'],
       ['barra padBot', barra ? getComputedStyle(barra).paddingBottom : 'n/d'],
-      ['sobra abaixo', rb ? Math.round(window.innerHeight - rb.bottom) : 'n/d']
+      ['barra fim', rb ? Math.round(rb.bottom) : 'n/d'],
+      ['sobra abaixo', rb ? Math.round(window.innerHeight - rb.bottom) : 'n/d'],
+      ['embaixo da barra', abaixo],
+      ['body altura', Math.round(document.body.getBoundingClientRect().height)]
     ];
   }
 
