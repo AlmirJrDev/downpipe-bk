@@ -40,62 +40,90 @@
     }
   }
 </style><script>
-if (location.search.indexOf('diag=1') !== -1) {
-  window.addEventListener('load', function () {
-    setTimeout(function () {
-      var sonda = document.createElement('div');
-      sonda.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom);width:1px;';
-      document.body.appendChild(sonda);
-      var insetBaixo = sonda.getBoundingClientRect().height;
-      var insetCima = 0;
-      var s2 = document.createElement('div');
-      s2.style.cssText = 'position:fixed;top:0;height:env(safe-area-inset-top);width:1px;';
-      document.body.appendChild(s2);
-      insetCima = s2.getBoundingClientRect().height;
+(function () {
+  function medir() {
+    function inset(lado) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;' + lado + ':0;height:env(safe-area-inset-' + lado + ');width:1px;';
+      document.body.appendChild(d);
+      var v = d.getBoundingClientRect().height;
+      d.remove();
+      return v;
+    }
+    function unidade(u) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;height:100' + u + ';width:1px;visibility:hidden;';
+      document.body.appendChild(d);
+      var v = Math.round(d.getBoundingClientRect().height);
+      d.remove();
+      return v;
+    }
 
-      var raiz = document.getElementById('root');
-      var vv = window.visualViewport;
+    var raiz = document.getElementById('root');
+    var vv = window.visualViewport;
 
-      // Acha a barra de abas: o container mais baixo com vários botões.
-      var barra = null, maiorTopo = -1;
-      var candidatos = document.querySelectorAll('div');
-      for (var i = 0; i < candidatos.length; i++) {
-        var e = candidatos[i];
-        var r = e.getBoundingClientRect();
-        if (r.height > 40 && r.height < 140 && r.width > window.innerWidth * 0.9 && r.top > maiorTopo) {
-          maiorTopo = r.top; barra = e;
-        }
+    // A barra de abas: o bloco largo e baixo mais próximo do fim da página.
+    var barra = null, maiorTopo = -1;
+    var todos = document.querySelectorAll('div');
+    for (var i = 0; i < todos.length; i++) {
+      var r = todos[i].getBoundingClientRect();
+      if (r.height > 40 && r.height < 160 && r.width > window.innerWidth * 0.9 && r.top > maiorTopo) {
+        maiorTopo = r.top; barra = todos[i];
       }
-      var rb = barra ? barra.getBoundingClientRect() : null;
+    }
+    var rb = barra ? barra.getBoundingClientRect() : null;
 
-      var linhas = [
-        ['innerHeight', window.innerHeight],
-        ['clientHeight', document.documentElement.clientHeight],
-        ['visualViewport', vv ? Math.round(vv.height) : 'n/d'],
-        ['screen.height', window.screen.height],
-        ['scrollHeight', document.documentElement.scrollHeight],
-        ['#root altura', raiz ? Math.round(raiz.getBoundingClientRect().height) : 'n/d'],
-        ['#root css', raiz ? getComputedStyle(raiz).height : 'n/d'],
-        ['inset topo', insetCima],
-        ['inset baixo', insetBaixo],
-        ['standalone', (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? 'sim' : 'nao'],
-        ['barra topo', rb ? Math.round(rb.top) : 'n/d'],
-        ['barra fim', rb ? Math.round(rb.bottom) : 'n/d'],
-        ['barra padBot', barra ? getComputedStyle(barra).paddingBottom : 'n/d'],
-        ['sobra abaixo', rb ? Math.round(window.innerHeight - rb.bottom) : 'n/d']
-      ];
+    return [
+      ['standalone', (window.matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? 'SIM' : 'nao'],
+      ['innerHeight', window.innerHeight],
+      ['visualViewport', vv ? Math.round(vv.height) : 'n/d'],
+      ['screen.height', window.screen.height],
+      ['100svh', unidade('svh')],
+      ['100dvh', unidade('dvh')],
+      ['100lvh', unidade('lvh')],
+      ['#root altura', raiz ? Math.round(raiz.getBoundingClientRect().height) : 'n/d'],
+      ['#root css', raiz ? getComputedStyle(raiz).height : 'n/d'],
+      ['inset topo', inset('top')],
+      ['inset baixo', inset('bottom')],
+      ['barra topo', rb ? Math.round(rb.top) : 'n/d'],
+      ['barra fim', rb ? Math.round(rb.bottom) : 'n/d'],
+      ['barra padBot', barra ? getComputedStyle(barra).paddingBottom : 'n/d'],
+      ['sobra abaixo', rb ? Math.round(window.innerHeight - rb.bottom) : 'n/d']
+    ];
+  }
 
-      var p = document.createElement('div');
-      p.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;' +
-        'font:11px ui-monospace,Menlo,monospace;padding:10px 12px;line-height:1.5;border-bottom:2px solid #0f0;';
-      var html = '<b style="color:#fff">MEDIDAS — mande print desta caixa</b><br>';
-      for (var j = 0; j < linhas.length; j++) html += linhas[j][0] + ': ' + linhas[j][1] + '<br>';
-      p.innerHTML = html;
-      document.body.appendChild(p);
-      sonda.remove(); s2.remove();
-    }, 1200);
-  });
-}
+  function mostrar() {
+    if (document.getElementById('painelDiag')) return;
+    var linhas = medir();
+    var p = document.createElement('div');
+    p.id = 'painelDiag';
+    p.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#000;color:#0f0;' +
+      'font:11px ui-monospace,Menlo,monospace;padding:10px 12px;line-height:1.5;border-bottom:2px solid #0f0;';
+    var html = '<b style="color:#fff">MEDIDAS — mande print</b><br>';
+    for (var j = 0; j < linhas.length; j++) html += linhas[j][0] + ': ' + linhas[j][1] + '<br>';
+    html += '<span style="color:#888">toque aqui para fechar</span>';
+    p.innerHTML = html;
+    p.onclick = function () { p.remove(); };
+    document.body.appendChild(p);
+  }
+
+  // Dois caminhos pra abrir: ?diag=1 no navegador, ou cinco toques rápidos
+  // no topo da tela — que é o único que funciona dentro do PWA instalado,
+  // onde não dá pra digitar endereço.
+  if (location.search.indexOf('diag=1') !== -1) {
+    window.addEventListener('load', function () { setTimeout(mostrar, 1200); });
+  }
+
+  var toques = 0, ultimo = 0;
+  document.addEventListener('touchstart', function (e) {
+    var y = e.touches && e.touches[0] ? e.touches[0].clientY : 999;
+    if (y > 70) { toques = 0; return; }
+    var agora = Date.now();
+    toques = (agora - ultimo < 800) ? toques + 1 : 1;
+    ultimo = agora;
+    if (toques >= 5) { toques = 0; mostrar(); }
+  }, { passive: true });
+})();
 </script><script>
   window.__promptInstalar = null;
   window.addEventListener('beforeinstallprompt', function (e) {
