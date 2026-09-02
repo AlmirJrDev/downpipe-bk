@@ -54,7 +54,21 @@ export function createApp() {
             scriptSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com'],
             imgSrc: ["'self'", 'data:', 'blob:', supabase, carto, 'https://basemaps.cartocdn.com'],
-            connectSrc: ["'self'", supabase, 'https://unpkg.com', carto, 'https://basemaps.cartocdn.com'],
+            // blob: e data: aqui não é redundância com o imgSrc acima. Uma
+            // foto escolhida no navegador chega como blob:/data:, e pra
+            // virar arquivo de upload ela é lida com fetch — que responde a
+            // connect-src, não a img-src. Sem isto a prévia aparecia (img-src
+            // permite) mas o envio falhava, o que fazia parecer problema do
+            // servidor quando o pedido nem chegava a sair.
+            connectSrc: [
+              "'self'",
+              'blob:',
+              'data:',
+              supabase,
+              'https://unpkg.com',
+              carto,
+              'https://basemaps.cartocdn.com',
+            ],
             // O MapLibre cria seus workers a partir de blob:.
             workerSrc: ["'self'", 'blob:'],
             childSrc: ["'self'", 'blob:'],
