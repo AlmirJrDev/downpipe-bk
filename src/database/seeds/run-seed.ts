@@ -37,7 +37,7 @@ async function run() {
          ($1, 'Kit de suspensão coilover com 15% off', 'Válido para os primeiros 50 pedidos do mês',
           'https://placehold.co/600x300?text=Turbo+Shop', 'Ver oferta',
           'https://turboshop.example.com/promo', 'active', now(), now() + interval '30 days'),
-         ($1, 'Revisão completa de motor', 'Agende com desconto para membros Gearhead',
+         ($1, 'Revisão completa de motor', 'Agende com desconto para membros Downpipe',
           'https://placehold.co/600x300?text=Revisao+Motor', 'Agendar',
           'https://turboshop.example.com/revisao', 'active', now(), now() + interval '30 days')`,
       [advertiserId]

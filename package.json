@@ -1,7 +1,7 @@
 {
-  "name": "gearhead-backend",
+  "name": "downpipe-backend",
   "version": "0.1.0",
-  "description": "Backend REST API do Gearhead - rede social para entusiastas de carros",
+  "description": "Backend REST API do Downpipe - rede social para entusiastas de carros",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

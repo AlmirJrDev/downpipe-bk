@@ -1,6 +1,6 @@
-# Gearhead — Backend
+# Downpipe — Backend
 
-API REST do **Gearhead**, rede social para entusiastas de carros. Construída em
+API REST do **Downpipe**, rede social para entusiastas de carros. Construída em
 TypeScript + Express, usando **Supabase** (Auth, Postgres, Storage) como
 infraestrutura principal.
 
@@ -8,8 +8,15 @@ infraestrutura principal.
 > Postgres, Migrations, Auth, Profiles, Catálogo de Veículos, Sincronização
 > FIPE, Carros do usuário, Storage, Projetos, Etapas, Modificações,
 > Estatísticas, Posts, Mídia, Feed, Likes, Comentários, Follows,
-> Notificações, Busca, Anunciantes, Anúncios). O backend do MVP do Gearhead
+> Notificações, Busca, Anunciantes, Anúncios). O backend do MVP do Downpipe
 > está funcionalmente completo conforme a especificação original.
+
+> **Sobre a palavra "gearhead" no código.** O produto se chama Downpipe, mas
+> `gearhead` continua aparecendo em `gearhead_since` (coluna) e
+> `gearheadSince` (campo da API), e em `'Novo Gearhead'` como nome padrão de
+> quem acaba de se cadastrar. Ali não é o nome antigo: é o substantivo — quem
+> vive carro *é* um gearhead. **Não troque.** Renomear a coluna exige
+> migration e quebra o contrato da API para o app que já está no ar.
 
 ## Stack
 

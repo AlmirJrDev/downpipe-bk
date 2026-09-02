@@ -5,5 +5,5 @@ const app = createApp();
 
 app.listen(env.PORT, () => {
   // eslint-disable-next-line no-console
-  console.log(`🚗 Gearhead backend rodando na porta ${env.PORT} (${env.NODE_ENV})`);
+  console.log(`🚗 Downpipe backend rodando na porta ${env.PORT} (${env.NODE_ENV})`);
 });
