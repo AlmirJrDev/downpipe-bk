@@ -12,6 +12,7 @@
  */
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 
 // A política do Nominatim exige identificar a aplicação e um contato.
 const USER_AGENT = 'Downpipe/1.0 (app de projetos de carros; contato via downpipe.app)';
@@ -62,6 +63,30 @@ async function query(search: string): Promise<Coordinates | null> {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
 
   return { latitude, longitude, precision: "exact" };
+}
+
+/** O que o pino no mapa vira em texto. */
+export interface EnderecoDoPonto {
+  /** Rua e número quando existem; vazio quando o Nominatim só sabe a região. */
+  location: string;
+  city: string;
+}
+
+interface NominatimAddress {
+  road?: string;
+  house_number?: string;
+  suburb?: string;
+  neighbourhood?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  state?: string;
+}
+
+interface NominatimReverse {
+  address?: NominatimAddress;
+  display_name?: string;
 }
 
 export interface AddressSuggestion {
@@ -116,6 +141,51 @@ export const geocodingService = {
       // Busca de endereço fora do ar não pode quebrar a tela de criar evento:
       // o organizador ainda pode arrastar o pino ou usar o GPS.
       return [];
+    }
+  },
+
+  /**
+   * O caminho inverso: o pino que a pessoa cravou no mapa vira endereço e
+   * cidade, pra ela não ter que digitar de novo o que já apontou.
+   *
+   * A cidade sai de city/town/village/municipality porque o Nominatim usa
+   * chaves diferentes conforme o tamanho do lugar — só "city" deixaria
+   * distrito e cidade pequena de fora, justamente onde mais rolê acontece.
+   *
+   * Nunca lança, pelo mesmo motivo do resto do arquivo: não conseguir
+   * resolver é só a pessoa preencher na mão, não um erro de tela.
+   */
+  async reverse(latitude: number, longitude: number): Promise<EnderecoDoPonto | null> {
+    const params = new URLSearchParams({
+      lat: String(latitude),
+      lon: String(longitude),
+      format: 'json',
+      addressdetails: '1',
+      // 18 = nível de rua. Mais fino que isso devolve o número da casa de
+      // um vizinho qualquer como se fosse o ponto.
+      zoom: '18',
+    });
+
+    try {
+      const response = await fetch(`${NOMINATIM_REVERSE_URL}?${params.toString()}`, {
+        headers: { 'User-Agent': USER_AGENT, 'Accept-Language': 'pt-BR' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+
+      if (!response.ok) return null;
+
+      const dados = (await response.json()) as NominatimReverse;
+      const a = dados.address;
+      if (!a) return null;
+
+      const cidade = a.city ?? a.town ?? a.village ?? a.municipality ?? '';
+      const rua = [a.road, a.house_number].filter(Boolean).join(', ');
+      const local = rua || a.neighbourhood || a.suburb || '';
+
+      if (!cidade && !local) return null;
+      return { location: local, city: cidade };
+    } catch {
+      return null;
     }
   },
 
