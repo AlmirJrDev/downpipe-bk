@@ -43,14 +43,27 @@ export const pushService = {
 
       await Promise.all(
         subscriptions.map(async (sub) => {
+          // Qual serviço de push é este: fcm.googleapis.com (Chrome/Android),
+          // web.push.apple.com (Safari/iOS) ou updates.push.services.mozilla.com
+          // (Firefox). Diferenciar isso no log é o que separa "o Google recusou
+          // meu envio" de "a Apple recusou o dela" quando os dois aparelhos
+          // testam junto e só um recebe.
+          const servico = new URL(sub.endpoint).hostname;
           try {
-            await webpush.sendNotification(
+            const resposta = await webpush.sendNotification(
               {
                 endpoint: sub.endpoint,
                 keys: { p256dh: sub.p256dh, auth: sub.auth },
               },
               JSON.stringify(payload)
             );
+            // Sucesso aqui só prova que o SERVIÇO DE PUSH aceitou a entrega
+            // (200/201) — não que o aparelho já mostrou a notificação. O que
+            // acontece depois desse ponto (acordar o navegador, entregar ao
+            // service worker) é responsabilidade da Apple/Google, fora do
+            // alcance do backend.
+            // eslint-disable-next-line no-console
+            console.log(`Push aceito por ${servico}: status ${resposta.statusCode}`);
           } catch (err) {
             const status = (err as { statusCode?: number }).statusCode;
             // 404/410 = o navegador cancelou essa inscrição (desinstalou o
@@ -61,7 +74,7 @@ export const pushService = {
               await pushSubscriptionsRepository.deleteByEndpoint(sub.endpoint).catch(() => {});
             } else {
               // eslint-disable-next-line no-console
-              console.warn('Falha ao enviar push:', status ?? err);
+              console.warn(`Falha ao enviar push por ${servico}:`, status ?? err);
             }
           }
         })
