@@ -24,6 +24,7 @@ function toPublicEvent(
     startsAt: row.starts_at,
     location: row.location,
     city: row.city,
+    address: row.address,
     photoUrl: row.photo_url,
     visibility: row.visibility,
     latitude: row.latitude,

@@ -10,6 +10,7 @@ export interface EventRow {
   starts_at: string;
   location: string;
   city: string;
+  address: string | null;
   photo_url: string | null;
   visibility: 'public' | 'link';
   latitude: number | null;
@@ -50,7 +51,7 @@ export interface AttendeeRow {
 // de events até profiles (many-to-many), e sem nomear a relação o PostgREST
 // recusa a consulta inteira com PGRST201.
 const EVENT_SELECT = `
-  id, organizer_id, name, description, starts_at, location, city, photo_url,
+  id, organizer_id, name, description, starts_at, location, city, address, photo_url,
   visibility, latitude, longitude, coords_precision, created_at, updated_at,
   profiles!events_organizer_id_fkey ( username, display_name, avatar_url, is_organizer ),
   event_attendees ( count )
@@ -125,6 +126,7 @@ export const eventsRepository = {
         starts_at: input.startsAt,
         location: input.location,
         city: input.city,
+        address: input.address ?? null,
         visibility: input.visibility ?? 'public',
       })
       .select('id')
@@ -141,6 +143,7 @@ export const eventsRepository = {
     if (input.startsAt !== undefined) patch.starts_at = input.startsAt;
     if (input.location !== undefined) patch.location = input.location;
     if (input.city !== undefined) patch.city = input.city;
+    if (input.address !== undefined) patch.address = input.address;
     if (input.visibility !== undefined) patch.visibility = input.visibility;
 
     const { error } = await supabaseAdmin.from('events').update(patch).eq('id', id);

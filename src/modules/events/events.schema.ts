@@ -9,6 +9,13 @@ const eventBaseSchema = {
   startsAt: z.string().datetime({ offset: true, message: 'startsAt deve ser uma data ISO 8601' }),
   location: z.string().min(1, 'location é obrigatório').max(200),
   city: z.string().min(1, 'city é obrigatória').max(80),
+  /**
+   * Rua e número, resolvidos a partir do pino no mapa (geocodificação
+   * reversa) — complementar a "location", que é como o pessoal chama o
+   * lugar ("Posto Graal"), não substituto. Null quando não há coordenada
+   * ou o ponto caiu onde o Nominatim não soube nomear.
+   */
+  address: z.string().max(300).nullable().optional(),
   visibility: eventVisibilityEnum.optional(),
   /**
    * Coordenada escolhida pelo organizador (pino no mapa, GPS ou sugestão de
