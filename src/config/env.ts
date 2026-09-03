@@ -43,6 +43,20 @@ const envSchema = z.object({
    * Se ficar vazio, a página funciona mas nunca mostra o app como online.
    */
   STATUS_SECRET: z.string().min(8, 'STATUS_SECRET deve ter ao menos 8 caracteres').optional(),
+
+  /**
+   * Par de chaves VAPID do Web Push — autentica o servidor perante os
+   * serviços de push do navegador (FCM no Chrome, o próprio Apple Push no
+   * Safari) sem precisar de credencial por plataforma.
+   *
+   * Opcionais de propósito: sem elas o pushService só loga um aviso e não
+   * envia nada — o resto do app continua de pé. Gerar um par novo:
+   * `node -e "console.log(require('web-push').generateVAPIDKeys())"`.
+   */
+  WEB_PUSH_VAPID_PUBLIC_KEY: z.string().optional(),
+  WEB_PUSH_VAPID_PRIVATE_KEY: z.string().optional(),
+  /** E-mail de contato que os serviços de push podem usar em caso de abuso. */
+  WEB_PUSH_SUBJECT: z.string().default('mailto:downpipeapp@gmail.com'),
 });
 
 const parsed = envSchema.safeParse(process.env);

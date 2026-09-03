@@ -18,6 +18,7 @@ import { postSaveRouter, savedPostsRouter } from '@/modules/saved-posts/saved-po
 import { postCommentsRouter, commentsRouter } from '@/modules/comments/comments.routes';
 import followsRoutes from '@/modules/follows/follows.routes';
 import notificationsRoutes from '@/modules/notifications/notifications.routes';
+import { pushSubscriptionsRouter } from '@/modules/push-subscriptions/push-subscriptions.routes';
 import searchRoutes from '@/modules/search/search.routes';
 import advertisementsRoutes from '@/modules/advertisements/advertisements.routes';
 import statusRoutes from '@/modules/status/status.routes';
@@ -133,6 +134,7 @@ export function createApp() {
 
   // Fase 7
   app.use('/notifications', notificationsRoutes);
+  app.use('/push', pushSubscriptionsRouter);
   app.use('/search', searchRoutes);
 
   // Encontros/rolês

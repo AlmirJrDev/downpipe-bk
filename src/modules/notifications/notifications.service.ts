@@ -1,6 +1,80 @@
 import { AppError } from '@/shared/utils/AppError';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
+import { profilesRepository } from '@/modules/profiles/profiles.repository';
+import { pushService } from '@/shared/push/push.service';
 import { notificationsRepository, NotificationRow } from './notifications.repository';
+
+/**
+ * Push por tipo de notificação — mesma copy que a lista dentro do app usa
+ * (app/notifications.tsx), pra quem recebe o toque na tela e quem recebe
+ * no sininho lerem a mesma frase.
+ *
+ * "like" fica de fora de propósito: é o tipo de maior volume e menor
+ * intenção — cinco curtidas numa foto seriam cinco toques no celular por
+ * algo que não pede ação nenhuma. Continua aparecendo no sininho.
+ */
+type TipoComPush = 'comment' | 'follow' | 'project_update' | 'event_attend' | 'car_tag';
+
+const FRASE: Record<TipoComPush, string> = {
+  comment: 'comentou na sua publicação',
+  follow: 'começou a seguir você',
+  project_update: 'publicou uma atualização do projeto',
+  event_attend: 'vai num rolê',
+  car_tag: 'marcou seu carro numa foto',
+};
+
+/**
+ * Monta e dispara o push de um tipo específico. Nunca lança — a mesma regra
+ * de "notificar não pode derrubar a ação original" que já vale pro registro
+ * interno vale aqui, com um motivo a mais: isto faz uma consulta de perfil
+ * a mais, e essa consulta também não pode virar 500 pra quem só queria
+ * curtir um post.
+ *
+ * `recipientUsername` só é buscado para "comment": é o único tipo em que a
+ * tela de destino é o PRÓPRIO perfil de quem recebe (ver app/notifications.tsx,
+ * a função `open`) — os outros tipos levam pro perfil de quem agiu ou pro
+ * evento, que já vêm resolvidos sem outra consulta.
+ */
+async function push(
+  tipo: TipoComPush,
+  recipientId: string,
+  actorId: string,
+  extra: { postId?: string; eventId?: string }
+) {
+  try {
+    const actor = await profilesRepository.findById(actorId);
+    if (!actor) return;
+
+    let url: string;
+    switch (tipo) {
+      case 'follow':
+        url = `/app/user/${actor.username}`;
+        break;
+      case 'event_attend':
+        url = `/app/event/${extra.eventId}`;
+        break;
+      case 'project_update':
+      case 'car_tag':
+        url = `/app/user-posts/${actor.username}?postId=${extra.postId}`;
+        break;
+      case 'comment': {
+        const recipient = await profilesRepository.findById(recipientId);
+        if (!recipient) return;
+        url = `/app/user-posts/${recipient.username}?postId=${extra.postId}`;
+        break;
+      }
+    }
+
+    await pushService.sendToUser(recipientId, {
+      title: actor.display_name,
+      body: FRASE[tipo],
+      url,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(`Falha ao montar push de ${tipo}:`, err);
+  }
+}
 
 function toPublicNotification(row: NotificationRow) {
   return {
@@ -48,6 +122,7 @@ export const notificationsService = {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificação de comment:', err);
     }
+    void push('comment', recipientId, actorId, { postId });
   },
 
   async notifyFollow(recipientId: string, actorId: string) {
@@ -57,6 +132,7 @@ export const notificationsService = {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificação de follow:', err);
     }
+    void push('follow', recipientId, actorId, {});
   },
 
   async notifyProjectUpdate(followerIds: string[], actorId: string, postId: string) {
@@ -68,6 +144,7 @@ export const notificationsService = {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificações de project_update:', err);
     }
+    for (const recipientId of followerIds) void push('project_update', recipientId, actorId, { postId });
   },
 
   /**
@@ -84,6 +161,7 @@ export const notificationsService = {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificações de event_attend:', err);
     }
+    for (const recipientId of followerIds) void push('event_attend', recipientId, actorId, { eventId });
   },
 
   /** Marcaram o carro de alguém numa foto — o aviso que faz a marcação
@@ -95,6 +173,7 @@ export const notificationsService = {
       // eslint-disable-next-line no-console
       console.warn('Falha ao criar notificação de car_tag:', err);
     }
+    void push('car_tag', recipientId, actorId, { postId });
   },
 
   // ---- Leitura, usada pelos endpoints REST de notificações.
