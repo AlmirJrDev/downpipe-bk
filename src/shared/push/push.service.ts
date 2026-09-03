@@ -23,6 +23,13 @@ export interface PushPayload {
   body: string;
   /** Caminho relativo (ex: "/app/event/uuid") pro clique abrir a tela certa. */
   url: string;
+  /**
+   * Total de não lidas depois desta notificação — o mesmo número que
+   * /notifications/unread-count devolveria. Vai no número do ícone do app
+   * (Badging API), lido pelo service worker mesmo com o app fechado, que é
+   * justamente o caso que o app sozinho não consegue cobrir.
+   */
+  badge: number;
 }
 
 export const pushService = {
@@ -80,7 +87,9 @@ export const pushService = {
             // service worker) é responsabilidade da Apple/Google, fora do
             // alcance do backend.
             // eslint-disable-next-line no-console
-            console.log(`Push aceito por ${servico}: status ${resposta.statusCode}`);
+            console.log(
+              `Push aceito por ${servico}: status ${resposta.statusCode}, badge ${payload.badge}`
+            );
           } catch (err) {
             const status = (err as { statusCode?: number }).statusCode;
             // 404/410 = o navegador cancelou essa inscrição (desinstalou o

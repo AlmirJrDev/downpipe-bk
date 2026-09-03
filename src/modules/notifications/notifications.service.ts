@@ -65,10 +65,16 @@ async function push(
       }
     }
 
+    // Contagem de verdade, lida depois de criar a notificação que disparou
+    // este push — é o mesmo número que /notifications/unread-count devolve,
+    // então o badge do ícone nunca diverge do sino dentro do app.
+    const badge = await notificationsRepository.countUnread(recipientId);
+
     await pushService.sendToUser(recipientId, {
       title: actor.display_name,
       body: FRASE[tipo],
       url,
+      badge,
     });
   } catch (err) {
     // eslint-disable-next-line no-console
