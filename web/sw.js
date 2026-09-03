@@ -72,15 +72,32 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: '/icon-192.png',
-      // No Android o "badge" é o ícone monocromático da barra de status.
-      // Reusar o icon-192 é um resultado razoável sem criar um asset novo
-      // só pra isso.
-      badge: '/icon-192.png',
-      data: { url: payload.url },
-    })
+    (async () => {
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: '/icon-192.png',
+        // No Android o "badge" aqui é o ícone monocromático da barra de
+        // status — uma coisa completamente diferente do número no ícone
+        // do app logo abaixo. Reusar o icon-192 é um resultado razoável
+        // sem criar um asset novo só pra isso.
+        badge: '/icon-192.png',
+        data: { url: payload.url },
+      });
+
+      // O número no ícone do app (Badging API) — não tem nada a ver com o
+      // "badge" acima. Existe justamente pro caso que o app aberto não
+      // cobre: com tudo fechado, é este evento (push) que atualiza o
+      // ícone, usando a contagem que o backend já mandou pronta.
+      if ('setAppBadge' in navigator && typeof payload.badge === 'number') {
+        try {
+          if (payload.badge > 0) await navigator.setAppBadge(payload.badge);
+          else await navigator.clearAppBadge();
+        } catch {
+          // Badging API ainda é instável em alguns navegadores — não vale
+          // derrubar a notificação em si por causa disso.
+        }
+      }
+    })()
   );
 });
 
