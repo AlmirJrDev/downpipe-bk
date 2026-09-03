@@ -55,7 +55,24 @@ export const pushService = {
                 endpoint: sub.endpoint,
                 keys: { p256dh: sub.p256dh, auth: sub.auth },
               },
-              JSON.stringify(payload)
+              JSON.stringify(payload),
+              {
+                // Pede prioridade alta ao serviço de push (vira prioridade
+                // alta de verdade no FCM do Android) — é o que dá à
+                // notificação uma chance de furar a economia de bateria do
+                // aparelho e acordar o navegador mesmo com o app fechado.
+                // Sem isso, um Android sob restrição de bateria pode
+                // segurar a entrega até a próxima vez que o app abrir —
+                // exatamente o sintoma visto no teste real: o Google aceita
+                // (201) e o aparelho nunca mostra.
+                //
+                // Não resolve tudo sozinho: se o fabricante do aparelho
+                // bloqueia a notificação manualmente (a pessoa precisa
+                // liberar "sem restrição de bateria" pro app/site), nenhuma
+                // prioridade de envio contorna isso — é ajuste que só quem
+                // usa o aparelho pode fazer.
+                urgency: 'high',
+              }
             );
             // Sucesso aqui só prova que o SERVIÇO DE PUSH aceitou a entrega
             // (200/201) — não que o aparelho já mostrou a notificação. O que
