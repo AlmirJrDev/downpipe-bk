@@ -32,16 +32,24 @@ export function createApp() {
   const app = express();
 
   /**
-   * Um salto de proxy: o do Render, que fica na frente do app e anota o IP
-   * de quem chamou no X-Forwarded-For.
+   * Três saltos de proxy, medidos em produção em 14/09/2026. Um pedido chega
+   * assim:
    *
-   * Sem isto, req.ip seria o IP interno do Render, igual pra todo mundo, e
-   * os limites de requisição tratariam o país inteiro como uma pessoa só.
-   * E não `true`: confiar em todos os saltos deixaria o próprio cliente
-   * forjar o cabeçalho e ganhar um IP novo a cada tentativa. Com 1, vale só
-   * a última entrada, que é a que o Render escreveu.
+   *   socket: ::1                       proxy local do Render
+   *   X-Forwarded-For: <cliente>, 172.70.x.x, 10.26.x.x
+   *                                      Cloudflare ^   ^ balanceador do Render
+   *
+   * Com 1 salto, req.ip saía 10.26.x.x, um IP interno que muda a cada
+   * chamada: o mesmo aparelho caía em contadores diferentes, e os limites de
+   * requisição não seguravam ninguém. Com 3, sai o IP de quem chamou.
+   *
+   * E não `true`: confiar em todos deixaria o cliente pôr um IP qualquer no
+   * começo do cabeçalho. Testado: com um X-Forwarded-For forjado, o IP lido
+   * continua o verdadeiro.
+   *
+   * Se o Render mudar a frente dele, este número precisa ser medido de novo.
    */
-  app.set('trust proxy', 1);
+  app.set('trust proxy', 3);
 
   /**
    * Com o PWA servido daqui, a CSP do helmet passa a valer para a página do

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { page, logo, publishSession, endSession, diagnosticoIp } from './status.controller';
+import { page, logo, publishSession, endSession } from './status.controller';
 
 const router = Router();
 
@@ -10,6 +10,5 @@ router.get('/logo.png', logo);
 // Publicação da sessão pelo script do app — exige x-status-secret.
 router.post('/session', publishSession);
 router.delete('/session', endSession);
-router.get('/diagnostico-ip', diagnosticoIp);
 
 export default router;
