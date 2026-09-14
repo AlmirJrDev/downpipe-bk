@@ -5,7 +5,7 @@ import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesService } from './profiles.service';
 import { profilesRepository } from './profiles.repository';
-import { updateProfileSchema, usernameParamSchema } from './profiles.schema';
+import { deleteAccountSchema, updateProfileSchema, usernameParamSchema } from './profiles.schema';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
   try {
@@ -69,6 +69,17 @@ export async function uploadAvatar(req: Request, res: Response, next: NextFuncti
     }
 
     sendSuccess(res, profile);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deleteMe(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw AppError.unauthorized();
+    const { username } = deleteAccountSchema.parse(req.body);
+    await profilesService.deleteMe(req.user.id, username);
+    sendSuccess(res, { deleted: true });
   } catch (err) {
     next(err);
   }

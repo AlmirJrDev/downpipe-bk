@@ -35,3 +35,14 @@ export const usernameParamSchema = z.object({
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+/**
+ * Confirmação de exclusão de conta: o @ digitado pela pessoa. Sem trim nem
+ * lowercase aqui de propósito — o app já manda exatamente o que está no
+ * perfil, e o service compara com o valor gravado.
+ */
+export const deleteAccountSchema = z
+  .object({
+    username: z.string().min(1, 'Digite o seu @ para confirmar'),
+  })
+  .strict();

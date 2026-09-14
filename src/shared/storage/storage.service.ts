@@ -74,6 +74,47 @@ export const storageService = {
   },
 
   /**
+   * Apaga tudo o que um usuário enviou para um bucket. Devolve quantos
+   * arquivos saíram.
+   *
+   * Ao contrário de deleteImage, aqui erro interrompe. É usado ao excluir a
+   * conta, e a política de privacidade promete que as fotos saem junto: se
+   * a remoção falhar no meio, é melhor a exclusão parar e poder ser tentada
+   * de novo do que apagar a conta e deixar fotos públicas sem dono, que
+   * ninguém mais conseguiria remover pelo app.
+   *
+   * Funciona porque todo upload grava em `<userId>/<arquivo>` (ver
+   * uploadImage), numa pasta só, sem subpastas.
+   */
+  async deleteUserFolder(bucket: StorageBucket, userId: string): Promise<number> {
+    const removidos = new Set<string>();
+
+    // Lista sempre do começo: o que já foi removido some da página seguinte.
+    for (;;) {
+      const { data, error } = await supabaseAdmin.storage.from(bucket).list(userId, { limit: 100 });
+      if (error) {
+        throw AppError.internal(`Falha ao listar arquivos de ${bucket}: ${error.message}`);
+      }
+
+      // Entrada sem id é pasta, não arquivo — e não há subpastas pra descer.
+      const caminhos = (data ?? []).filter((f) => f.id).map((f) => `${userId}/${f.name}`);
+      if (caminhos.length === 0) return removidos.size;
+
+      // Se algo que já mandamos remover volta na lista, a remoção não está
+      // surtindo efeito. Sem esta trava o laço rodaria pra sempre.
+      if (caminhos.some((c) => removidos.has(c))) {
+        throw AppError.internal(`Arquivos de ${bucket} não saíram do Storage`);
+      }
+
+      const { error: erroRemocao } = await supabaseAdmin.storage.from(bucket).remove(caminhos);
+      if (erroRemocao) {
+        throw AppError.internal(`Falha ao remover arquivos de ${bucket}: ${erroRemocao.message}`);
+      }
+      caminhos.forEach((c) => removidos.add(c));
+    }
+  },
+
+  /**
    * Extrai o path relativo ao bucket a partir de uma URL pública do Supabase
    * Storage, para permitir a remoção de imagens antigas ao substituir.
    */

@@ -1,4 +1,7 @@
 import { AppError } from '@/shared/utils/AppError';
+import { supabaseAdmin } from '@/config/supabase';
+import { storageService } from '@/shared/storage/storage.service';
+import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { followsRepository } from '@/modules/follows/follows.repository';
 import { profilesRepository, ProfileRow } from './profiles.repository';
 import { UpdateProfileInput } from './profiles.schema';
@@ -67,6 +70,45 @@ export const profilesService = {
       isOrganizer: updated.is_organizer,
       updatedAt: updated.updated_at,
     };
+  },
+
+  /**
+   * Exclui a conta e tudo o que veio com ela.
+   *
+   * `confirmUsername` é o @ que a pessoa digitou na tela de confirmação. É
+   * irreversível, então o servidor confere de novo em vez de confiar só no
+   * app: um pedido disparado por engano, ou de uma versão velha do app, não
+   * apaga nada.
+   *
+   * A ordem importa. Fotos primeiro, conta depois: se o Storage falhar, a
+   * conta continua de pé e a pessoa pode tentar de novo. Na ordem inversa,
+   * uma falha deixaria fotos públicas de uma conta que não existe mais.
+   *
+   * O banco cuida do resto sozinho. Apagar o usuário do Auth apaga o perfil
+   * (profiles.id referencia auth.users com cascade), e o perfil leva carros,
+   * posts, comentários, curtidas, follows, rolês, presenças, notificações,
+   * salvos, bloqueios e inscrições de push. Posts de outras pessoas que
+   * marcaram um carro desta conta ficam, só perdem a marcação — a foto é de
+   * quem fotografou, como a política de privacidade avisa.
+   */
+  async deleteMe(userId: string, confirmUsername: string) {
+    const profile = await profilesRepository.findById(userId);
+    if (!profile) {
+      throw AppError.notFound('PROFILE_NOT_FOUND', 'Perfil não encontrado');
+    }
+
+    if (profile.username !== confirmUsername) {
+      throw AppError.validation('O @ digitado não confere com o da sua conta.');
+    }
+
+    for (const bucket of Object.values(STORAGE_BUCKETS)) {
+      await storageService.deleteUserFolder(bucket, userId);
+    }
+
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (error) {
+      throw AppError.internal(`Falha ao excluir a conta: ${error.message}`);
+    }
   },
 
   async getPublicProfile(username: string, viewerId: string | undefined) {
