@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Três páginas: o Google acharia sozinho. Existe porque as lojas de app
-  pedem a URL da política de privacidade, e uma página indexada é mais
-  fácil de conferir do que uma que ninguém sabe se está no ar.
+  Poucas páginas: o Google acharia sozinho. Existe porque as lojas de app
+  pedem a URL da política de privacidade e, no Google Play, a da exclusão
+  de conta. Uma página indexada é mais fácil de conferir do que uma que
+  ninguém sabe se está no ar.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -12,6 +13,11 @@
   </url>
   <url>
     <loc>https://downpipe.onrender.com/privacidade</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://downpipe.onrender.com/excluir-conta</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
