@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { env } from '@/config/env';
 import { notFoundHandler, errorHandler } from '@/shared/middleware/error.middleware';
+import { limiteGeral } from '@/shared/middleware/rateLimit.middleware';
 import authRoutes from '@/modules/auth/auth.routes';
 import { meRouter, publicProfilesRouter } from '@/modules/profiles/profiles.routes';
 import vehicleCatalogRoutes from '@/modules/vehicle-catalog/vehicle-catalog.routes';
@@ -29,6 +30,18 @@ import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
 
 export function createApp() {
   const app = express();
+
+  /**
+   * Um salto de proxy: o do Render, que fica na frente do app e anota o IP
+   * de quem chamou no X-Forwarded-For.
+   *
+   * Sem isto, req.ip seria o IP interno do Render, igual pra todo mundo, e
+   * os limites de requisição tratariam o país inteiro como uma pessoa só.
+   * E não `true`: confiar em todos os saltos deixaria o próprio cliente
+   * forjar o cabeçalho e ganhar um IP novo a cada tentativa. Com 1, vale só
+   * a última entrada, que é a que o Render escreveu.
+   */
+  app.set('trust proxy', 1);
 
   /**
    * Com o PWA servido daqui, a CSP do helmet passa a valer para a página do
@@ -92,6 +105,8 @@ export function createApp() {
   );
   app.use(express.json({ limit: '2mb' }));
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+  // Depois do morgan, pra requisição barrada ainda aparecer no log.
+  app.use(limiteGeral);
 
   app.get('/health', (_req, res) => {
     res.json({ data: { status: 'ok' }, error: null });

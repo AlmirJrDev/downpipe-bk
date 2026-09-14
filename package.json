@@ -13,7 +13,8 @@
     "migrate": "tsx src/database/run-migrations.ts",
     "seed": "tsx src/database/seeds/run-seed.ts",
     "sync:fipe": "tsx src/modules/vehicle-sync/sync.runner.ts",
-    "ads": "tsx src/modules/advertisements/ads.cli.ts"
+    "ads": "tsx src/modules/advertisements/ads.cli.ts",
+    "moderar": "tsx src/modules/moderation/moderar.cli.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
@@ -21,6 +22,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "express-rate-limit": "^8.7.0",
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "multer": "^2.0.0",
