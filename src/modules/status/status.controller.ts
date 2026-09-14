@@ -104,3 +104,24 @@ export async function endSession(req: Request, res: Response, next: NextFunction
     next(err);
   }
 }
+
+/**
+ * TEMPORÁRIO: mostra como o pedido chega depois dos proxies do Render, pra
+ * acertar o `trust proxy`. Sai no commit seguinte, assim que medido.
+ */
+export function diagnosticoIp(req: Request, res: Response, next: NextFunction) {
+  try {
+    assertSecret(req);
+    sendSuccess(res, {
+      ip: req.ip,
+      ips: req.ips,
+      xForwardedFor: req.header('x-forwarded-for') ?? null,
+      socket: req.socket.remoteAddress ?? null,
+      cfConnectingIp: req.header('cf-connecting-ip') ?? null,
+      trueClientIp: req.header('true-client-ip') ?? null,
+      xRealIp: req.header('x-real-ip') ?? null,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
