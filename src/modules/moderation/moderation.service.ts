@@ -1,8 +1,50 @@
 import { AppError } from '@/shared/utils/AppError';
 import { followsRepository } from '@/modules/follows/follows.repository';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
+import { notificationsRepository } from '@/modules/notifications/notifications.repository';
+import { pushService } from '@/shared/push/push.service';
 import { moderationRepository } from './moderation.repository';
-import { CreateReportInput } from './moderation.schema';
+import { CreateReportInput, ReportReason } from './moderation.schema';
+
+/** Mesmos rótulos da folha de denúncia do app (components/ReportSheet.tsx). */
+const MOTIVO: Record<ReportReason, string> = {
+  conteudo_improprio: 'Conteúdo impróprio',
+  spam: 'Spam ou propaganda',
+  assedio: 'Assédio ou ofensa',
+  carro_nao_e_meu: 'Foto de carro usada sem permissão',
+  informacao_falsa: 'Informação falsa',
+  outro: 'Outro motivo',
+};
+
+/**
+ * Avisa quem modera, por push, que chegou denúncia nova.
+ *
+ * Antes a denúncia entrava na tabela e parava lá: ninguém era avisado, e
+ * as lojas exigem resposta rápida a denúncias. O toque abre o próprio
+ * conteúdo denunciado quando ele tem uma tela — post e perfil têm;
+ * comentário abre o post onde ele está.
+ *
+ * Nunca lança, pela mesma regra do push de notificação: uma falha aqui não
+ * pode fazer a denúncia em si parecer que falhou pra quem denunciou. O
+ * resto (ver a fila, agir) é com `npm run moderar`.
+ */
+async function avisarModeracao(input: CreateReportInput) {
+  try {
+    const admins = await moderationRepository.listAdminIds();
+    if (admins.length === 0) return;
+
+    const alvo = await moderationRepository.describeTarget(input);
+    const body = `${MOTIVO[input.reason]} · ${alvo.rotulo}`;
+
+    for (const adminId of admins) {
+      const badge = await notificationsRepository.countUnread(adminId);
+      await pushService.sendToUser(adminId, { title: 'Nova denúncia', body, url: alvo.url, badge });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('Falha ao avisar moderação:', err instanceof Error ? err.message : err);
+  }
+}
 
 export const moderationService = {
   async report(reporterId: string, input: CreateReportInput) {
@@ -11,7 +53,12 @@ export const moderationService = {
       throw AppError.validation('Você não pode denunciar o seu próprio perfil');
     }
 
-    await moderationRepository.createReport(reporterId, input);
+    const nova = await moderationRepository.createReport(reporterId, input);
+
+    // Só denúncia nova avisa: a mesma pessoa repetindo a mesma denúncia não
+    // é informação nova pra moderação, e viraria um jeito de spammar o celular
+    // de quem modera.
+    if (nova) void avisarModeracao(input);
 
     // Resposta igual mesmo quando a denúncia já existia: dizer "você já
     // denunciou isso" não ajuda em nada e só faz a pessoa duvidar se funcionou.
