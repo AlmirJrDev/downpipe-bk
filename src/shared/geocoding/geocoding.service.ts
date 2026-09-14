@@ -2,24 +2,18 @@
  * Geocodificação de endereço via Nominatim (OpenStreetMap).
  *
  * Escolhido por ser gratuito e não exigir chave — o que mantém o deploy sem
- * mais um segredo pra configurar. Em troca, a política de uso pede
- * User-Agent identificando a aplicação e no máximo 1 requisição por segundo.
- * Como isto só roda quando alguém cria ou muda o endereço de um evento, o
- * volume fica muito abaixo do limite.
+ * mais um segredo pra configurar. Em troca, a política de uso é rígida: 1
+ * requisição por segundo pro servidor inteiro, cache obrigatório e nada de
+ * busca enquanto a pessoa digita. Tudo isso fica no nominatim.client.ts,
+ * por onde passam as três funções abaixo.
  *
  * Nunca lança: endereço que não resolve devolve null, e o evento é salvo sem
  * coordenada. Mapa é enfeite do evento, não pré-requisito dele.
  */
+import { consultarNominatim } from './nominatim.client';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
-
-// A política do Nominatim exige identificar a aplicação e um contato.
-const USER_AGENT = 'Downpipe/1.0 (app de projetos de carros; contato via downpipe.app)';
-
-// Curto de propósito: isto acontece dentro da requisição de criar evento, e
-// é melhor salvar sem coordenada do que deixar o organizador esperando.
-const TIMEOUT_MS = 5000;
 
 export interface Coordinates {
   latitude: number;
@@ -47,15 +41,10 @@ async function query(search: string): Promise<Coordinates | null> {
     countrycodes: 'br',
   });
 
-  const response = await fetch(`${NOMINATIM_URL}?${params.toString()}`, {
-    headers: { 'User-Agent': USER_AGENT, 'Accept-Language': 'pt-BR' },
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-
-  if (!response.ok) return null;
-
-  const results = (await response.json()) as NominatimResult[];
-  const first = results[0];
+  const results = (await consultarNominatim(`${NOMINATIM_URL}?${params.toString()}`)) as
+    | NominatimResult[]
+    | null;
+  const first = results?.[0];
   if (!first) return null;
 
   const latitude = Number(first.lat);
@@ -103,7 +92,8 @@ interface NominatimSuggestion {
 
 export const geocodingService = {
   /**
-   * Sugestões de endereço para o organizador escolher enquanto digita.
+   * Sugestões de endereço para o organizador escolher, quando ele pede a
+   * busca.
    *
    * Existe para atacar o problema na raiz: se o endereço vem de uma lista
    * gerada pelo próprio geocodificador, ele resolve por construção — em vez
@@ -122,14 +112,11 @@ export const geocodingService = {
     });
 
     try {
-      const response = await fetch(`${NOMINATIM_URL}?${params.toString()}`, {
-        headers: { 'User-Agent': USER_AGENT, 'Accept-Language': 'pt-BR' },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
+      const results = (await consultarNominatim(`${NOMINATIM_URL}?${params.toString()}`)) as
+        | NominatimSuggestion[]
+        | null;
+      if (!results) return [];
 
-      if (!response.ok) return [];
-
-      const results = (await response.json()) as NominatimSuggestion[];
       return results
         .map((r) => ({
           label: r.display_name,
@@ -157,8 +144,10 @@ export const geocodingService = {
    */
   async reverse(latitude: number, longitude: number): Promise<EnderecoDoPonto | null> {
     const params = new URLSearchParams({
-      lat: String(latitude),
-      lon: String(longitude),
+      // Arredonda pra ~11 m. Pino arrastado dois pixels pro lado resolve pro
+      // mesmo endereço, e assim cai no cache em vez de gastar outra chamada.
+      lat: latitude.toFixed(4),
+      lon: longitude.toFixed(4),
       format: 'json',
       addressdetails: '1',
       // 18 = nível de rua. Mais fino que isso devolve o número da casa de
@@ -167,15 +156,10 @@ export const geocodingService = {
     });
 
     try {
-      const response = await fetch(`${NOMINATIM_REVERSE_URL}?${params.toString()}`, {
-        headers: { 'User-Agent': USER_AGENT, 'Accept-Language': 'pt-BR' },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-
-      if (!response.ok) return null;
-
-      const dados = (await response.json()) as NominatimReverse;
-      const a = dados.address;
+      const dados = (await consultarNominatim(
+        `${NOMINATIM_REVERSE_URL}?${params.toString()}`
+      )) as NominatimReverse | null;
+      const a = dados?.address;
       if (!a) return null;
 
       const cidade = a.city ?? a.town ?? a.village ?? a.municipality ?? '';
