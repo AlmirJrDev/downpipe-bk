@@ -48,6 +48,14 @@ export const storageService = {
     const { error } = await supabaseAdmin.storage.from(bucket).upload(path, buffer, {
       contentType: mimeType,
       upsert: false,
+      // Um ano. O padrão do Supabase é uma hora, e é pouco: passada a hora, o
+      // navegador baixa a mesma foto de novo, e o feed inteiro recarrega toda
+      // vez que a pessoa volta ao app.
+      //
+      // Guardar por um ano só é seguro porque o nome tem um UUID e nunca se
+      // repete: trocar a foto de um carro gera outro arquivo, com outro
+      // endereço. Não existe o caso "mesma URL, conteúdo diferente".
+      cacheControl: String(60 * 60 * 24 * 365),
     });
 
     if (error) {

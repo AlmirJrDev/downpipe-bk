@@ -78,7 +78,12 @@ async function subirImagem(caminho: string): Promise<string> {
   const destino = `${Date.now()}-${path.basename(absoluto).replace(/[^\w.-]/g, '_')}`;
   const { error } = await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(destino, fs.readFileSync(absoluto), { contentType: tipo, upsert: false });
+    .upload(destino, fs.readFileSync(absoluto), {
+      contentType: tipo,
+      upsert: false,
+      // Mesmo um ano do storage.service: o nome carrega a data e não se repete.
+      cacheControl: String(60 * 60 * 24 * 365),
+    });
   if (error) throw error;
 
   const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(destino);
