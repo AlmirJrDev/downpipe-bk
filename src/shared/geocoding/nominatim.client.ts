@@ -58,7 +58,10 @@ function esperarVez(): Promise<void> {
     if (espera > 0) await new Promise((r) => setTimeout(r, espera));
     ultimaSaida = Date.now();
   });
-  fila = vez;
+  // A fila guarda a versão que nunca rejeita. Se um dia algo aqui dentro
+  // lançar, a promessa rejeitada viraria o elo seguinte da corrente e toda
+  // chamada futura falharia pra sempre, sem chegar ao Nominatim.
+  fila = vez.catch(() => undefined);
   return vez;
 }
 

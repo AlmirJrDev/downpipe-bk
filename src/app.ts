@@ -113,8 +113,37 @@ export function createApp() {
   );
   app.use(express.json({ limit: '2mb' }));
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-  // Depois do morgan, pra requisição barrada ainda aparecer no log.
-  app.use(limiteGeral);
+
+  /**
+   * Teto geral, só nos prefixos da API. Depois do morgan, pra requisição
+   * barrada ainda aparecer no log.
+   *
+   * Router novo montado abaixo precisa entrar nesta lista, ou fica sem teto.
+   * Fora dela ficam de propósito: /health (o Render bate nele o tempo todo,
+   * e barrar faria ele achar que o serviço caiu) e os arquivos do app e da
+   * landing, que numa primeira visita chegam a dezenas de uma vez.
+   */
+  const PREFIXOS_DA_API = [
+    '/auth',
+    '/profile',
+    '/profiles',
+    '/vehicles',
+    '/cars',
+    '/projects',
+    '/modifications',
+    '/feed',
+    '/posts',
+    '/comments',
+    '/notifications',
+    '/push',
+    '/search',
+    '/events',
+    '/geocoding',
+    '/advertisements',
+    '/reports',
+    '/status',
+  ];
+  app.use(PREFIXOS_DA_API, limiteGeral);
 
   app.get('/health', (_req, res) => {
     res.json({ data: { status: 'ok' }, error: null });

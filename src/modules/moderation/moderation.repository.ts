@@ -31,7 +31,12 @@ export const moderationRepository = {
         .select('username')
         .eq('id', input.profileId)
         .maybeSingle();
-      return { rotulo: `perfil @${data?.username ?? '?'}`, url: `/app/user/${data?.username ?? ''}` };
+      // Sem username, o perfil já não existe: manda pra home em vez de um
+      // endereço de perfil vazio, que abriria a tela de "não encontrado".
+      return {
+        rotulo: data?.username ? `perfil @${data.username}` : 'perfil já removido',
+        url: data?.username ? `/app/user/${data.username}` : '/app',
+      };
     }
 
     let postId = input.postId;

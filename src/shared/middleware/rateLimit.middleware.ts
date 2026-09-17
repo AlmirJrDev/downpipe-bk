@@ -28,7 +28,6 @@ function limite(
   opcoes: Pick<Options, 'windowMs' | 'limit'> & {
     mensagem: string;
     chave?: (req: Request) => string;
-    pular?: (req: Request) => boolean;
   }
 ) {
   return rateLimit({
@@ -37,7 +36,6 @@ function limite(
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     ...(opcoes.chave ? { keyGenerator: opcoes.chave } : {}),
-    ...(opcoes.pular ? { skip: opcoes.pular } : {}),
     handler: (_req, res) => sendError(res, 429, 'RATE_LIMITED', opcoes.mensagem),
   });
 }
@@ -79,18 +77,18 @@ export const limiteRecuperacaoPorIp = limite({ windowMs: 60 * MINUTO, limit: 30,
 export const limiteGeocodificacao = limite({ windowMs: MINUTO, limit: 30, mensagem: TENTE_DEPOIS });
 
 /**
- * Teto geral da API, contra robô. Arquivos do app e da landing ficam de
- * fora: uma primeira visita baixa dezenas de arquivos de uma vez e não é
- * abuso nenhum. O health check do Render também, ou uma instabilidade de
- * rede faria o próprio Render achar que o serviço caiu.
+ * Teto geral da API, contra robô.
+ *
+ * Aplicado só nos prefixos da API (ver PREFIXOS_DA_API em app.ts), e não no
+ * app inteiro. A primeira versão ia no app todo e pulava o que "parecesse
+ * arquivo estático", testando se o caminho terminava em ponto e extensão.
+ * Isso abria um buraco: ponto é caractere válido em @, então
+ * /profiles/joao.silva passava sem ser contado — e era só usar um @ com
+ * ponto pra martelar a API à vontade. Escolher onde aplicar é mais seguro
+ * do que tentar adivinhar o que pular.
  */
 export const limiteGeral = limite({
   windowMs: MINUTO,
   limit: 600,
   mensagem: TENTE_DEPOIS,
-  pular: (req) =>
-    req.path === '/health' ||
-    req.path.startsWith('/app') ||
-    req.path.startsWith('/_expo') ||
-    /\.[a-z0-9]+$/i.test(req.path),
 });

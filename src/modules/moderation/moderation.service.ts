@@ -28,15 +28,25 @@ const MOTIVO: Record<ReportReason, string> = {
  * pode fazer a denúncia em si parecer que falhou pra quem denunciou. O
  * resto (ver a fila, agir) é com `npm run moderar`.
  */
-async function avisarModeracao(input: CreateReportInput) {
+async function avisarModeracao(reporterId: string, input: CreateReportInput) {
   try {
     const admins = await moderationRepository.listAdminIds();
-    if (admins.length === 0) return;
+    if (admins.length === 0) {
+      // Fica no log em vez de sumir: uma fila que ninguém vê é pior do que
+      // não ter fila, e o único sinal disso seria este aviso.
+      // eslint-disable-next-line no-console
+      console.warn('Denúncia recebida e ninguém na tabela admins pra avisar.');
+      return;
+    }
 
     const alvo = await moderationRepository.describeTarget(input);
     const body = `${MOTIVO[input.reason]} · ${alvo.rotulo}`;
 
     for (const adminId of admins) {
+      // Quem denunciou não precisa do próprio aviso: o app já respondeu
+      // "denúncia registrada" na tela dele.
+      if (adminId === reporterId) continue;
+
       const badge = await notificationsRepository.countUnread(adminId);
       await pushService.sendToUser(adminId, { title: 'Nova denúncia', body, url: alvo.url, badge });
     }
@@ -58,7 +68,7 @@ export const moderationService = {
     // Só denúncia nova avisa: a mesma pessoa repetindo a mesma denúncia não
     // é informação nova pra moderação, e viraria um jeito de spammar o celular
     // de quem modera.
-    if (nova) void avisarModeracao(input);
+    if (nova) void avisarModeracao(reporterId, input);
 
     // Resposta igual mesmo quando a denúncia já existia: dizer "você já
     // denunciou isso" não ajuda em nada e só faz a pessoa duvidar se funcionou.

@@ -54,6 +54,17 @@ describe('moderationService.report', () => {
     );
   });
 
+  it('não manda push pra quem modera e denunciou ao mesmo tempo', async () => {
+    vi.mocked(moderationRepository.createReport).mockResolvedValue(true);
+    vi.mocked(moderationRepository.listAdminIds).mockResolvedValue([ADMIN, REPORTER]);
+
+    await moderationService.report(REPORTER, { postId: POST, reason: 'spam' });
+    await esperarAviso();
+
+    const avisados = vi.mocked(pushService.sendToUser).mock.calls.map(([id]) => id);
+    expect(avisados).toEqual([ADMIN]);
+  });
+
   it('não avisa de novo quando a mesma pessoa repete a denúncia', async () => {
     vi.mocked(moderationRepository.createReport).mockResolvedValue(false);
 
