@@ -28,6 +28,8 @@ function limite(
   opcoes: Pick<Options, 'windowMs' | 'limit'> & {
     mensagem: string;
     chave?: (req: Request) => string;
+    /** Só conta o que deu errado — ver os limites de login. */
+    soErros?: boolean;
   }
 ) {
   return rateLimit({
@@ -36,6 +38,7 @@ function limite(
     standardHeaders: 'draft-8',
     legacyHeaders: false,
     ...(opcoes.chave ? { keyGenerator: opcoes.chave } : {}),
+    ...(opcoes.soErros ? { skipSuccessfulRequests: true } : {}),
     handler: (_req, res) => sendError(res, 429, 'RATE_LIMITED', opcoes.mensagem),
   });
 }
@@ -53,14 +56,29 @@ function porEmail(prefixo: string) {
 
 const TENTE_DEPOIS = 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.';
 
+/**
+ * Os dois limites de login contam só tentativa que falhou.
+ *
+ * Quem acerta a senha não é ataque, e cobrar dele o mesmo orçamento criava
+ * dois falsos positivos: a pessoa que entra em três aparelhos no mesmo dia, e
+ * a rede de operadora, onde milhares de pessoas saem pelo mesmo IP — num rolê
+ * grande, cem logins bem-sucedidos em quinze minutos trancariam todo mundo que
+ * chegasse depois.
+ */
 export const limiteLoginPorConta = limite({
   windowMs: 15 * MINUTO,
   limit: 10,
   chave: porEmail('login'),
+  soErros: true,
   mensagem: 'Muitas tentativas de entrar nesta conta. Espere 15 minutos e tente de novo.',
 });
 
-export const limiteLoginPorIp = limite({ windowMs: 15 * MINUTO, limit: 100, mensagem: TENTE_DEPOIS });
+export const limiteLoginPorIp = limite({
+  windowMs: 15 * MINUTO,
+  limit: 100,
+  soErros: true,
+  mensagem: TENTE_DEPOIS,
+});
 
 export const limiteCadastro = limite({ windowMs: 60 * MINUTO, limit: 30, mensagem: TENTE_DEPOIS });
 
