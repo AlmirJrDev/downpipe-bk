@@ -91,6 +91,18 @@ export const limiteRecuperacaoPorConta = limite({
 
 export const limiteRecuperacaoPorIp = limite({ windowMs: 60 * MINUTO, limit: 30, mensagem: TENTE_DEPOIS });
 
+/**
+ * Mensagens do chat do rolê, contadas por pessoa (vem depois do requireAuth).
+ * Vinte por minuto é mais do que alguém digita de verdade, e segura quem
+ * cola o mesmo texto em loop — que, além de poluir o chat, dispararia push.
+ */
+export const limiteMensagens = limite({
+  windowMs: MINUTO,
+  limit: 20,
+  chave: (req) => (req.user ? `chat:${req.user.id}` : `chat:ip:${ipKeyGenerator(req.ip ?? '')}`),
+  mensagem: 'Você está mandando mensagens rápido demais. Espere um pouco.',
+});
+
 /** Busca de endereço: cada chamada consome a cota do Nominatim. */
 export const limiteGeocodificacao = limite({ windowMs: MINUTO, limit: 30, mensagem: TENTE_DEPOIS });
 

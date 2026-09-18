@@ -9,6 +9,7 @@ export const moderationRepository = {
       post_id: input.postId ?? null,
       comment_id: input.commentId ?? null,
       profile_id: input.profileId ?? null,
+      message_id: input.messageId ?? null,
       reason: input.reason,
       details: input.details ?? null,
     });
@@ -36,6 +37,23 @@ export const moderationRepository = {
       return {
         rotulo: data?.username ? `perfil @${data.username}` : 'perfil já removido',
         url: data?.username ? `/app/user/${data.username}` : '/app',
+      };
+    }
+
+    if (input.messageId) {
+      const { data } = await supabaseAdmin
+        .from('event_messages')
+        .select('event_id, events ( name ), profiles ( username )')
+        .eq('id', input.messageId)
+        .maybeSingle();
+      const evento = (data?.events as unknown as { name: string } | null)?.name;
+      const autor = (data?.profiles as unknown as { username: string } | null)?.username;
+      // O link é o do rolê, não o do chat: quem modera normalmente não
+      // confirmou presença, e o chat recusaria. O texto da mensagem aparece
+      // no `npm run moderar`.
+      return {
+        rotulo: autor && evento ? `mensagem de @${autor} no chat de "${evento}"` : 'mensagem de chat',
+        url: data?.event_id ? `/app/event/${data.event_id}` : '/app',
       };
     }
 

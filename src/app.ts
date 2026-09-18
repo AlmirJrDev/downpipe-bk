@@ -27,6 +27,7 @@ import { reportsRouter, blocksRouter, myBlocksRouter } from '@/modules/moderatio
 import { eventsRouter, profileEventsRouter } from '@/modules/events/events.routes';
 import { eventPostsRouter } from '@/modules/posts/posts.routes';
 import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
+import { eventChatRouter } from '@/modules/event-chat/event-chat.routes';
 
 export function createApp() {
   const app = express();
@@ -192,6 +193,7 @@ export function createApp() {
   // Encontros/rolês
   app.use('/events', eventPostsRouter);
   app.use('/events', eventsRouter);
+  app.use('/events', eventChatRouter);
   app.use('/profiles', profileEventsRouter);
   app.use('/geocoding', geocodingRoutes);
 

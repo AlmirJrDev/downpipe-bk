@@ -18,6 +18,7 @@ import { moderationRepository } from './moderation.repository';
  *   npm run moderar -- revisar <id>            tira a denúncia da fila
  *   npm run moderar -- apagar-post <id>        apaga o post e as fotos
  *   npm run moderar -- apagar-comentario <id>
+ *   npm run moderar -- apagar-mensagem <id>    mensagem do chat de um rolê
  *   npm run moderar -- excluir-conta <@>       exclusão pedida por e-mail
  *   npm run moderar -- admin                   quem recebe os avisos
  *   npm run moderar -- admin <@>               adiciona
@@ -44,7 +45,7 @@ async function perfilPorUsername(entrada: string) {
 async function fila() {
   const { data, error } = await supabaseAdmin
     .from('reports')
-    .select('id, reason, details, created_at, post_id, comment_id, profile_id, profiles!reports_reporter_id_fkey ( username )')
+    .select('id, reason, details, created_at, post_id, comment_id, profile_id, message_id, profiles!reports_reporter_id_fkey ( username )')
     .eq('status', 'open')
     .order('created_at', { ascending: true });
   if (error) throw error;
@@ -59,14 +60,19 @@ async function fila() {
       postId: r.post_id ?? undefined,
       commentId: r.comment_id ?? undefined,
       profileId: r.profile_id ?? undefined,
+      messageId: r.message_id ?? undefined,
       reason: r.reason,
     });
     const quem = (r.profiles as unknown as { username: string } | null)?.username ?? '?';
-    const idAlvo = r.post_id ?? r.comment_id ?? r.profile_id;
+    const idAlvo = r.post_id ?? r.comment_id ?? r.profile_id ?? r.message_id;
 
     console.log(`\n${r.id}`);
     console.log(`  ${new Date(r.created_at).toLocaleString('pt-BR')} · ${r.reason} · por @${quem}`);
     console.log(`  alvo: ${alvo.rotulo} (${idAlvo})`);
+    if (r.message_id) {
+      const { data: m } = await supabaseAdmin.from('event_messages').select('text').eq('id', r.message_id).maybeSingle();
+      if (m) console.log(`  mensagem: "${m.text}"`);
+    }
     if (r.comment_id) {
       const { data: c } = await supabaseAdmin.from('comments').select('text').eq('id', r.comment_id).maybeSingle();
       if (c) console.log(`  comentário: "${c.text}"`);
@@ -101,6 +107,14 @@ async function apagarPost(id: string) {
   if (erroPost) throw erroPost;
   if (!data?.length) throw new Error(`post ${id} não encontrado`);
   console.log(`Post ${id} apagado, com ${midias?.length ?? 0} foto(s) e as denúncias dele.`);
+}
+
+async function apagarMensagem(id: string) {
+  if (!id) throw new Error('faltou o id da mensagem');
+  const { data, error } = await supabaseAdmin.from('event_messages').delete().eq('id', id).select('id');
+  if (error) throw error;
+  if (!data?.length) throw new Error(`mensagem ${id} não encontrada`);
+  console.log(`Mensagem ${id} apagada do chat, com as denúncias dela.`);
 }
 
 async function apagarComentario(id: string) {
@@ -159,6 +173,8 @@ async function main() {
       return revisar(resto[0]);
     case 'apagar-post':
       return apagarPost(resto[0]);
+    case 'apagar-mensagem':
+      return apagarMensagem(resto[0]);
     case 'apagar-comentario':
       return apagarComentario(resto[0]);
     case 'excluir-conta':
@@ -167,7 +183,7 @@ async function main() {
       return admin(resto);
     default:
       throw new Error(
-        `comando desconhecido: "${comando}" (use fila, revisar, apagar-post, apagar-comentario, excluir-conta ou admin)`
+        `comando desconhecido: "${comando}" (use fila, revisar, apagar-post, apagar-comentario, apagar-mensagem, excluir-conta ou admin)`
       );
   }
 }

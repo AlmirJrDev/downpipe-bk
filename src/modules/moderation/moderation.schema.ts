@@ -21,13 +21,15 @@ export const createReportSchema = z
     postId: z.string().uuid('postId inválido').optional(),
     commentId: z.string().uuid('commentId inválido').optional(),
     profileId: z.string().uuid('profileId inválido').optional(),
+    /** Mensagem do chat de um rolê. */
+    messageId: z.string().uuid('messageId inválido').optional(),
     reason: reportReasonEnum,
     details: z.string().max(600, 'Detalhe muito longo').optional(),
   })
   .strict()
   .refine(
-    (d) => [d.postId, d.commentId, d.profileId].filter(Boolean).length === 1,
-    { message: 'Informe exatamente um alvo: postId, commentId ou profileId' }
+    (d) => [d.postId, d.commentId, d.profileId, d.messageId].filter(Boolean).length === 1,
+    { message: 'Informe exatamente um alvo: postId, commentId, profileId ou messageId' }
   );
 
 export const userIdParamSchema = z.object({

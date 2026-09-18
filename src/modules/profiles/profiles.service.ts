@@ -87,9 +87,10 @@ export const profilesService = {
    * O banco cuida do resto sozinho. Apagar o usuário do Auth apaga o perfil
    * (profiles.id referencia auth.users com cascade), e o perfil leva carros,
    * posts, comentários, curtidas, follows, rolês, presenças, notificações,
-   * salvos, bloqueios e inscrições de push. Posts de outras pessoas que
-   * marcaram um carro desta conta ficam, só perdem a marcação — a foto é de
-   * quem fotografou, como a política de privacidade avisa.
+   * salvos, bloqueios, inscrições de push e mensagens nos chats de rolê.
+   * Posts de outras pessoas que marcaram um carro desta conta ficam, só
+   * perdem a marcação — a foto é de quem fotografou, como a política de
+   * privacidade avisa.
    */
   async deleteMe(userId: string, confirmUsername: string) {
     const profile = await profilesRepository.findById(userId);

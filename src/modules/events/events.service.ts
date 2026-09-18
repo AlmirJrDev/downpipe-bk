@@ -8,6 +8,7 @@ import { followsRepository } from '@/modules/follows/follows.repository';
 import { notificationsService } from '@/modules/notifications/notifications.service';
 import { geocodingService } from '@/shared/geocoding/geocoding.service';
 import { distanceKm, boundingBox } from '@/shared/geocoding/distance';
+import { eventChatService } from '@/modules/event-chat/event-chat.service';
 import { eventsRepository, EventRow, AttendeeRow } from './events.repository';
 import { CreateEventInput, UpdateEventInput } from './events.schema';
 
@@ -75,6 +76,60 @@ function toPublicAttendee(row: AttendeeRow) {
         }
       : null,
   };
+}
+
+/** "sábado, 26/09 às 14:00", sempre no horário de Brasília. */
+function dataPorExtenso(iso: string): string {
+  const data = new Date(iso);
+  const dia = data.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
+  const hora = data.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo',
+  });
+  return `${dia} às ${hora}`;
+}
+
+/**
+ * Horário ou local mudou: escreve no chat do rolê, e o chat avisa todo mundo
+ * que confirmou por push.
+ *
+ * Antes, mudar o horário não avisava ninguém — quem ia ao rolê só descobria
+ * se abrisse a tela de novo, e podia aparecer na hora errada. Mudança de
+ * nome, descrição ou foto não gera aviso: não muda onde nem quando ir.
+ *
+ * Rolê que já passou também não: editar um evento antigo é ajuste de
+ * registro, não notícia.
+ */
+async function anunciarMudancas(antes: EventRow, depois: EventRow) {
+  if (Date.parse(depois.starts_at) < Date.now()) return;
+
+  const avisos: string[] = [];
+
+  if (Date.parse(antes.starts_at) !== Date.parse(depois.starts_at)) {
+    avisos.push(`Horário mudou: agora é ${dataPorExtenso(depois.starts_at)}.`);
+  }
+
+  if (antes.location !== depois.location || antes.city !== depois.city) {
+    avisos.push(`Local mudou: agora é em ${depois.location}, ${depois.city}.`);
+  }
+
+  if (avisos.length === 0) return;
+
+  try {
+    // Uma mensagem só, mesmo quando mudaram os dois: um push, não dois.
+    await eventChatService.systemMessage(depois.id, avisos.join(' '));
+  } catch (err) {
+    // A edição já foi salva; falhar no aviso não pode desfazer isso na tela
+    // de quem organiza.
+    // eslint-disable-next-line no-console
+    console.warn('Falha ao anunciar mudança do rolê:', err instanceof Error ? err.message : err);
+  }
 }
 
 async function findEventOrThrow(id: string): Promise<EventRow> {
@@ -288,13 +343,18 @@ export const eventsService = {
     }
 
     const updated = await findEventOrThrow(id);
+    await anunciarMudancas(current, updated);
+
     const attendingByMe = await eventsRepository.attendanceExists(id, userId);
     return toPublicEvent(updated, attendingByMe);
   },
 
   async remove(id: string, userId: string) {
-    await assertOrganizer(id, userId);
+    const event = await assertOrganizer(id, userId);
+    // Lê quem avisar antes de apagar; manda depois, sem segurar a resposta.
+    const avisar = await eventChatService.prepararAvisoDeCancelamento(event);
     await eventsRepository.delete(id);
+    void avisar();
   },
 
   async uploadPhoto(id: string, userId: string, buffer: Buffer, mimeType: string) {
