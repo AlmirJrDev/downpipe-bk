@@ -9,6 +9,15 @@ export interface PostMediaRow {
   position: number;
 }
 
+export interface CommentPreviewRow {
+  id: string;
+  post_id: string;
+  author_id: string;
+  text: string;
+  created_at: string;
+  username: string;
+}
+
 export interface PostRow {
   id: string;
   author_id: string;
@@ -242,6 +251,30 @@ export const postsRepository = {
 
     if (error) throw error;
     return new Set((data ?? []).map((row) => row.post_id));
+  },
+
+  /**
+   * Até 3 comentários mais recentes de cada post, agrupados por post e em
+   * ordem de chegada (o mais novo por último, como numa conversa). Lê a view
+   * comment_previews, que já faz o recorte por post no banco.
+   */
+  async findCommentPreviews(postIds: string[]): Promise<Map<string, CommentPreviewRow[]>> {
+    const porPost = new Map<string, CommentPreviewRow[]>();
+    if (postIds.length === 0) return porPost;
+
+    const { data, error } = await supabaseAdmin
+      .from('comment_previews')
+      .select('id, post_id, author_id, text, created_at, username')
+      .in('post_id', postIds)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    for (const linha of (data ?? []) as CommentPreviewRow[]) {
+      const lista = porPost.get(linha.post_id) ?? [];
+      lista.push(linha);
+      porPost.set(linha.post_id, lista);
+    }
+    return porPost;
   },
 
   async countAll(): Promise<number> {

@@ -53,7 +53,12 @@ async function assertEventTaggable(eventId: string) {
   }
 }
 
-function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolean | null) {
+function toPublicPost(
+  row: PostRow,
+  likedByMe: boolean | null,
+  savedByMe: boolean | null,
+  commentsPreview: { id: string; text: string; author: { username: string } }[] = []
+) {
   return {
     id: row.id,
     type: row.type,
@@ -111,6 +116,9 @@ function toPublicPost(row: PostRow, likedByMe: boolean | null, savedByMe: boolea
     // A tela usa isso pra mostrar aceitar/recusar pro dono, e um aviso
     // discreto pra quem publicou.
     carTagStatus: row.car_tag_status,
+    // Os comentários mais recentes, pra prévia no card. Vazio no detalhe do
+    // post, que abre a lista inteira de qualquer jeito.
+    commentsPreview,
   };
 }
 
@@ -128,27 +136,36 @@ async function assertPostOwnership(postId: string, userId: string): Promise<Post
   return post;
 }
 
-async function buildPostsResponse(rows: PostRow[], total: number, viewerId: string | undefined) {
-  let likedSet = new Set<string>();
-  let savedSet = new Set<string>();
+/** Quantos comentários o card do feed mostra abaixo da legenda. */
+const COMENTARIOS_NA_PREVIA = 2;
 
-  if (viewerId && rows.length > 0) {
-    const ids = rows.map((row) => row.id);
-    // Duas consultas independentes: em paralelo, não em sequência.
-    [likedSet, savedSet] = await Promise.all([
-      postsRepository.findLikedPostIds(ids, viewerId),
-      postsRepository.findSavedPostIds(ids, viewerId),
-    ]);
-  }
+async function buildPostsResponse(rows: PostRow[], total: number, viewerId: string | undefined) {
+  const ids = rows.map((row) => row.id);
+
+  // Consultas independentes: em paralelo, não em sequência.
+  const [likedSet, savedSet, previas, escondidos] = await Promise.all([
+    viewerId && ids.length > 0 ? postsRepository.findLikedPostIds(ids, viewerId) : new Set<string>(),
+    viewerId && ids.length > 0 ? postsRepository.findSavedPostIds(ids, viewerId) : new Set<string>(),
+    postsRepository.findCommentPreviews(ids),
+    moderationService.hiddenIdsFor(viewerId),
+  ]);
 
   return {
-    posts: rows.map((row) =>
-      toPublicPost(
+    posts: rows.map((row) => {
+      // Comentário de quem a pessoa bloqueou não aparece no card, igual não
+      // aparece na lista inteira. Por isso a view traz 3: sobra de onde tirar.
+      const previa = (previas.get(row.id) ?? [])
+        .filter((c) => !escondidos.includes(c.author_id))
+        .slice(-COMENTARIOS_NA_PREVIA)
+        .map((c) => ({ id: c.id, text: c.text, author: { username: c.username } }));
+
+      return toPublicPost(
         row,
         viewerId ? likedSet.has(row.id) : null,
-        viewerId ? savedSet.has(row.id) : null
-      )
-    ),
+        viewerId ? savedSet.has(row.id) : null,
+        previa
+      );
+    }),
     total,
   };
 }
