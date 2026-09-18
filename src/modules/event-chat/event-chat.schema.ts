@@ -23,5 +23,10 @@ export const listMessagesQuerySchema = z
   .object({
     desde: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'desde inválido').optional(),
     antes: z.string().refine((v) => !Number.isNaN(Date.parse(v)), 'antes inválido').optional(),
+    /** O `agora` da conferida anterior: devolve o que foi apagado desde então. */
+    removidasDesde: z
+      .string()
+      .refine((v) => !Number.isNaN(Date.parse(v)), 'removidasDesde inválido')
+      .optional(),
   })
   .refine((q) => !(q.desde && q.antes), { message: 'Use desde ou antes, não os dois' });

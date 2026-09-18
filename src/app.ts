@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import cors from 'cors';
+import fs from 'node:fs';
 import path from 'node:path';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -28,6 +29,7 @@ import { eventsRouter, profileEventsRouter } from '@/modules/events/events.route
 import { eventPostsRouter } from '@/modules/posts/posts.routes';
 import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
 import { eventChatRouter } from '@/modules/event-chat/event-chat.routes';
+import { previaDoCaminho, comPrevia } from '@/shared/web/linkPreview';
 
 export function createApp() {
   const app = express();
@@ -263,6 +265,43 @@ export function createApp() {
     };
 
     app.use('/app', express.static(dist, { extensions: ['html'], setHeaders: cacheDosAssets }));
+
+    /**
+     * Link compartilhado com prévia própria (ver shared/web/linkPreview.ts).
+     *
+     * Vem depois do express.static, que não acha arquivo pra /app/post/<id>,
+     * e antes do fallback abaixo, que devolveria a casca genérica. A chave é
+     * conferida antes de ir ao banco, e o teto geral vale aqui também: cada
+     * link custa consultas, e a rota é pública.
+     */
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const USERNAME = /^[a-z0-9_.]{3,30}$/;
+    let casca: string | null = null;
+
+    app.get(
+      ['/app/post/:chave', '/app/event/:chave', '/app/user/:chave', '/app/car/:chave'],
+      limiteGeral,
+      async (req, res, next) => {
+        try {
+          const tipo = req.path.split('/')[2];
+          const chave = req.params.chave;
+          const valida = tipo === 'user' ? USERNAME.test(chave) : UUID.test(chave);
+          if (!valida) return next();
+
+          const previa = await previaDoCaminho(tipo, chave);
+          if (!previa) return next();
+
+          casca ??= fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+          const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+          res
+            .type('html')
+            .send(comPrevia(casca, previa, `${origem}${req.originalUrl}`, `${origem}/og-banner.png`));
+        } catch {
+          // Qualquer falha aqui cai na casca normal: o link continua abrindo.
+          next();
+        }
+      }
+    );
 
     // Rota dinâmica (/app/event/abc) não tem HTML próprio: devolve a casca
     // e o expo-router resolve o caminho no navegador.

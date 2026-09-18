@@ -134,12 +134,27 @@ export const eventChatService = {
    * Abrir ou conferir o chat conta como leitura — é isso que zera o contador
    * e libera o próximo push.
    */
-  async list(eventId: string, userId: string, janela: { desde?: string; antes?: string }) {
+  async list(
+    eventId: string,
+    userId: string,
+    janela: { desde?: string; antes?: string; removidasDesde?: string }
+  ) {
     const { event, organizador } = await participacao(eventId, userId);
 
-    const [linhas, escondidos] = await Promise.all([
-      eventChatRepository.list(eventId, { ...janela, limite: janela.desde ? 200 : JANELA }),
+    // Lida antes das consultas: o que for apagado durante elas cai na
+    // próxima conferida em vez de escapar entre as duas.
+    const agora = new Date().toISOString();
+
+    const [linhas, escondidos, removidas] = await Promise.all([
+      eventChatRepository.list(eventId, {
+        desde: janela.desde,
+        antes: janela.antes,
+        limite: janela.desde ? 200 : JANELA,
+      }),
       moderationRepository.listHiddenIds(userId),
+      janela.removidasDesde
+        ? eventChatRepository.removedSince(eventId, janela.removidasDesde)
+        : Promise.resolve([] as string[]),
     ]);
 
     // Inclui as mensagens de quem a pessoa bloqueou: escondidas não são "não
@@ -151,6 +166,11 @@ export const eventChatService = {
     return {
       organizerId: event.organizer_id,
       isOrganizer: organizador,
+      // Hora do servidor, pra tela devolver na próxima conferida como
+      // removidasDesde. E os ids que saíram desde a conferida anterior, pra
+      // tela tirar da conversa sem a pessoa precisar sair e voltar.
+      agora,
+      removedIds: removidas,
       // Menos que a janela cheia = não há nada mais antigo pra buscar.
       hasOlder: !janela.desde && linhas.length === JANELA,
       messages: linhas

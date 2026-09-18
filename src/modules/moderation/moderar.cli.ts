@@ -111,10 +111,18 @@ async function apagarPost(id: string) {
 
 async function apagarMensagem(id: string) {
   if (!id) throw new Error('faltou o id da mensagem');
-  const { data, error } = await supabaseAdmin.from('event_messages').delete().eq('id', id).select('id');
+  // Marca como apagada, igual ao botão do app: some na hora do chat aberto
+  // de quem está na conversa. A denúncia fica, agora como revisada.
+  const { data, error } = await supabaseAdmin
+    .from('event_messages')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .is('deleted_at', null)
+    .select('id');
   if (error) throw error;
-  if (!data?.length) throw new Error(`mensagem ${id} não encontrada`);
-  console.log(`Mensagem ${id} apagada do chat, com as denúncias dela.`);
+  if (!data?.length) throw new Error(`mensagem ${id} não encontrada, ou já apagada`);
+  await supabaseAdmin.from('reports').update({ status: 'reviewed' }).eq('message_id', id);
+  console.log(`Mensagem ${id} apagada do chat, e as denúncias dela marcadas como revisadas.`);
 }
 
 async function apagarComentario(id: string) {

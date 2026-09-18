@@ -60,7 +60,11 @@ export const eventChatRepository = {
     eventId: string,
     janela: { desde?: string; antes?: string; limite: number }
   ): Promise<MessageRow[]> {
-    let query = supabaseAdmin.from('event_messages').select(MESSAGE_SELECT).eq('event_id', eventId);
+    let query = supabaseAdmin
+      .from('event_messages')
+      .select(MESSAGE_SELECT)
+      .eq('event_id', eventId)
+      .is('deleted_at', null);
 
     if (janela.desde) {
       query = query.gte('created_at', janela.desde).order('created_at', { ascending: true });
@@ -82,6 +86,7 @@ export const eventChatRepository = {
       .from('event_messages')
       .select(MESSAGE_SELECT)
       .eq('id', id)
+      .is('deleted_at', null)
       .maybeSingle();
     if (error) throw error;
     return data as unknown as MessageRow | null;
@@ -101,9 +106,31 @@ export const eventChatRepository = {
     return data as unknown as MessageRow;
   },
 
+  /**
+   * Marca como apagada, sem tirar a linha: é a marca que deixa o chat aberto
+   * dos outros saber que a mensagem saiu (ver removedSince).
+   *
+   * A hora vem do relógio do servidor, o mesmo do `agora` que a conferida
+   * devolve ao app. Comparar horas de um relógio só evita o descompasso que
+   * já pegou a marcação de leitura (banco e servidor não batem por ~1 s).
+   */
   async delete(id: string): Promise<void> {
-    const { error } = await supabaseAdmin.from('event_messages').delete().eq('id', id);
+    const { error } = await supabaseAdmin
+      .from('event_messages')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
     if (error) throw error;
+  },
+
+  /** Ids apagados deste rolê a partir de uma hora (inclusive). */
+  async removedSince(eventId: string, desde: string): Promise<string[]> {
+    const { data, error } = await supabaseAdmin
+      .from('event_messages')
+      .select('id')
+      .eq('event_id', eventId)
+      .gte('deleted_at', desde);
+    if (error) throw error;
+    return (data ?? []).map((r) => r.id);
   },
 
   /**
@@ -162,6 +189,7 @@ export const eventChatRepository = {
       .from('event_messages')
       .select('id', { count: 'exact', head: true })
       .eq('event_id', eventId)
+      .is('deleted_at', null)
       .or(`author_id.is.null,author_id.neq.${userId}`);
     if (leitura) query = query.gt('created_at', leitura.last_read_at);
 

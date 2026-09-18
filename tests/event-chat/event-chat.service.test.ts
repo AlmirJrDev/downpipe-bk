@@ -16,6 +16,7 @@ vi.mock('@/modules/event-chat/event-chat.repository', () => ({
     reads: vi.fn(),
     markPushed: vi.fn(),
     countUnread: vi.fn(),
+    removedSince: vi.fn(),
   },
 }));
 
@@ -163,6 +164,27 @@ describe('push das mensagens', () => {
     await esperarAviso();
 
     expect(avisados()).toEqual([ORGANIZADOR]);
+  });
+});
+
+describe('mensagem apagada some da tela dos outros', () => {
+  it('a conferida devolve os ids apagados desde a anterior, e a hora pra próxima', async () => {
+    vi.mocked(eventChatRepository.removedSince).mockResolvedValue(['m-apagada']);
+
+    const r = await eventChatService.list(EVENTO, ANA, {
+      desde: '2026-09-18T12:00:00Z',
+      removidasDesde: '2026-09-18T12:00:00Z',
+    });
+
+    expect(eventChatRepository.removedSince).toHaveBeenCalledWith(EVENTO, '2026-09-18T12:00:00Z');
+    expect(r.removedIds).toEqual(['m-apagada']);
+    expect(Number.isNaN(Date.parse(r.agora))).toBe(false);
+  });
+
+  it('sem removidasDesde (primeira carga) nem pergunta o que foi apagado', async () => {
+    const r = await eventChatService.list(EVENTO, ANA, {});
+    expect(eventChatRepository.removedSince).not.toHaveBeenCalled();
+    expect(r.removedIds).toEqual([]);
   });
 });
 

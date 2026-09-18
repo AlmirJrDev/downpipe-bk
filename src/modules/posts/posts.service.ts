@@ -116,8 +116,8 @@ function toPublicPost(
     // A tela usa isso pra mostrar aceitar/recusar pro dono, e um aviso
     // discreto pra quem publicou.
     carTagStatus: row.car_tag_status,
-    // Os comentários mais recentes, pra prévia no card. Vazio no detalhe do
-    // post, que abre a lista inteira de qualquer jeito.
+    // Os comentários mais recentes, pra prévia no card. Vazio só na resposta
+    // de criar ou editar, que não passa pelo funil das listas.
     commentsPreview,
   };
 }
@@ -271,14 +271,10 @@ export const postsService = {
       throw AppError.notFound('POST_NOT_FOUND', 'Post não encontrado');
     }
 
-    const [likedByMe, savedByMe] = viewerId
-      ? await Promise.all([
-          postsRepository.findLikedPostIds([id], viewerId).then((set) => set.has(id)),
-          postsRepository.findSavedPostIds([id], viewerId).then((set) => set.has(id)),
-        ])
-      : [null, null];
-
-    return toPublicPost(post, likedByMe, savedByMe);
+    // Mesmo funil das listas: curtido, salvo e a prévia de comentários, que
+    // a tela de uma publicação só (aberta por link) também mostra.
+    const { posts } = await buildPostsResponse([post], 1, viewerId);
+    return posts[0];
   },
 
   async create(authorId: string, input: CreatePostInput, files: UploadedFile[]) {
