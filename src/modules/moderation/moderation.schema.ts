@@ -32,6 +32,20 @@ export const createReportSchema = z
     { message: 'Informe exatamente um alvo: postId, commentId, profileId ou messageId' }
   );
 
+/** A fila abre nas pendentes; as revisadas servem de histórico. */
+export const filaQuerySchema = z.object({
+  status: z.enum(['open', 'reviewed']).default('open'),
+});
+
+export const reportIdParamSchema = z.object({
+  id: z.string().uuid('id inválido'),
+});
+
+export const alvoParamsSchema = z.object({
+  tipo: z.enum(['post', 'comentario', 'mensagem']),
+  id: z.string().uuid('id inválido'),
+});
+
 export const userIdParamSchema = z.object({
   userId: z.string().uuid('userId inválido'),
 });

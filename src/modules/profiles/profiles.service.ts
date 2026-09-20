@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/config/supabase';
 import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { followsRepository } from '@/modules/follows/follows.repository';
+import { moderationRepository } from '@/modules/moderation/moderation.repository';
 import { profilesRepository, ProfileRow } from './profiles.repository';
 import { UpdateProfileInput } from './profiles.schema';
 
@@ -42,6 +43,8 @@ export const profilesService = {
       gearheadSince: profile.gearhead_since,
       instagram: profile.instagram,
       isOrganizer: profile.is_organizer,
+      // Só no próprio perfil: é o que faz a fila de denúncias aparecer no app.
+      isAdmin: await moderationRepository.isAdmin(profile.id),
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
       followersCount: counts.followersCount,

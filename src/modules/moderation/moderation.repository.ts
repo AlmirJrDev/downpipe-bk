@@ -82,6 +82,109 @@ export const moderationRepository = {
     };
   },
 
+  /**
+   * A fila, da mais antiga pra mais nova: quem modera responde por ordem de
+   * chegada, e denúncia velha parada é o que as lojas cobram.
+   */
+  async listReports(status: 'open' | 'reviewed') {
+    const { data, error } = await supabaseAdmin
+      .from('reports')
+      .select(
+        'id, reason, details, status, created_at, post_id, comment_id, profile_id, message_id, profiles!reports_reporter_id_fkey ( username )'
+      )
+      .eq('status', status)
+      .order('created_at', { ascending: status === 'open' })
+      .limit(100);
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  async countOpenReports(): Promise<number> {
+    const { count, error } = await supabaseAdmin
+      .from('reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'open');
+    if (error) throw error;
+    return count ?? 0;
+  },
+
+  /** O texto denunciado, que é o que decide a maioria dos casos. */
+  async textOfComment(id: string): Promise<string | null> {
+    const { data } = await supabaseAdmin.from('comments').select('text').eq('id', id).maybeSingle();
+    return data?.text ?? null;
+  },
+
+  async textOfMessage(id: string): Promise<string | null> {
+    const { data } = await supabaseAdmin
+      .from('event_messages')
+      .select('text')
+      .eq('id', id)
+      .maybeSingle();
+    return data?.text ?? null;
+  },
+
+  async reviewReport(id: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin
+      .from('reports')
+      .update({ status: 'reviewed' })
+      .eq('id', id)
+      .select('id');
+    if (error) throw error;
+    return !!data?.length;
+  },
+
+  async reviewReportsOfMessage(messageId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('reports')
+      .update({ status: 'reviewed' })
+      .eq('message_id', messageId);
+    if (error) throw error;
+  },
+
+  async mediaUrlsOfPost(postId: string): Promise<string[]> {
+    const { data, error } = await supabaseAdmin
+      .from('post_media')
+      .select('media_url')
+      .eq('post_id', postId);
+    if (error) throw error;
+    return (data ?? []).map((m) => m.media_url);
+  },
+
+  async deletePost(id: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin.from('posts').delete().eq('id', id).select('id');
+    if (error) throw error;
+    return !!data?.length;
+  },
+
+  async deleteComment(id: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin.from('comments').delete().eq('id', id).select('id');
+    if (error) throw error;
+    return !!data?.length;
+  },
+
+  /** Mensagem de chat some como no botão do app: marcada, não removida. */
+  async softDeleteMessage(id: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin
+      .from('event_messages')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+      .is('deleted_at', null)
+      .select('id');
+    if (error) throw error;
+    return !!data?.length;
+  },
+
+  /** Esta pessoa modera? É o que abre a fila no app. */
+  async isAdmin(userId: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    return !!data;
+  },
+
   /** Quem modera: recebe o aviso de denúncia nova. */
   async listAdminIds(): Promise<string[]> {
     const { data, error } = await supabaseAdmin.from('admins').select('user_id');

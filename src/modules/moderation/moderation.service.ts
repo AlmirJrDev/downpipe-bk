@@ -1,4 +1,6 @@
 import { AppError } from '@/shared/utils/AppError';
+import { storageService } from '@/shared/storage/storage.service';
+import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { followsRepository } from '@/modules/follows/follows.repository';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { notificationsRepository } from '@/modules/notifications/notifications.repository';
@@ -7,7 +9,7 @@ import { moderationRepository } from './moderation.repository';
 import { CreateReportInput, ReportReason } from './moderation.schema';
 
 /** Mesmos rótulos da folha de denúncia do app (components/ReportSheet.tsx). */
-const MOTIVO: Record<ReportReason, string> = {
+export const MOTIVO: Record<ReportReason, string> = {
   conteudo_improprio: 'Conteúdo impróprio',
   spam: 'Spam ou propaganda',
   assedio: 'Assédio ou ofensa',
@@ -123,6 +125,106 @@ export const moderationService = {
         blockedAt: linha.created_at,
       };
     });
+  },
+
+  /**
+   * A fila de denúncias, pronta pra tela.
+   *
+   * Existia só no `npm run moderar`, o que obrigava quem modera a estar no
+   * computador com o projeto aberto — enquanto o push da denúncia chega no
+   * celular. Aqui vai tudo que a decisão precisa: motivo, quem denunciou, o
+   * alvo com o texto dele e o endereço pra abrir.
+   */
+  async fila(status: 'open' | 'reviewed' = 'open') {
+    const linhas = await moderationRepository.listReports(status);
+
+    return Promise.all(
+      linhas.map(async (linha) => {
+        const alvo = await moderationRepository.describeTarget({
+          postId: linha.post_id ?? undefined,
+          commentId: linha.comment_id ?? undefined,
+          profileId: linha.profile_id ?? undefined,
+          messageId: linha.message_id ?? undefined,
+          reason: linha.reason,
+        });
+
+        const texto = linha.comment_id
+          ? await moderationRepository.textOfComment(linha.comment_id)
+          : linha.message_id
+            ? await moderationRepository.textOfMessage(linha.message_id)
+            : null;
+
+        return {
+          id: linha.id,
+          reason: linha.reason,
+          reasonLabel: MOTIVO[linha.reason as ReportReason] ?? linha.reason,
+          details: linha.details,
+          status: linha.status,
+          createdAt: linha.created_at,
+          reporter: (linha.profiles as unknown as { username: string } | null)?.username ?? null,
+          target: {
+            tipo: linha.post_id
+              ? ('post' as const)
+              : linha.comment_id
+                ? ('comentario' as const)
+                : linha.message_id
+                  ? ('mensagem' as const)
+                  : ('perfil' as const),
+            id: linha.post_id ?? linha.comment_id ?? linha.message_id ?? linha.profile_id,
+            rotulo: alvo.rotulo,
+            url: alvo.url,
+            texto,
+          },
+        };
+      })
+    );
+  },
+
+  async pendentes() {
+    return { open: await moderationRepository.countOpenReports() };
+  },
+
+  async revisar(id: string) {
+    const achou = await moderationRepository.reviewReport(id);
+    if (!achou) throw AppError.notFound('REPORT_NOT_FOUND', 'Denúncia não encontrada');
+    return { id, status: 'reviewed' as const };
+  },
+
+  /**
+   * Apaga o conteúdo denunciado, sem checar dono — é justamente o que a
+   * moderação precisa pular. As denúncias do alvo vão junto (cascade no
+   * banco), menos as de mensagem, que só some marcada.
+   */
+  async apagarConteudo(tipo: 'post' | 'comentario' | 'mensagem', id: string) {
+    if (tipo === 'post') {
+      // Fotos primeiro, mesma ordem do postsService.remove: apagar a linha
+      // antes deixaria os arquivos órfãos no Storage, pagando espaço à toa.
+      for (const url of await moderationRepository.mediaUrlsOfPost(id)) {
+        const caminho = storageService.extractPathFromPublicUrl(STORAGE_BUCKETS.POSTS, url);
+        if (caminho) await storageService.deleteImage(STORAGE_BUCKETS.POSTS, caminho);
+      }
+      if (!(await moderationRepository.deletePost(id))) {
+        throw AppError.notFound('POST_NOT_FOUND', 'Publicação não encontrada');
+      }
+      return { apagado: true };
+    }
+
+    if (tipo === 'comentario') {
+      if (!(await moderationRepository.deleteComment(id))) {
+        throw AppError.notFound('COMMENT_NOT_FOUND', 'Comentário não encontrado');
+      }
+      return { apagado: true };
+    }
+
+    if (!(await moderationRepository.softDeleteMessage(id))) {
+      throw AppError.notFound('MESSAGE_NOT_FOUND', 'Mensagem não encontrada, ou já apagada');
+    }
+    await moderationRepository.reviewReportsOfMessage(id);
+    return { apagado: true };
+  },
+
+  ehAdmin(userId: string): Promise<boolean> {
+    return moderationRepository.isAdmin(userId);
   },
 
   /** Ids escondidos deste usuário — usado pelos feeds e listagens. */

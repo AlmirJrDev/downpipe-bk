@@ -24,7 +24,7 @@ import { pushSubscriptionsRouter } from '@/modules/push-subscriptions/push-subsc
 import searchRoutes from '@/modules/search/search.routes';
 import advertisementsRoutes from '@/modules/advertisements/advertisements.routes';
 import statusRoutes from '@/modules/status/status.routes';
-import { reportsRouter, blocksRouter, myBlocksRouter } from '@/modules/moderation/moderation.routes';
+import { reportsRouter, blocksRouter, myBlocksRouter, adminRouter } from '@/modules/moderation/moderation.routes';
 import { eventsRouter, profileEventsRouter } from '@/modules/events/events.routes';
 import { eventPostsRouter } from '@/modules/posts/posts.routes';
 import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
@@ -144,6 +144,7 @@ export function createApp() {
     '/geocoding',
     '/advertisements',
     '/reports',
+    '/admin',
     '/status',
   ];
   app.use(PREFIXOS_DA_API, limiteGeral);
@@ -207,6 +208,7 @@ export function createApp() {
 
   // Moderação: denunciar conteúdo e bloquear pessoas.
   app.use('/reports', reportsRouter);
+  app.use('/admin', adminRouter);
   app.use('/profiles', blocksRouter);
   app.use('/profile', myBlocksRouter);
 

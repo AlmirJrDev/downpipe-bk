@@ -1,10 +1,8 @@
 /* eslint-disable no-console */
 import { supabaseAdmin } from '@/config/supabase';
 import { env } from '@/config/env';
-import { storageService } from '@/shared/storage/storage.service';
-import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesService } from '@/modules/profiles/profiles.service';
-import { moderationRepository } from './moderation.repository';
+import { moderationService } from './moderation.service';
 
 /**
  * Moderação pela linha de comando.
@@ -26,6 +24,9 @@ import { moderationRepository } from './moderation.repository';
  *
  * Apagar um post ou comentário leva junto as denúncias dele (cascade no
  * banco), então não precisa revisar uma por uma depois.
+ *
+ * A mesma fila, com os mesmos botões, agora também vive no app em
+ * /app/moderacao pra quem está na tabela `admins`.
  */
 
 const BASE = env.APP_URL ?? 'https://downpipe.onrender.com';
@@ -43,93 +44,47 @@ async function perfilPorUsername(entrada: string) {
 }
 
 async function fila() {
-  const { data, error } = await supabaseAdmin
-    .from('reports')
-    .select('id, reason, details, created_at, post_id, comment_id, profile_id, message_id, profiles!reports_reporter_id_fkey ( username )')
-    .eq('status', 'open')
-    .order('created_at', { ascending: true });
-  if (error) throw error;
+  const denuncias = await moderationService.fila('open');
 
-  if (!data || data.length === 0) {
+  if (denuncias.length === 0) {
     console.log('Nenhuma denúncia aberta.');
     return;
   }
 
-  for (const r of data) {
-    const alvo = await moderationRepository.describeTarget({
-      postId: r.post_id ?? undefined,
-      commentId: r.comment_id ?? undefined,
-      profileId: r.profile_id ?? undefined,
-      messageId: r.message_id ?? undefined,
-      reason: r.reason,
-    });
-    const quem = (r.profiles as unknown as { username: string } | null)?.username ?? '?';
-    const idAlvo = r.post_id ?? r.comment_id ?? r.profile_id ?? r.message_id;
-
-    console.log(`\n${r.id}`);
-    console.log(`  ${new Date(r.created_at).toLocaleString('pt-BR')} · ${r.reason} · por @${quem}`);
-    console.log(`  alvo: ${alvo.rotulo} (${idAlvo})`);
-    if (r.message_id) {
-      const { data: m } = await supabaseAdmin.from('event_messages').select('text').eq('id', r.message_id).maybeSingle();
-      if (m) console.log(`  mensagem: "${m.text}"`);
-    }
-    if (r.comment_id) {
-      const { data: c } = await supabaseAdmin.from('comments').select('text').eq('id', r.comment_id).maybeSingle();
-      if (c) console.log(`  comentário: "${c.text}"`);
-    }
-    if (r.details) console.log(`  detalhe: "${r.details}"`);
-    console.log(`  ver: ${BASE}${alvo.url}`);
+  for (const d of denuncias) {
+    console.log(`
+${d.id}`);
+    console.log(`  ${new Date(d.createdAt).toLocaleString('pt-BR')} · ${d.reason} · por @${d.reporter ?? '?'}`);
+    console.log(`  alvo: ${d.target.rotulo} (${d.target.id})`);
+    if (d.target.texto) console.log(`  texto: "${d.target.texto}"`);
+    if (d.details) console.log(`  detalhe: "${d.details}"`);
+    console.log(`  ver: ${BASE}${d.target.url}`);
   }
-  console.log(`\n${data.length} denúncia(s) aberta(s).`);
+  console.log(`
+${denuncias.length} denúncia(s) aberta(s).`);
 }
 
 async function revisar(id: string) {
   if (!id) throw new Error('faltou o id da denúncia');
-  const { data, error } = await supabaseAdmin.from('reports').update({ status: 'reviewed' }).eq('id', id).select('id');
-  if (error) throw error;
-  if (!data?.length) throw new Error(`denúncia ${id} não encontrada`);
+  await moderationService.revisar(id);
   console.log(`Denúncia ${id} revisada.`);
 }
 
 async function apagarPost(id: string) {
   if (!id) throw new Error('faltou o id do post');
-  const { data: midias, error } = await supabaseAdmin.from('post_media').select('media_url').eq('post_id', id);
-  if (error) throw error;
-
-  // Fotos primeiro, mesma lógica do postsService.remove — só sem a checagem
-  // de dono, que aqui é justamente o que a moderação precisa pular.
-  for (const m of midias ?? []) {
-    const caminho = storageService.extractPathFromPublicUrl(STORAGE_BUCKETS.POSTS, m.media_url);
-    if (caminho) await storageService.deleteImage(STORAGE_BUCKETS.POSTS, caminho);
-  }
-
-  const { data, error: erroPost } = await supabaseAdmin.from('posts').delete().eq('id', id).select('id');
-  if (erroPost) throw erroPost;
-  if (!data?.length) throw new Error(`post ${id} não encontrado`);
-  console.log(`Post ${id} apagado, com ${midias?.length ?? 0} foto(s) e as denúncias dele.`);
+  await moderationService.apagarConteudo('post', id);
+  console.log(`Post ${id} apagado, com as fotos e as denúncias dele.`);
 }
 
 async function apagarMensagem(id: string) {
   if (!id) throw new Error('faltou o id da mensagem');
-  // Marca como apagada, igual ao botão do app: some na hora do chat aberto
-  // de quem está na conversa. A denúncia fica, agora como revisada.
-  const { data, error } = await supabaseAdmin
-    .from('event_messages')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id)
-    .is('deleted_at', null)
-    .select('id');
-  if (error) throw error;
-  if (!data?.length) throw new Error(`mensagem ${id} não encontrada, ou já apagada`);
-  await supabaseAdmin.from('reports').update({ status: 'reviewed' }).eq('message_id', id);
+  await moderationService.apagarConteudo('mensagem', id);
   console.log(`Mensagem ${id} apagada do chat, e as denúncias dela marcadas como revisadas.`);
 }
 
 async function apagarComentario(id: string) {
   if (!id) throw new Error('faltou o id do comentário');
-  const { data, error } = await supabaseAdmin.from('comments').delete().eq('id', id).select('id');
-  if (error) throw error;
-  if (!data?.length) throw new Error(`comentário ${id} não encontrado`);
+  await moderationService.apagarConteudo('comentario', id);
   console.log(`Comentário ${id} apagado, com as denúncias dele.`);
 }
 
