@@ -25,6 +25,7 @@ export function toPublicCar(row: CarRow) {
     projectProgress: row.project_progress,
     amountInvested: row.amount_invested,
     category: row.category,
+    instagram: row.instagram,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     // Dono embutido: sem isso o app não teria como mostrar de quem é o carro

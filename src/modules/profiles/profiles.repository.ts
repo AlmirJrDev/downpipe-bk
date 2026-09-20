@@ -8,6 +8,7 @@ export interface ProfileRow {
   bio: string | null;
   avatar_url: string | null;
   gearhead_since: number | null;
+  instagram: string | null;
   is_organizer: boolean;
   created_at: string;
   updated_at: string;
@@ -72,6 +73,7 @@ export const profilesRepository = {
     if (input.bio !== undefined) payload.bio = input.bio;
     if (input.avatarUrl !== undefined) payload.avatar_url = input.avatarUrl;
     if (input.gearheadSince !== undefined) payload.gearhead_since = input.gearheadSince;
+    if (input.instagram !== undefined) payload.instagram = input.instagram;
     if (input.isOrganizer !== undefined) payload.is_organizer = input.isOrganizer;
 
     const { data, error } = await supabaseAdmin

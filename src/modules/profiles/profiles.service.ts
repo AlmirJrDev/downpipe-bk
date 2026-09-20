@@ -14,6 +14,7 @@ function toPublicProfile(row: ProfileRow) {
     bio: row.bio,
     avatarUrl: row.avatar_url,
     gearheadSince: row.gearhead_since,
+    instagram: row.instagram,
     isOrganizer: row.is_organizer,
     createdAt: row.created_at,
   };
@@ -39,6 +40,7 @@ export const profilesService = {
       bio: profile.bio,
       avatarUrl: profile.avatar_url,
       gearheadSince: profile.gearhead_since,
+      instagram: profile.instagram,
       isOrganizer: profile.is_organizer,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
@@ -67,6 +69,7 @@ export const profilesService = {
       bio: updated.bio,
       avatarUrl: updated.avatar_url,
       gearheadSince: updated.gearhead_since,
+      instagram: updated.instagram,
       isOrganizer: updated.is_organizer,
       updatedAt: updated.updated_at,
     };

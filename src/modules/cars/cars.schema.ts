@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { instagramSchema } from '@/shared/validation/instagram';
 
 export const carStatusEnum = z.enum(['planning', 'building', 'complete']);
 
@@ -30,6 +31,8 @@ const carBaseSchema = {
   description: z.string().max(2000).nullable().optional(),
   status: carStatusEnum.optional(),
   category: carCategoryEnum.nullable().optional(),
+  /** Muita gente mantém um Instagram só do carro — é esse @ aqui. */
+  instagram: instagramSchema,
 };
 
 export const createCarSchema = z.object(carBaseSchema).strict();

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { instagramSchema } from '@/shared/validation/instagram';
 
 export const usernameSchema = z
   .string()
@@ -25,6 +26,7 @@ export const updateProfileSchema = z
      * carro também, e duas contas obrigariam a manter dois logins.
      */
     isOrganizer: z.boolean().optional(),
+    instagram: instagramSchema,
   })
   .strict()
   // impede explicitamente qualquer tentativa de sobrescrever o id via body

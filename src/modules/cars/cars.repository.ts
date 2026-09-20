@@ -19,6 +19,7 @@ export interface CarRow {
   project_progress: number;
   amount_invested: number;
   category: string | null;
+  instagram: string | null;
   created_at: string;
   updated_at: string;
   profiles: { id: string; username: string; display_name: string; avatar_url: string | null } | null;
@@ -86,6 +87,7 @@ function toDbPayload(input: CreateCarInput | UpdateCarInput): Record<string, unk
   if (input.description !== undefined) payload.description = input.description;
   if (input.status !== undefined) payload.status = input.status;
   if (input.category !== undefined) payload.category = input.category;
+  if (input.instagram !== undefined) payload.instagram = input.instagram;
 
   return payload;
 }
