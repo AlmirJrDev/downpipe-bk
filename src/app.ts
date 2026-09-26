@@ -14,6 +14,7 @@ import { carsRouter, profileCarsRouter } from '@/modules/cars/cars.routes';
 import { carProjectRouter, projectsRouter } from '@/modules/projects/projects.routes';
 import projectStepsRoutes from '@/modules/project-steps/project-steps.routes';
 import { carModificationsRouter, modificationsRouter } from '@/modules/modifications/modifications.routes';
+import { carMaintenancesRouter, maintenancesRouter } from '@/modules/maintenances/maintenances.routes';
 import { feedRouter, postsRouter, profilePostsRouter, carPostsRouter } from '@/modules/posts/posts.routes';
 import likesRoutes from '@/modules/likes/likes.routes';
 import { postSaveRouter, savedPostsRouter } from '@/modules/saved-posts/saved-posts.routes';
@@ -134,6 +135,7 @@ export function createApp() {
     '/cars',
     '/projects',
     '/modifications',
+    '/maintenances',
     '/feed',
     '/posts',
     '/comments',
@@ -171,6 +173,8 @@ export function createApp() {
   app.use('/projects', projectStepsRoutes);
   app.use('/cars', carModificationsRouter);
   app.use('/modifications', modificationsRouter);
+  app.use('/cars', carMaintenancesRouter);
+  app.use('/maintenances', maintenancesRouter);
 
   // Fase 5
   app.use('/feed', feedRouter);

@@ -2,6 +2,7 @@ import { eventsRepository, EventRow } from './events.repository';
 import { eventChatRepository } from '@/modules/event-chat/event-chat.repository';
 import { notificationsRepository } from '@/modules/notifications/notifications.repository';
 import { pushService } from '@/shared/push/push.service';
+import { maintenanceRemindersService } from '@/modules/maintenances/maintenance-reminders.service';
 
 /**
  * Lembrete do rolê que está chegando.
@@ -105,6 +106,11 @@ export const eventRemindersService = {
 /**
  * Liga o agendador dentro do próprio processo do backend.
  *
+ * Um agendador só pros dois lembretes que o app tem — rolê chegando e
+ * manutenção vencida. Juntos porque a pergunta é a mesma ("o que venceu
+ * desde a última vez?") e porque dois timers seriam duas coisas pra lembrar
+ * de desligar.
+ *
  * Sem serviço de fila nem cron externo: o app é um processo só, e um
  * `setInterval` resolve o problema inteiro. A repetição é inofensiva porque
  * `reminder_sent_at` garante um aviso por rolê. O único cuidado é o serviço
@@ -112,8 +118,8 @@ export const eventRemindersService = {
  * ele acorda, o que qualquer visita ao app provoca. Um ping externo de 10 em
  * 10 minutos em /health resolve isso de graça, se o atraso incomodar.
  */
-export function iniciarLembretesDeRole(intervaloEmMinutos = 15) {
-  const rodar = () => {
+export function iniciarLembretes(intervaloEmMinutos = 15) {
+const rodar = () => {
     eventRemindersService
       .enviarPendentes()
       .then(({ roles, avisos }) => {
@@ -125,6 +131,19 @@ export function iniciarLembretesDeRole(intervaloEmMinutos = 15) {
       .catch((err) => {
         // eslint-disable-next-line no-console
         console.warn('Lembretes de rolê falharam:', err instanceof Error ? err.message : err);
+      });
+
+    maintenanceRemindersService
+      .enviarPendentes()
+      .then(({ avisos }) => {
+        if (avisos > 0) {
+          // eslint-disable-next-line no-console
+          console.log(`Lembretes de manutenção: ${avisos} aviso(s).`);
+        }
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.warn('Lembretes de manutenção falharam:', err instanceof Error ? err.message : err);
       });
   };
 
