@@ -18,6 +18,7 @@ export interface EventRow {
   coords_precision: 'exact' | 'city' | 'pinned' | null;
   created_at: string;
   updated_at: string;
+  reminder_sent_at: string | null;
   profiles: {
     username: string;
     display_name: string;
@@ -72,6 +73,33 @@ interface ListFilters {
 }
 
 export const eventsRepository = {
+  /**
+   * Rolês que começam daqui a pouco e ainda não avisaram ninguém.
+   *
+   * A janela é "de agora até daqui a X horas": rolê marcado em cima da hora
+   * também precisa do lembrete, e quem já passou não avisa mais nada.
+   */
+  async paraLembrar(ateISO: string): Promise<EventRow[]> {
+    const { data, error } = await supabaseAdmin
+      .from('events')
+      .select('*')
+      .is('reminder_sent_at', null)
+      .gte('starts_at', new Date().toISOString())
+      .lte('starts_at', ateISO)
+      .order('starts_at', { ascending: true })
+      .limit(50);
+    if (error) throw error;
+    return (data ?? []) as EventRow[];
+  },
+
+  async marcarLembreteEnviado(id: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('events')
+      .update({ reminder_sent_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
   async list(
     filters: ListFilters,
     { limit, offset }: PaginationParams
