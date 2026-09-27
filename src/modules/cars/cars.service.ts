@@ -7,6 +7,17 @@ import { vehicleCatalogRepository } from '@/modules/vehicle-catalog/vehicle-cata
 import { carsRepository, CarRow, countEventsForCar } from './cars.repository';
 import { CreateCarInput, UpdateCarInput, ListCarsQuery } from './cars.schema';
 
+/**
+ * Junta as curtidas das fotos a uma lista de carros.
+ *
+ * Uma consulta pra página inteira (ver carsRepository.likesPorCarro), e não
+ * uma por card — o N+1 é justamente o que faz a Explorar ficar lenta.
+ */
+async function comCurtidas(rows: CarRow[]) {
+  const likes = await carsRepository.likesPorCarro(rows.map((row) => row.id));
+  return rows.map((row) => ({ ...toPublicCar(row), photosLikes: likes.get(row.id) ?? 0 }));
+}
+
 export function toPublicCar(row: CarRow) {
   return {
     id: row.id,
@@ -76,7 +87,7 @@ export async function assertCarOwnership(carId: string, userId: string): Promise
 export const carsService = {
   async list(filters: ListCarsQuery, pagination: PaginationParams) {
     const { rows, total } = await carsRepository.list(filters, pagination);
-    return { cars: rows.map(toPublicCar), total };
+    return { cars: await comCurtidas(rows), total };
   },
 
   async listByUsername(username: string, pagination: PaginationParams) {
@@ -87,7 +98,7 @@ export const carsService = {
     }
 
     const { rows, total } = await carsRepository.list({ ownerId: profile.id }, pagination);
-    return { cars: rows.map(toPublicCar), total };
+    return { cars: await comCurtidas(rows), total };
   },
 
   async getById(id: string) {
@@ -100,8 +111,9 @@ export const carsService = {
     // Só no detalhe: na listagem seria uma consulta por card (N+1), e o
     // número não aparece lá.
     const eventsCount = await countEventsForCar(id);
+    const likes = await carsRepository.likesPorCarro([id]);
 
-    return { ...toPublicCar(car), eventsCount };
+    return { ...toPublicCar(car), eventsCount, photosLikes: likes.get(id) ?? 0 };
   },
 
   async create(ownerId: string, input: CreateCarInput) {

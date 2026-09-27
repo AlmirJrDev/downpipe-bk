@@ -93,6 +93,24 @@ function toDbPayload(input: CreateCarInput | UpdateCarInput): Record<string, unk
 }
 
 export const carsRepository = {
+  /**
+   * Curtidas somadas das fotos de cada carro, em uma consulta só.
+   *
+   * Map, e não array: quem chama junta com a lista de carros por id, e carro
+   * sem foto curtida simplesmente não aparece aqui (vira zero lá).
+   */
+  async likesPorCarro(carIds: string[]): Promise<Map<string, number>> {
+    if (carIds.length === 0) return new Map();
+
+    const { data, error } = await supabaseAdmin
+      .from('car_photo_likes')
+      .select('car_id, likes')
+      .in('car_id', carIds);
+
+    if (error) throw error;
+    return new Map((data ?? []).map((linha) => [linha.car_id as string, linha.likes as number]));
+  },
+
   async list(
     filters: ListCarsQuery & { ownerId?: string },
     { limit, offset }: PaginationParams
