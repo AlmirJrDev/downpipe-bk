@@ -19,7 +19,44 @@ export interface ProfileRow {
  * role) porque as regras de autorização (usuário só edita o próprio profile)
  * já são garantidas pela camada de serviço + RLS ao nível do banco.
  */
+export interface SugestaoRow {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  is_organizer: boolean;
+  cars_count: number;
+  posts_count: number;
+  last_post_at: string | null;
+}
+
 export const profilesRepository = {
+  /**
+   * Candidatas a sugestão, já sem quem a pessoa não quer ver.
+   *
+   * Ordem: quem publica mais primeiro, depois quem tem mais carro, e em caso
+   * de empate quem publicou por último. É o mais perto de "tem o que mostrar"
+   * que dá pra fazer sem inventar um algoritmo de recomendação.
+   */
+  async sugestoes(excluir: string[], limite: number): Promise<SugestaoRow[]> {
+    let query = supabaseAdmin
+      .from('profile_suggestions')
+      .select('*')
+      .order('posts_count', { ascending: false })
+      .order('cars_count', { ascending: false })
+      .order('last_post_at', { ascending: false, nullsFirst: false })
+      .limit(limite);
+
+    if (excluir.length > 0) {
+      query = query.not('id', 'in', `(${excluir.join(',')})`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []) as SugestaoRow[];
+  },
+
   async findById(id: string): Promise<ProfileRow | null> {
     const { data, error } = await supabaseAdmin
       .from('profiles')

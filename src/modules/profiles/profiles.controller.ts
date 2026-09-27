@@ -5,7 +5,7 @@ import { storageService } from '@/shared/storage/storage.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesService } from './profiles.service';
 import { profilesRepository } from './profiles.repository';
-import { deleteAccountSchema, updateProfileSchema, usernameParamSchema } from './profiles.schema';
+import { deleteAccountSchema, updateProfileSchema, usernameParamSchema, sugestoesQuerySchema } from './profiles.schema';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
   try {
@@ -80,6 +80,20 @@ export async function deleteMe(req: Request, res: Response, next: NextFunction) 
     const { username } = deleteAccountSchema.parse(req.body);
     await profilesService.deleteMe(req.user.id, username);
     sendSuccess(res, { deleted: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Quem seguir. Vive em /profile (singular, do próprio usuário) porque a
+ * resposta depende de quem pergunta: já segue, bloqueou, é você mesmo.
+ */
+export async function suggestions(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw AppError.unauthorized();
+    const { limit } = sugestoesQuerySchema.parse(req.query);
+    sendSuccess(res, await profilesService.sugestoes(req.user.id, limit));
   } catch (err) {
     next(err);
   }

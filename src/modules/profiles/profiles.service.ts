@@ -55,6 +55,33 @@ export const profilesService = {
     };
   },
 
+  /**
+   * Quem seguir. Some da lista assim que a pessoa segue — a próxima consulta
+   * já não traz quem ela acabou de seguir.
+   */
+  async sugestoes(userId: string, limite: number) {
+    const [seguindo, escondidos] = await Promise.all([
+      followsRepository.listFollowingIds(userId),
+      moderationRepository.listHiddenIds(userId),
+    ]);
+
+    const linhas = await profilesRepository.sugestoes(
+      [...new Set([userId, ...seguindo, ...escondidos])],
+      limite
+    );
+
+    return linhas.map((linha) => ({
+      id: linha.id,
+      username: linha.username,
+      displayName: linha.display_name,
+      avatarUrl: linha.avatar_url,
+      bio: linha.bio,
+      isOrganizer: linha.is_organizer,
+      carsCount: linha.cars_count,
+      postsCount: linha.posts_count,
+    }));
+  },
+
   async updateMe(userId: string, input: UpdateProfileInput) {
     if (input.username) {
       const taken = await profilesRepository.isUsernameTaken(input.username, userId);

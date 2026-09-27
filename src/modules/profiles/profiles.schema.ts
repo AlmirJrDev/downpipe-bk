@@ -32,6 +32,11 @@ export const updateProfileSchema = z
   // impede explicitamente qualquer tentativa de sobrescrever o id via body
   .refine((data) => !('id' in data), { message: 'Campo "id" não pode ser alterado' });
 
+/** Poucas sugestões: uma fileira que rola, não uma lista infinita. */
+export const sugestoesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(20).default(8),
+});
+
 export const usernameParamSchema = z.object({
   username: usernameSchema,
 });

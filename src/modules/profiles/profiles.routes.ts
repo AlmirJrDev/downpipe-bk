@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, attachUserIfPresent } from '@/shared/middleware/auth.middleware';
 import { imageUpload } from '@/shared/middleware/upload.middleware';
-import { getMe, updateMe, getByUsername, uploadAvatar, deleteMe } from './profiles.controller';
+import { getMe, updateMe, getByUsername, uploadAvatar, deleteMe, suggestions } from './profiles.controller';
 
 // Rotas privadas: /profile/me
 export const meRouter = Router();
@@ -11,6 +11,7 @@ meRouter.post('/me/avatar', requireAuth, imageUpload, uploadAvatar);
 // POST e não DELETE: leva a confirmação no corpo, e o cliente do app só
 // manda corpo em POST/PATCH.
 meRouter.post('/me/delete', requireAuth, deleteMe);
+meRouter.get('/suggestions', requireAuth, suggestions);
 
 // Rotas públicas: /profiles/:username
 export const publicProfilesRouter = Router();
