@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '@/shared/middleware/auth.middleware';
 import { requireAdmin } from '@/shared/middleware/admin.middleware';
-import { suggest, list, count, approve, reject } from './event-suggestions.controller';
+import { suggest, list, count, approve, reject, photo } from './event-suggestions.controller';
 
 /**
  * POST /events/suggestions — qualquer pessoa logada avisa de um rolê que viu.
@@ -18,3 +18,4 @@ adminSuggestionsRouter.get('/', list);
 adminSuggestionsRouter.get('/count', count);
 adminSuggestionsRouter.post('/:id/approve', approve);
 adminSuggestionsRouter.post('/:id/reject', reject);
+adminSuggestionsRouter.post('/:id/photo', photo);

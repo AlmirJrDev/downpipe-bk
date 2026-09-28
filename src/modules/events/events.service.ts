@@ -43,6 +43,11 @@ function toPublicEvent(
     sourceUrl: row.source_url,
     sourceNote: row.source_note,
     organizerInstagram: row.organizer_instagram,
+    /**
+     * O @ de quem avisou do rolê. Null quando o rolê foi garimpado por nós —
+     * e aí a tela não credita ninguém, em vez de creditar quem aprovou.
+     */
+    tippedBy: row.avisou?.username ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     organizer: row.profiles

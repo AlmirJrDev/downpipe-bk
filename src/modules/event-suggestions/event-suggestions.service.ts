@@ -2,6 +2,7 @@ import { AppError } from '@/shared/utils/AppError';
 import { eventsService } from '@/modules/events/events.service';
 import { eventsRepository } from '@/modules/events/events.repository';
 import { eventSuggestionsRepository, SuggestionRow } from './event-suggestions.repository';
+import { flyerService } from './flyer.service';
 import {
   ApproveSuggestionInput,
   CreateSuggestionInput,
@@ -29,6 +30,7 @@ function toPublic(row: SuggestionRow) {
     sourceUrl: row.source_url,
     sourceNote: row.source_note,
     organizerInstagram: row.organizer_instagram,
+    photoUrl: row.photo_url,
     suggestedBy: row.profiles?.username ?? null,
     status: row.status,
     eventId: row.event_id,
@@ -62,6 +64,27 @@ export const eventSuggestionsService = {
 
   async pendentes() {
     return { pending: await eventSuggestionsRepository.contarPendentes() };
+  },
+
+  /**
+   * Puxa a arte do post que serviu de fonte.
+   *
+   * Fica separado da aprovação de propósito: quem revisa vê a imagem antes
+   * de publicar e decide se ela representa o encontro — flyer de outra
+   * edição, print de story, foto do ano passado acontecem.
+   */
+  async puxarFoto(id: string, adminId: string) {
+    const sugestao = await eventSuggestionsRepository.findById(id);
+    if (!sugestao) {
+      throw AppError.notFound('SUGGESTION_NOT_FOUND', 'Sugestão não encontrada');
+    }
+    if (!sugestao.source_url) {
+      throw AppError.validation('Esta sugestão não tem link de fonte pra buscar a foto.');
+    }
+
+    const photoUrl = await flyerService.copiarDaPagina(sugestao.source_url, adminId);
+    await eventSuggestionsRepository.salvarFoto(id, photoUrl);
+    return { photoUrl };
   },
 
   /**
@@ -106,11 +129,19 @@ export const eventSuggestionsService = {
       visibility: 'public',
     } as never);
 
-    // O crédito: quem divulgou primeiro, e o link pra conferir.
+    // O crédito: quem divulgou primeiro, o link pra conferir, e quem avisou
+    // aqui dentro. `tippedBy` fica vazio quando o rolê veio de garimpo nosso
+    // — a tela não credita quem aprovou, porque aprovar não é ter avisado.
     await eventsRepository.update(evento.id, {
       sourceUrl: correcoes.sourceUrl ?? sugestao.source_url,
       sourceNote: correcoes.sourceNote ?? sugestao.source_note,
+      tippedBy: sugestao.suggested_by,
     } as never);
+
+    // A arte que quem revisou puxou do post vira a foto do rolê.
+    if (sugestao.photo_url) {
+      await eventsRepository.updatePhoto(evento.id, sugestao.photo_url);
+    }
 
     await eventSuggestionsRepository.marcar(id, 'approved', adminId, evento.id);
     return { eventId: evento.id };

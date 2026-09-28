@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 vi.mock('@/modules/event-suggestions/event-suggestions.repository', () => ({
   eventSuggestionsRepository: {
     create: vi.fn(),
+    salvarFoto: vi.fn(),
     list: vi.fn(),
     findById: vi.fn(),
     marcar: vi.fn(),
@@ -15,7 +16,7 @@ vi.mock('@/modules/events/events.service', () => ({
 }));
 
 vi.mock('@/modules/events/events.repository', () => ({
-  eventsRepository: { update: vi.fn() },
+  eventsRepository: { update: vi.fn(), updatePhoto: vi.fn() },
 }));
 
 import { eventSuggestionsService } from '@/modules/event-suggestions/event-suggestions.service';
@@ -48,6 +49,7 @@ const sugestao = (extra: Record<string, unknown> = {}) =>
     source_url: 'https://exemplo.com/post',
     source_note: 'Visto no calendário X',
     organizer_instagram: null,
+    photo_url: null,
     suggested_by: null,
     status: 'pending',
     reviewed_at: null,
@@ -111,6 +113,8 @@ describe('aprovar', () => {
     expect(eventsRepository.update).toHaveBeenCalledWith('e1', {
       sourceUrl: 'https://exemplo.com/post',
       sourceNote: 'Visto no calendário X',
+      // Garimpo nosso não credita ninguém: aprovar não é ter avisado.
+      tippedBy: null,
     });
     expect(eventSuggestionsRepository.marcar).toHaveBeenCalledWith('s1', 'approved', ADMIN, 'e1');
   });
@@ -173,5 +177,67 @@ describe('descartar', () => {
 
     expect(eventsService.create).not.toHaveBeenCalled();
     expect(eventSuggestionsRepository.marcar).toHaveBeenCalledWith('s1', 'rejected', ADMIN);
+  });
+});
+
+describe('crédito de quem avisou', () => {
+  it('sugestão de usuário credita quem avisou', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
+      sugestao({ suggested_by: 'u9', source: 'usuario' })
+    );
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(eventsRepository.update).toHaveBeenCalledWith(
+      'e1',
+      expect.objectContaining({ tippedBy: 'u9' })
+    );
+  });
+
+  it('garimpo nosso não credita ninguém — aprovar não é ter avisado', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao({ source: 'web' }));
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(eventsRepository.update).toHaveBeenCalledWith(
+      'e1',
+      expect.objectContaining({ tippedBy: null })
+    );
+  });
+});
+
+describe('a arte do rolê', () => {
+  it('a foto puxada do post vira a foto do rolê', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
+      sugestao({ photo_url: 'https://storage/flyer.jpg' })
+    );
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(eventsRepository.updatePhoto).toHaveBeenCalledWith('e1', 'https://storage/flyer.jpg');
+  });
+
+  it('sem foto puxada, o rolê nasce sem foto e ninguém reclama', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(eventsRepository.updatePhoto).not.toHaveBeenCalled();
   });
 });

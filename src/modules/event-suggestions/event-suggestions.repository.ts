@@ -22,6 +22,7 @@ export interface SuggestionRow {
   source_url: string | null;
   source_note: string | null;
   organizer_instagram: string | null;
+  photo_url: string | null;
   suggested_by: string | null;
   status: 'pending' | 'approved' | 'rejected';
   reviewed_at: string | null;
@@ -94,6 +95,15 @@ export const eventSuggestionsRepository = {
 
     if (error) throw error;
     return (data ?? []) as unknown as SuggestionRow[];
+  },
+
+  /** A arte do rolê, já copiada pro nosso Storage. */
+  async salvarFoto(id: string, photoUrl: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('event_suggestions')
+      .update({ photo_url: photoUrl })
+      .eq('id', id);
+    if (error) throw error;
   },
 
   async findById(id: string): Promise<SuggestionRow | null> {

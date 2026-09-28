@@ -48,6 +48,17 @@ export async function approve(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+/** POST /admin/suggestions/:id/photo — puxa a arte do post da fonte. */
+export async function photo(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw AppError.unauthorized();
+    const { id } = suggestionIdParamSchema.parse(req.params);
+    sendSuccess(res, await eventSuggestionsService.puxarFoto(id, req.user.id));
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function reject(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) throw AppError.unauthorized();

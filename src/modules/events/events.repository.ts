@@ -26,6 +26,7 @@ export interface EventRow {
   source_url: string | null;
   source_note: string | null;
   organizer_instagram: string | null;
+  tipped_by: string | null;
   created_at: string;
   updated_at: string;
   reminder_sent_at: string | null;
@@ -35,6 +36,8 @@ export interface EventRow {
     avatar_url: string | null;
     is_organizer: boolean;
   } | null;
+  /** Quem avisou do rolê pela fila; null quando ninguém avisou. */
+  avisou: { username: string } | null;
   event_attendees: { count: number }[] | null;
 }
 
@@ -65,8 +68,9 @@ const EVENT_SELECT = `
   id, organizer_id, name, description, starts_at, location, city, address, photo_url,
   visibility, latitude, longitude, coords_precision, created_at, updated_at,
   ends_at, ends_at_estimated, entry_note, attractions, rules, kind, car_categories,
-  source_url, source_note, organizer_instagram,
+  source_url, source_note, organizer_instagram, tipped_by,
   profiles!events_organizer_id_fkey ( username, display_name, avatar_url, is_organizer ),
+  avisou:profiles!events_tipped_by_fkey ( username ),
   event_attendees ( count )
 `;
 
@@ -186,7 +190,12 @@ export const eventsRepository = {
     return data.id;
   },
 
-  async update(id: string, input: UpdateEventInput): Promise<void> {
+  /**
+   * `tippedBy` fica fora do schema de propósito: quem avisou é decidido pela
+   * fila de sugestões, não por quem manda o PATCH — senão qualquer
+   * organizador poderia creditar quem quisesse pelo próprio rolê.
+   */
+  async update(id: string, input: UpdateEventInput & { tippedBy?: string | null }): Promise<void> {
     const patch: Record<string, unknown> = {};
     if (input.name !== undefined) patch.name = input.name;
     if (input.description !== undefined) patch.description = input.description;
@@ -204,6 +213,7 @@ export const eventsRepository = {
     if (input.carCategories !== undefined) patch.car_categories = input.carCategories;
     if (input.sourceUrl !== undefined) patch.source_url = input.sourceUrl;
     if (input.sourceNote !== undefined) patch.source_note = input.sourceNote;
+    if (input.tippedBy !== undefined) patch.tipped_by = input.tippedBy;
     if (input.organizerInstagram !== undefined) {
       patch.organizer_instagram = input.organizerInstagram;
     }
