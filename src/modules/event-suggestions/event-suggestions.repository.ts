@@ -21,6 +21,7 @@ export interface SuggestionRow {
   source: 'web' | 'usuario' | 'manual';
   source_url: string | null;
   source_note: string | null;
+  organizer_instagram: string | null;
   suggested_by: string | null;
   status: 'pending' | 'approved' | 'rejected';
   reviewed_at: string | null;
@@ -50,6 +51,7 @@ function paraBanco(input: CreateSuggestionInput): Record<string, unknown> {
     car_categories: input.carCategories ?? [],
     source_url: input.sourceUrl ?? null,
     source_note: input.sourceNote ?? null,
+    organizer_instagram: input.organizerInstagram ?? null,
   };
 }
 

@@ -240,7 +240,15 @@ export const eventChatService = {
    * Rolê que já aconteceu não avisa: apagar um evento antigo é faxina, não
    * cancelamento, e ninguém precisa ser acordado por isso.
    */
-  async prepararAvisoDeCancelamento(event: EventRow): Promise<() => Promise<void>> {
+  async prepararAvisoDeCancelamento(
+    event: EventRow,
+    /**
+     * O que o push vai dizer. Muda quando quem tira o rolê do ar não é o
+     * organizador: "cancelado pelo organizador" seria mentira num rolê
+     * removido pela moderação porque ninguém encontrou o encontro lá.
+     */
+    motivo = 'Rolê cancelado pelo organizador.'
+  ): Promise<() => Promise<void>> {
     const semAviso = async () => undefined;
     if (Date.parse(event.starts_at) < Date.now()) return semAviso;
 
@@ -262,7 +270,7 @@ export const eventChatService = {
           // O toque abre a home: o rolê não vai existir mais.
           await pushService.sendToUser(id, {
             title: event.name,
-            body: 'Rolê cancelado pelo organizador.',
+            body: motivo,
             url: '/app',
             badge,
           });

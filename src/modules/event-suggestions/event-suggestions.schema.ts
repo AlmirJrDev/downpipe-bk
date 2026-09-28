@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { instagramSchema } from '@/shared/validation/instagram';
 import {
   attractionEnum,
   eventCarCategoryEnum,
@@ -35,6 +36,11 @@ export const createSuggestionSchema = z
     sourceUrl: z.string().url('sourceUrl deve ser uma URL').max(500).nullable().optional(),
     /** "Visto no story do @fulano", "cartaz no posto". */
     sourceNote: z.string().max(200).nullable().optional(),
+    /**
+     * O @ de quem organiza. Vai junto pro rolê publicado: o encontro é dele,
+     * não de quem aprovou a sugestão aqui dentro.
+     */
+    organizerInstagram: instagramSchema,
   })
   .strict();
 

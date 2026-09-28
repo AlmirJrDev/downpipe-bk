@@ -5,6 +5,7 @@ import { followsRepository } from '@/modules/follows/follows.repository';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { notificationsRepository } from '@/modules/notifications/notifications.repository';
 import { pushService } from '@/shared/push/push.service';
+import { eventChatService } from '@/modules/event-chat/event-chat.service';
 import { moderationRepository } from './moderation.repository';
 import { CreateReportInput, ReportReason } from './moderation.schema';
 
@@ -15,6 +16,7 @@ export const MOTIVO: Record<ReportReason, string> = {
   assedio: 'Assédio ou ofensa',
   carro_nao_e_meu: 'Foto de carro usada sem permissão',
   informacao_falsa: 'Informação falsa',
+  role_nao_aconteceu: 'Fui e o rolê não existia',
   outro: 'Outro motivo',
 };
 
@@ -145,6 +147,7 @@ export const moderationService = {
           commentId: linha.comment_id ?? undefined,
           profileId: linha.profile_id ?? undefined,
           messageId: linha.message_id ?? undefined,
+          eventId: linha.event_id ?? undefined,
           reason: linha.reason,
         });
 
@@ -169,8 +172,15 @@ export const moderationService = {
                 ? ('comentario' as const)
                 : linha.message_id
                   ? ('mensagem' as const)
-                  : ('perfil' as const),
-            id: linha.post_id ?? linha.comment_id ?? linha.message_id ?? linha.profile_id,
+                  : linha.event_id
+                    ? ('evento' as const)
+                    : ('perfil' as const),
+            id:
+              linha.post_id ??
+              linha.comment_id ??
+              linha.message_id ??
+              linha.event_id ??
+              linha.profile_id,
             rotulo: alvo.rotulo,
             url: alvo.url,
             texto,
@@ -195,7 +205,27 @@ export const moderationService = {
    * moderação precisa pular. As denúncias do alvo vão junto (cascade no
    * banco), menos as de mensagem, que só some marcada.
    */
-  async apagarConteudo(tipo: 'post' | 'comentario' | 'mensagem', id: string) {
+  async apagarConteudo(tipo: 'post' | 'comentario' | 'mensagem' | 'evento', id: string) {
+    if (tipo === 'evento') {
+      const evento = await moderationRepository.findEvent(id);
+      if (!evento) throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+
+      // Quem confirmou presença é avisado antes de tudo sumir em cascata —
+      // é justamente essa gente que ia viajar até lá.
+      const avisar = await eventChatService.prepararAvisoDeCancelamento(
+        evento as never,
+        'Este rolê saiu do ar: não deu pra confirmar que ele existe.'
+      );
+
+      if (!(await moderationRepository.deleteEvent(id))) {
+        throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+      }
+      await moderationRepository.rejeitarSugestaoDoEvento(id);
+      void avisar();
+      return { apagado: true };
+    }
+
+
     if (tipo === 'post') {
       // Fotos primeiro, mesma ordem do postsService.remove: apagar a linha
       // antes deixaria os arquivos órfãos no Storage, pagando espaço à toa.

@@ -47,6 +47,7 @@ const sugestao = (extra: Record<string, unknown> = {}) =>
     source: 'web',
     source_url: 'https://exemplo.com/post',
     source_note: 'Visto no calendário X',
+    organizer_instagram: null,
     suggested_by: null,
     status: 'pending',
     reviewed_at: null,
@@ -112,6 +113,21 @@ describe('aprovar', () => {
       sourceNote: 'Visto no calendário X',
     });
     expect(eventSuggestionsRepository.marcar).toHaveBeenCalledWith('s1', 'approved', ADMIN, 'e1');
+  });
+
+  it('o @ de quem organiza vai junto: o rolê é dele, não de quem aprovou', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
+      sugestao({ organizer_instagram: 'amante_dos_baixos' })
+    );
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'Posto Graal',
+      city: 'Sumaré',
+    });
+
+    const [, evento] = vi.mocked(eventsService.create).mock.calls[0];
+    expect(evento).toMatchObject({ organizerInstagram: 'amante_dos_baixos' });
   });
 
   it('a correção de quem aprova ganha da sugestão — data errada é a regra', async () => {

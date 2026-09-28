@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { instagramSchema } from '@/shared/validation/instagram';
 
 export const eventVisibilityEnum = z.enum(['public', 'link']);
 
@@ -110,6 +111,17 @@ const eventBaseSchema = {
    */
   sourceUrl: z.string().url().max(500).nullable().optional(),
   sourceNote: z.string().max(200).nullable().optional(),
+
+  /**
+   * O @ de quem organiza, quando não é quem publicou aqui dentro.
+   *
+   * Rolê aprovado da fila entra com um admin como organizador — alguém tem
+   * que responder por ele no app —, mas o dono do encontro é o perfil que
+   * divulgou. Sem este campo a tela apresentaria o admin como organizador de
+   * um rolê que não é dele, e quem quisesse perguntar "vai ter mesmo?"
+   * perguntaria pra quem não sabe.
+   */
+  organizerInstagram: instagramSchema,
 };
 
 /** Rolê que termina antes de começar é erro de digitação, não escolha. */

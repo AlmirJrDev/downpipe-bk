@@ -12,6 +12,9 @@ vi.mock('@/modules/moderation/moderation.repository', () => ({
     deletePost: vi.fn(),
     deleteComment: vi.fn(),
     softDeleteMessage: vi.fn(),
+    findEvent: vi.fn(),
+    deleteEvent: vi.fn(),
+    rejeitarSugestaoDoEvento: vi.fn(),
     isAdmin: vi.fn(),
     countOpenReports: vi.fn(),
   },
@@ -27,8 +30,12 @@ vi.mock('@/modules/notifications/notifications.repository', () => ({
   notificationsRepository: { countUnread: vi.fn() },
 }));
 vi.mock('@/shared/push/push.service', () => ({ pushService: { sendToUser: vi.fn() } }));
+vi.mock('@/modules/event-chat/event-chat.service', () => ({
+  eventChatService: { prepararAvisoDeCancelamento: vi.fn(async () => async () => undefined) },
+}));
 
 import { moderationService } from '@/modules/moderation/moderation.service';
+import { eventChatService } from '@/modules/event-chat/event-chat.service';
 import { moderationRepository } from '@/modules/moderation/moderation.repository';
 import { storageService } from '@/shared/storage/storage.service';
 
@@ -100,5 +107,49 @@ describe('apagar conteúdo denunciado', () => {
     await expect(moderationService.apagarConteudo('comentario', 'c1')).rejects.toMatchObject({
       statusCode: 404,
     });
+  });
+});
+
+describe('apagar um rolê denunciado', () => {
+  const EVENTO = { id: 'e1', name: 'Encontro fantasma', starts_at: '2026-12-01T22:00:00.000Z' };
+
+  it('avisa quem confirmou ANTES de apagar — depois a lista some em cascata', async () => {
+    vi.mocked(moderationRepository.findEvent).mockResolvedValue(EVENTO as never);
+    vi.mocked(moderationRepository.deleteEvent).mockResolvedValue(true);
+
+    await moderationService.apagarConteudo('evento', 'e1');
+
+    const ordemDoAviso = vi.mocked(eventChatService.prepararAvisoDeCancelamento).mock
+      .invocationCallOrder[0];
+    const ordemDoDelete = vi.mocked(moderationRepository.deleteEvent).mock.invocationCallOrder[0];
+    expect(ordemDoAviso).toBeLessThan(ordemDoDelete);
+  });
+
+  it('o aviso não diz "cancelado pelo organizador" — não foi ele quem tirou', async () => {
+    vi.mocked(moderationRepository.findEvent).mockResolvedValue(EVENTO as never);
+    vi.mocked(moderationRepository.deleteEvent).mockResolvedValue(true);
+
+    await moderationService.apagarConteudo('evento', 'e1');
+
+    const [, motivo] = vi.mocked(eventChatService.prepararAvisoDeCancelamento).mock.calls[0];
+    expect(motivo).not.toContain('organizador');
+  });
+
+  it('a sugestão que virou este rolê volta pra descartada', async () => {
+    vi.mocked(moderationRepository.findEvent).mockResolvedValue(EVENTO as never);
+    vi.mocked(moderationRepository.deleteEvent).mockResolvedValue(true);
+
+    await moderationService.apagarConteudo('evento', 'e1');
+
+    expect(moderationRepository.rejeitarSugestaoDoEvento).toHaveBeenCalledWith('e1');
+  });
+
+  it('rolê que já sumiu vira 404, e nada é apagado', async () => {
+    vi.mocked(moderationRepository.findEvent).mockResolvedValue(null as never);
+
+    await expect(moderationService.apagarConteudo('evento', 'e1')).rejects.toMatchObject({
+      statusCode: 404,
+    });
+    expect(moderationRepository.deleteEvent).not.toHaveBeenCalled();
   });
 });

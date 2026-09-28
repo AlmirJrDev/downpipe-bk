@@ -42,6 +42,7 @@ function toPublicEvent(
     carCategories: row.car_categories ?? [],
     sourceUrl: row.source_url,
     sourceNote: row.source_note,
+    organizerInstagram: row.organizer_instagram,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     organizer: row.profiles

@@ -10,6 +10,7 @@ export const moderationRepository = {
       comment_id: input.commentId ?? null,
       profile_id: input.profileId ?? null,
       message_id: input.messageId ?? null,
+      event_id: input.eventId ?? null,
       reason: input.reason,
       details: input.details ?? null,
     });
@@ -37,6 +38,20 @@ export const moderationRepository = {
       return {
         rotulo: data?.username ? `perfil @${data.username}` : 'perfil já removido',
         url: data?.username ? `/app/user/${data.username}` : '/app',
+      };
+    }
+
+    if (input.eventId) {
+      const { data } = await supabaseAdmin
+        .from('events')
+        .select('name, city, starts_at')
+        .eq('id', input.eventId)
+        .maybeSingle();
+      // O link é o do próprio rolê: quem modera precisa ver a data, o lugar
+      // e a fonte antes de decidir, e é tudo isso que a tela do rolê mostra.
+      return {
+        rotulo: data?.name ? `rolê "${data.name}"${data.city ? ` · ${data.city}` : ''}` : 'rolê já removido',
+        url: data?.name ? `/app/event/${input.eventId}` : '/app',
       };
     }
 
@@ -90,7 +105,7 @@ export const moderationRepository = {
     const { data, error } = await supabaseAdmin
       .from('reports')
       .select(
-        'id, reason, details, status, created_at, post_id, comment_id, profile_id, message_id, profiles!reports_reporter_id_fkey ( username )'
+        'id, reason, details, status, created_at, post_id, comment_id, profile_id, message_id, event_id, profiles!reports_reporter_id_fkey ( username )'
       )
       .eq('status', status)
       .order('created_at', { ascending: status === 'open' })
@@ -154,6 +169,33 @@ export const moderationRepository = {
     const { data, error } = await supabaseAdmin.from('posts').delete().eq('id', id).select('id');
     if (error) throw error;
     return !!data?.length;
+  },
+
+  /** O rolê inteiro. Confirmados, chat e avisos somem em cascata. */
+  async findEvent(id: string) {
+    const { data } = await supabaseAdmin.from('events').select('*').eq('id', id).maybeSingle();
+    return data;
+  },
+
+  async deleteEvent(id: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin.from('events').delete().eq('id', id).select('id');
+    if (error) throw error;
+    return !!data?.length;
+  },
+
+  /**
+   * A sugestão que virou este rolê volta pra "descartada".
+   *
+   * Sem isso ela continuaria na aba "publicados" da fila apontando pra um
+   * rolê que não existe mais — e o próximo garimpo poderia reimportar o
+   * mesmo encontro fantasma achando que já tinha dado certo uma vez.
+   */
+  async rejeitarSugestaoDoEvento(eventId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('event_suggestions')
+      .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+      .eq('event_id', eventId);
+    if (error) throw error;
   },
 
   async deleteComment(id: string): Promise<boolean> {

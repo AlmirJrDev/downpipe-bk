@@ -28,6 +28,7 @@ function toPublic(row: SuggestionRow) {
     source: row.source,
     sourceUrl: row.source_url,
     sourceNote: row.source_note,
+    organizerInstagram: row.organizer_instagram,
     suggestedBy: row.profiles?.username ?? null,
     status: row.status,
     eventId: row.event_id,
@@ -98,6 +99,10 @@ export const eventSuggestionsService = {
       rules: correcoes.rules ?? sugestao.rules,
       kind: correcoes.kind ?? sugestao.kind,
       carCategories: correcoes.carCategories ?? sugestao.car_categories,
+      // Quem organiza é o perfil que divulgou. O admin fica de organizador
+      // dentro do app porque alguém precisa poder editar e cancelar, mas a
+      // tela credita o @ — e é pra ele que quem tem dúvida pergunta.
+      organizerInstagram: correcoes.organizerInstagram ?? sugestao.organizer_instagram,
       visibility: 'public',
     } as never);
 

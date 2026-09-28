@@ -43,6 +43,7 @@ async function fila() {
     const quando = s.startsAt ? new Date(s.startsAt).toLocaleString('pt-BR') : 'sem data';
     console.log(`  ${quando} · ${s.location ?? 'sem local'} — ${s.city ?? 'sem cidade'}`);
     if (s.entryNote) console.log(`  entrada: ${s.entryNote}`);
+    if (s.organizerInstagram) console.log(`  organiza: @${s.organizerInstagram}`);
     if (s.attractions.length) console.log(`  tem: ${s.attractions.join(', ')}`);
     if (s.rules.length) console.log(`  não pode: ${s.rules.join(', ')}`);
     console.log(`  fonte: ${s.sourceNote ?? s.source}${s.sourceUrl ? ` — ${s.sourceUrl}` : ''}`);
