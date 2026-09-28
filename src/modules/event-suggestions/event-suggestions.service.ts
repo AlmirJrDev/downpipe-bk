@@ -144,7 +144,16 @@ export const eventSuggestionsService = {
     }
 
     await eventSuggestionsRepository.marcar(id, 'approved', adminId, evento.id);
-    return { eventId: evento.id };
+
+    /**
+     * Avisa quando o rolê saiu sem ponto no mapa.
+     *
+     * Endereço de flyer é onde o geocodificador mais erra, e um rolê sem
+     * coordenada simplesmente não existe no "perto de mim" — que é como a
+     * maioria das pessoas acha encontro. Falhar calado aqui é perder o rolê
+     * depois de todo o trabalho de achar e conferir.
+     */
+    return { eventId: evento.id, semLocalizacao: evento.latitude == null };
   },
 
   async descartar(id: string, adminId: string) {

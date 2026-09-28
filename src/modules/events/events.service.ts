@@ -189,7 +189,20 @@ async function resolveCoords(
       return;
     }
 
-    const coords = await geocodingService.geocodeEvent(location, city);
+    // Uma segunda tentativa quando a primeira volta vazia. O Nominatim tem
+    // 5s de paciência e às vezes estoura; foi o que aconteceu com o primeiro
+    // rolê aprovado pela fila, que nasceu sem ponto e sumiu do "perto de
+    // mim" sem ninguém ficar sabendo.
+    let coords = await geocodingService.geocodeEvent(location, city);
+    if (!coords) {
+      await new Promise((r) => setTimeout(r, 1200));
+      coords = await geocodingService.geocodeEvent(location, city);
+    }
+
+    if (!coords) {
+      // eslint-disable-next-line no-console
+      console.warn(`Rolê ${id} ficou sem ponto no mapa: "${location}, ${city}" não resolveu.`);
+    }
     await eventsRepository.updateCoords(id, coords);
   } catch (err) {
     // eslint-disable-next-line no-console

@@ -61,7 +61,7 @@ const sugestao = (extra: Record<string, unknown> = {}) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1' } as never);
+  vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1', latitude: null } as never);
 });
 
 describe('sugerir um rolê', () => {
@@ -101,7 +101,7 @@ describe('aprovar', () => {
       city: 'Sumaré',
     });
 
-    expect(r).toEqual({ eventId: 'e1' });
+    expect(r).toEqual({ eventId: 'e1', semLocalizacao: true });
     const [organizador, evento] = vi.mocked(eventsService.create).mock.calls[0];
     expect(organizador).toBe(ADMIN);
     expect(evento).toMatchObject({
@@ -239,5 +239,38 @@ describe('a arte do rolê', () => {
     });
 
     expect(eventsRepository.updatePhoto).not.toHaveBeenCalled();
+  });
+});
+
+describe('rolê sem ponto no mapa', () => {
+  /**
+   * Endereço de flyer é onde o geocodificador mais erra, e rolê sem
+   * coordenada não existe no "perto de mim". Quem aprovou precisa saber na
+   * hora — depois de publicado, ninguém volta pra conferir.
+   */
+  it('avisa quando o rolê saiu sem coordenada', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
+    vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1', latitude: null } as never);
+
+    const r = await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(r.semLocalizacao).toBe(true);
+  });
+
+  it('com coordenada, não avisa nada', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
+    vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1', latitude: -22.9 } as never);
+
+    const r = await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(r.semLocalizacao).toBe(false);
   });
 });
