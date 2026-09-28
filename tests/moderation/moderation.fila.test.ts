@@ -135,13 +135,23 @@ describe('apagar um rolê denunciado', () => {
     expect(motivo).not.toContain('organizador');
   });
 
-  it('a sugestão que virou este rolê volta pra descartada', async () => {
+  /**
+   * A ordem aqui é o bug: events.id em event_suggestions é "on delete set
+   * null", então depois do delete não existe mais linha com esse event_id
+   * pra marcar. O ensaio em produção pegou a sugestão presa em "approved"
+   * apontando pra um rolê que não existia mais.
+   */
+  it('marca a sugestão ANTES de apagar — depois o vínculo já virou null', async () => {
     vi.mocked(moderationRepository.findEvent).mockResolvedValue(EVENTO as never);
     vi.mocked(moderationRepository.deleteEvent).mockResolvedValue(true);
 
     await moderationService.apagarConteudo('evento', 'e1');
 
     expect(moderationRepository.rejeitarSugestaoDoEvento).toHaveBeenCalledWith('e1');
+    const ordemDaMarca = vi.mocked(moderationRepository.rejeitarSugestaoDoEvento).mock
+      .invocationCallOrder[0];
+    const ordemDoDelete = vi.mocked(moderationRepository.deleteEvent).mock.invocationCallOrder[0];
+    expect(ordemDaMarca).toBeLessThan(ordemDoDelete);
   });
 
   it('rolê que já sumiu vira 404, e nada é apagado', async () => {

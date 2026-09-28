@@ -217,10 +217,16 @@ export const moderationService = {
         'Este rolê saiu do ar: não deu pra confirmar que ele existe.'
       );
 
+      // A sugestão volta pra descartada ANTES de o rolê sumir: a coluna que
+      // liga as duas é "on delete set null", então depois do delete não
+      // sobra por onde achar a sugestão — ela ficaria pra sempre na aba
+      // "publicados" apontando pro nada, e o próximo garimpo reimportaria o
+      // mesmo encontro fantasma achando que já tinha dado certo uma vez.
+      await moderationRepository.rejeitarSugestaoDoEvento(id);
+
       if (!(await moderationRepository.deleteEvent(id))) {
         throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
       }
-      await moderationRepository.rejeitarSugestaoDoEvento(id);
       void avisar();
       return { apagado: true };
     }
