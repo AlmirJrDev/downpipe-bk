@@ -102,6 +102,14 @@ const eventBaseSchema = {
   kind: eventKindEnum.nullable().optional(),
   /** Vazio = qualquer carro, que é a maioria dos encontros. */
   carCategories: z.array(eventCarCategoryEnum).max(7).optional(),
+
+  /**
+   * De onde veio a informação, quando o rolê não é nosso. Publicar encontro
+   * dos outros sem dizer a fonte se apropria do trabalho de quem organiza e
+   * esconde de quem lê que aquilo é de segunda mão.
+   */
+  sourceUrl: z.string().url().max(500).nullable().optional(),
+  sourceNote: z.string().max(200).nullable().optional(),
 };
 
 /** Rolê que termina antes de começar é erro de digitação, não escolha. */

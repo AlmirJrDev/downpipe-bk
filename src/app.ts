@@ -15,6 +15,7 @@ import { carProjectRouter, projectsRouter } from '@/modules/projects/projects.ro
 import projectStepsRoutes from '@/modules/project-steps/project-steps.routes';
 import { carModificationsRouter, modificationsRouter } from '@/modules/modifications/modifications.routes';
 import { carMaintenancesRouter, maintenancesRouter } from '@/modules/maintenances/maintenances.routes';
+import { suggestionsRouter, adminSuggestionsRouter } from '@/modules/event-suggestions/event-suggestions.routes';
 import { feedRouter, postsRouter, profilePostsRouter, carPostsRouter } from '@/modules/posts/posts.routes';
 import likesRoutes from '@/modules/likes/likes.routes';
 import { postSaveRouter, savedPostsRouter } from '@/modules/saved-posts/saved-posts.routes';
@@ -201,6 +202,8 @@ export function createApp() {
   app.use('/events', eventPostsRouter);
   app.use('/events', eventsRouter);
   app.use('/events', eventChatRouter);
+  app.use('/events', suggestionsRouter);
+  app.use('/admin/suggestions', adminSuggestionsRouter);
   app.use('/profiles', profileEventsRouter);
   app.use('/geocoding', geocodingRoutes);
 

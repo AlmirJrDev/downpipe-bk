@@ -40,6 +40,8 @@ function toPublicEvent(
     rules: row.rules ?? [],
     kind: row.kind,
     carCategories: row.car_categories ?? [],
+    sourceUrl: row.source_url,
+    sourceNote: row.source_note,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     organizer: row.profiles

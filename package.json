@@ -14,7 +14,8 @@
     "seed": "tsx src/database/seeds/run-seed.ts",
     "sync:fipe": "tsx src/modules/vehicle-sync/sync.runner.ts",
     "ads": "tsx src/modules/advertisements/ads.cli.ts",
-    "moderar": "tsx src/modules/moderation/moderar.cli.ts"
+    "moderar": "tsx src/modules/moderation/moderar.cli.ts",
+    "roles": "tsx src/modules/event-suggestions/roles.cli.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

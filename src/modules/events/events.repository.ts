@@ -23,6 +23,8 @@ export interface EventRow {
   rules: string[];
   kind: string | null;
   car_categories: string[];
+  source_url: string | null;
+  source_note: string | null;
   created_at: string;
   updated_at: string;
   reminder_sent_at: string | null;
@@ -62,6 +64,7 @@ const EVENT_SELECT = `
   id, organizer_id, name, description, starts_at, location, city, address, photo_url,
   visibility, latitude, longitude, coords_precision, created_at, updated_at,
   ends_at, ends_at_estimated, entry_note, attractions, rules, kind, car_categories,
+  source_url, source_note,
   profiles!events_organizer_id_fkey ( username, display_name, avatar_url, is_organizer ),
   event_attendees ( count )
 `;
@@ -171,6 +174,8 @@ export const eventsRepository = {
         rules: input.rules ?? [],
         kind: input.kind ?? null,
         car_categories: input.carCategories ?? [],
+        source_url: input.sourceUrl ?? null,
+        source_note: input.sourceNote ?? null,
       })
       .select('id')
       .single();
@@ -195,6 +200,8 @@ export const eventsRepository = {
     if (input.rules !== undefined) patch.rules = input.rules;
     if (input.kind !== undefined) patch.kind = input.kind;
     if (input.carCategories !== undefined) patch.car_categories = input.carCategories;
+    if (input.sourceUrl !== undefined) patch.source_url = input.sourceUrl;
+    if (input.sourceNote !== undefined) patch.source_note = input.sourceNote;
 
     const { error } = await supabaseAdmin.from('events').update(patch).eq('id', id);
     if (error) throw error;
