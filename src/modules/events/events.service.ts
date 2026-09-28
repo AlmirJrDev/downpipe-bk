@@ -33,6 +33,13 @@ function toPublicEvent(
     // "city" avisa a tela que o pino é o centro da cidade, não o local do
     // rolê — sem isso ela mostraria um ponto aproximado como se fosse exato.
     coordsPrecision: row.coords_precision,
+    endsAt: row.ends_at,
+    endsAtEstimated: row.ends_at_estimated,
+    entryNote: row.entry_note,
+    attractions: row.attractions ?? [],
+    rules: row.rules ?? [],
+    kind: row.kind,
+    carCategories: row.car_categories ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     organizer: row.profiles
@@ -232,6 +239,24 @@ async function buildResponse(
  */
 const NEARBY_SCAN_LIMIT = 300;
 
+/**
+ * O rolê aceita este carro?
+ *
+ * Encontro de carro antigo com um rebaixado no meio não é briga de regra, é
+ * frustração dos dois lados — de quem organizou e de quem viajou até lá. A
+ * lista vazia é o caso comum ("qualquer carro"), e carro sem categoria
+ * preenchida passa: recusar por um campo que a pessoa nem sabe que existe
+ * seria pior do que deixar entrar.
+ */
+export function carroAceitoNoRole(
+  categoriasDoRole: string[] | null | undefined,
+  categoriaDoCarro: string | null | undefined
+): boolean {
+  if (!categoriasDoRole || categoriasDoRole.length === 0) return true;
+  if (!categoriaDoCarro) return true;
+  return categoriasDoRole.includes(categoriaDoCarro);
+}
+
 export const eventsService = {
   /** Calendário público: só visibility 'public'. Eventos por link ficam fora. */
   async list(
@@ -385,11 +410,18 @@ export const eventsService = {
    * transformaria um toque em dois e excluiria quem não tem carro.
    */
   async attend(eventId: string, userId: string, carId?: string | null) {
-    await findEventOrThrow(eventId);
+    const evento = await findEventOrThrow(eventId);
 
     // Só dá pra levar carro que é seu — declarar o carro alheio seria um
     // jeito silencioso de colocá-lo na lista do rolê sem ele saber.
-    if (carId) await assertCarOwnership(carId, userId);
+    if (carId) {
+      const carro = await assertCarOwnership(carId, userId);
+      if (!carroAceitoNoRole(evento.car_categories, carro.category)) {
+        throw AppError.validation(
+          `Este rolê é pra ${(evento.car_categories ?? []).join(', ')}. Escolha outro carro ou confirme sem declarar um.`
+        );
+      }
+    }
 
     const already = await eventsRepository.attendanceExists(eventId, userId);
     if (already) {

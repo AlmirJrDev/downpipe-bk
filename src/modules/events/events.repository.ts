@@ -16,6 +16,13 @@ export interface EventRow {
   latitude: number | null;
   longitude: number | null;
   coords_precision: 'exact' | 'city' | 'pinned' | null;
+  ends_at: string | null;
+  ends_at_estimated: boolean;
+  entry_note: string | null;
+  attractions: string[];
+  rules: string[];
+  kind: string | null;
+  car_categories: string[];
   created_at: string;
   updated_at: string;
   reminder_sent_at: string | null;
@@ -156,6 +163,13 @@ export const eventsRepository = {
         city: input.city,
         address: input.address ?? null,
         visibility: input.visibility ?? 'public',
+        ends_at: input.endsAt ?? null,
+        ends_at_estimated: input.endsAtEstimated ?? false,
+        entry_note: input.entryNote ?? null,
+        attractions: input.attractions ?? [],
+        rules: input.rules ?? [],
+        kind: input.kind ?? null,
+        car_categories: input.carCategories ?? [],
       })
       .select('id')
       .single();
@@ -173,6 +187,13 @@ export const eventsRepository = {
     if (input.city !== undefined) patch.city = input.city;
     if (input.address !== undefined) patch.address = input.address;
     if (input.visibility !== undefined) patch.visibility = input.visibility;
+    if (input.endsAt !== undefined) patch.ends_at = input.endsAt;
+    if (input.endsAtEstimated !== undefined) patch.ends_at_estimated = input.endsAtEstimated;
+    if (input.entryNote !== undefined) patch.entry_note = input.entryNote;
+    if (input.attractions !== undefined) patch.attractions = input.attractions;
+    if (input.rules !== undefined) patch.rules = input.rules;
+    if (input.kind !== undefined) patch.kind = input.kind;
+    if (input.carCategories !== undefined) patch.car_categories = input.carCategories;
 
     const { error } = await supabaseAdmin.from('events').update(patch).eq('id', id);
     if (error) throw error;

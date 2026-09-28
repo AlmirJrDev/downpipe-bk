@@ -2,6 +2,63 @@ import { z } from 'zod';
 
 export const eventVisibilityEnum = z.enum(['public', 'link']);
 
+/**
+ * O que o rolê oferece. Vocabulário fechado porque vira chip na tela e
+ * filtro depois; "outros" cobre o que a cena inventar sem exigir migration.
+ */
+export const attractionEnum = z.enum([
+  'food_truck',
+  'bar',
+  'espaco_kids',
+  'som',
+  'lojas',
+  'premiacao',
+  'sorteio',
+  'estacionamento',
+  'banheiro',
+  'area_coberta',
+  'pet_friendly',
+  'beneficente',
+]);
+
+/**
+ * O que não pode. É a lista que evita o encontro acabar cedo com o dono do
+ * posto expulsando todo mundo.
+ */
+export const eventRuleEnum = z.enum([
+  'sem_som_alto',
+  'sem_acelerar',
+  'sem_arrancada',
+  'sem_borrachao',
+  'sem_bebida',
+  'sem_drift',
+  'sem_menores',
+  'sem_animais',
+]);
+
+/** Que tipo de encontro é. Muda o que a pessoa espera ao chegar. */
+export const eventKindEnum = z.enum([
+  'encontro',
+  'exposicao',
+  'passeio',
+  'drift',
+  'arrancada',
+  'track_day',
+  'off_road',
+  'beneficente',
+]);
+
+/** Mesmas categorias dos carros do app: é o que valida a presença. */
+export const eventCarCategoryEnum = z.enum([
+  'JDM',
+  'Euro',
+  'Muscle',
+  'Performance',
+  'Clássicos',
+  'Stance',
+  'Other',
+]);
+
 const eventBaseSchema = {
   name: z.string().min(1, 'name é obrigatório').max(120),
   description: z.string().max(2000).nullable().optional(),
@@ -25,9 +82,39 @@ const eventBaseSchema = {
    */
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
+
+  /**
+   * Fim do rolê. Quase sempre é palpite — `endsAtEstimated` diz isso pra
+   * tela, que escreve "até por volta das 22h" em vez de prometer hora certa.
+   */
+  endsAt: z
+    .string()
+    .datetime({ offset: true, message: 'endsAt deve ser uma data ISO 8601' })
+    .nullable()
+    .optional(),
+  endsAtEstimated: z.boolean().optional(),
+
+  /** "1 kg de alimento", "R$ 10 por carro", "entrada franca". */
+  entryNote: z.string().max(120).nullable().optional(),
+
+  attractions: z.array(attractionEnum).max(12).optional(),
+  rules: z.array(eventRuleEnum).max(8).optional(),
+  kind: eventKindEnum.nullable().optional(),
+  /** Vazio = qualquer carro, que é a maioria dos encontros. */
+  carCategories: z.array(eventCarCategoryEnum).max(7).optional(),
 };
 
-export const createEventSchema = z.object(eventBaseSchema).strict();
+/** Rolê que termina antes de começar é erro de digitação, não escolha. */
+const fimDepoisDoInicio = (data: { startsAt?: string; endsAt?: string | null }) =>
+  !data.endsAt || !data.startsAt || Date.parse(data.endsAt) > Date.parse(data.startsAt);
+
+export const createEventSchema = z
+  .object(eventBaseSchema)
+  .strict()
+  .refine(fimDepoisDoInicio, {
+    message: 'O fim do rolê tem que ser depois do começo',
+    path: ['endsAt'],
+  });
 
 export const updateEventSchema = z
   .object({
@@ -40,6 +127,10 @@ export const updateEventSchema = z
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: 'Envie ao menos um campo para atualizar',
+  })
+  .refine(fimDepoisDoInicio, {
+    message: 'O fim do rolê tem que ser depois do começo',
+    path: ['endsAt'],
   });
 
 /**
