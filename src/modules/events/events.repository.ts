@@ -61,6 +61,7 @@ export interface AttendeeRow {
 const EVENT_SELECT = `
   id, organizer_id, name, description, starts_at, location, city, address, photo_url,
   visibility, latitude, longitude, coords_precision, created_at, updated_at,
+  ends_at, ends_at_estimated, entry_note, attractions, rules, kind, car_categories,
   profiles!events_organizer_id_fkey ( username, display_name, avatar_url, is_organizer ),
   event_attendees ( count )
 `;
