@@ -33,6 +33,12 @@ import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
 import { eventChatRouter } from '@/modules/event-chat/event-chat.routes';
 import { previaDoCaminho, comPrevia } from '@/shared/web/linkPreview';
 import { destinoDaMudanca, robotsTxt, sitemapXml } from '@/shared/web/busca';
+import {
+  cidadesComRole,
+  paginaDaAgenda,
+  paginaDaCidade,
+  slugDaCidade,
+} from '@/shared/web/cidades';
 import { eventsRepository } from '@/modules/events/events.repository';
 
 export function createApp() {
@@ -292,6 +298,43 @@ export function createApp() {
      * mudaria no próximo deploy. Cinco minutos de cache: o Google não precisa
      * de mais que isso, e o banco não precisa responder a cada visita dele.
      */
+    /**
+     * A agenda por cidade (ver shared/web/cidades.ts): o que responde à
+     * busca "encontro de carro em Campinas". Cinco minutos de cache, como o
+     * sitemap: rolê publicado aparece aqui logo, e o banco não responde a
+     * cada visita.
+     */
+    app.get('/encontros', limiteGeral, async (req, res, next) => {
+      try {
+        const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+        const { proximos } = await eventsRepository.listarParaPaginasDeCidade();
+        res
+          .type('html')
+          .setHeader('Cache-Control', 'public, max-age=300')
+          .send(paginaDaAgenda(origem, proximos));
+      } catch (err) {
+        next(err);
+      }
+    });
+
+    app.get('/encontros/:cidade', limiteGeral, async (req, res, next) => {
+      try {
+        const slug = req.params.cidade.toLowerCase();
+        if (!/^[a-z0-9-]{2,60}$/.test(slug)) return next();
+        const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+        const { proximos, cidades } = await eventsRepository.listarParaPaginasDeCidade();
+        const pagina = paginaDaCidade(origem, slug, proximos, cidades);
+        // Cidade que nunca teve rolê: cai no 404 do site.
+        if (!pagina) return next();
+        res
+          .type('html')
+          .setHeader('Cache-Control', 'public, max-age=300')
+          .send(pagina.html);
+      } catch (err) {
+        next(err);
+      }
+    });
+
     app.get('/robots.txt', (req, res) => {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
       res.type('text/plain').setHeader('Cache-Control', 'public, max-age=3600').send(robotsTxt(origem));
@@ -300,13 +343,21 @@ export function createApp() {
     app.get('/sitemap.xml', async (req, res, next) => {
       try {
         const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
-        const roles = await eventsRepository.listarParaSitemap();
+        const [roles, agenda] = await Promise.all([
+          eventsRepository.listarParaSitemap(),
+          eventsRepository.listarParaPaginasDeCidade(),
+        ]);
+        // Só as cidades com rolê agendado: a de agenda vazia sai com noindex,
+        // e mandar pro Google uma página que diz "não indexe" é contraditório.
+        const cidades = cidadesComRole(agenda.proximos);
         res
           .type('application/xml')
           .setHeader('Cache-Control', 'public, max-age=300')
           .send(
             sitemapXml(origem, [
               { caminho: '/' },
+              { caminho: '/encontros' },
+              ...cidades.map((c) => ({ caminho: `/encontros/${slugDaCidade(c.nome)}` })),
               { caminho: '/privacidade' },
               { caminho: '/termos' },
               ...roles.map((r) => ({ caminho: `/app/event/${r.id}`, atualizadoEm: r.updated_at })),

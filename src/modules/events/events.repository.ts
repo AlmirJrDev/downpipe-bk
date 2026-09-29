@@ -224,6 +224,52 @@ export const eventsRepository = {
   },
 
   /**
+   * O que as páginas de cidade precisam: os rolês públicos que ainda vão
+   * acontecer, e toda cidade que já teve rolê público.
+   *
+   * As cidades vêm de todos os rolês, passados inclusive, porque a página
+   * de uma cidade sem rolê agendado agora não pode sumir: ela volta a ter
+   * rolê semana que vem, e um 404 no meio faria o Google esquecer a página.
+   */
+  async listarParaPaginasDeCidade(): Promise<{
+    proximos: {
+      id: string;
+      name: string;
+      starts_at: string;
+      ends_at: string | null;
+      ends_at_estimated: boolean;
+      location: string;
+      city: string;
+      entry_note: string | null;
+      photo_url: string | null;
+      photo_thumb_url: string | null;
+      organizer_instagram: string | null;
+    }[];
+    cidades: string[];
+  }> {
+    // Doze horas de folga: rolê que começou à noite ainda está rolando.
+    const desde = new Date(Date.now() - 12 * 3_600_000).toISOString();
+    const [proximos, todas] = await Promise.all([
+      supabaseAdmin
+        .from('events')
+        .select(
+          'id, name, starts_at, ends_at, ends_at_estimated, location, city, entry_note, photo_url, photo_thumb_url, organizer_instagram'
+        )
+        .eq('visibility', 'public')
+        .gte('starts_at', desde)
+        .order('starts_at', { ascending: true })
+        .limit(500),
+      supabaseAdmin.from('events').select('city').eq('visibility', 'public').limit(5000),
+    ]);
+    if (proximos.error) throw proximos.error;
+    if (todas.error) throw todas.error;
+    return {
+      proximos: proximos.data ?? [],
+      cidades: [...new Set((todas.data ?? []).map((e) => e.city as string))],
+    };
+  },
+
+  /**
    * Rolês públicos que ainda não acabaram: o que vale mandar pro Google.
    *
    * Um dia de folga pra trás pra rolê que vira a noite não sumir do sitemap

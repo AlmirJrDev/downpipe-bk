@@ -181,6 +181,9 @@ h2.titulo {
 }
 .passo h3 { margin: 0 0 7px; font-size: 17px; font-weight: 700; }
 .passo p { margin: 0; color: var(--apagado); font-size: 14px; }
+.link-agenda { display: inline-block; margin-top: 12px; color: var(--marca); font-size: 13px; font-weight: 700; text-decoration: none; }
+.link-agenda:hover { text-decoration: underline; }
+.link-agenda:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
 
 /* grade de recursos */
 .grade { display: grid; gap: 14px; margin-top: 38px; }
@@ -354,6 +357,10 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
           <div class="n">02</div>
           <h3>Ache um rolê</h3>
           <p>Veja os encontros perto de você no mapa, confirme presença e diga qual carro vai levar.</p>
+          <!-- Link de verdade pra agenda: é por ele que o Google acha as
+               páginas de cidade, e quem só quer ver os rolês não precisa
+               criar conta pra isso. -->
+          <a class="link-agenda" href="/encontros">Ver a agenda de encontros →</a>
         </div>
         <div class="passo revela">
           <div class="n">03</div>
