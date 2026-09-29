@@ -83,11 +83,23 @@ function quando(r: RoleDaAgenda): string {
   return `${ini.semana} ${ini.dia} ${ini.mes} · ${ini.hora}${fim ? ` ${ate.trim()}` : ''}`;
 }
 
-function cartao(r: RoleDaAgenda, mostrarCidade: boolean): string {
+/**
+ * "Entrada: Entrada gratuita" repetia a palavra. Quando o próprio texto já
+ * começa dizendo que é a entrada, ele vai sozinho.
+ */
+function linhaDaEntrada(nota: string): string {
+  return /^entrada\b/i.test(nota.trim()) ? nota.trim() : `Entrada: ${nota.trim()}`;
+}
+
+/** Os primeiros cartões aparecem sem rolar: carregar tarde só atrasa o que se vê primeiro. */
+const CARTOES_NO_TOPO = 3;
+
+function cartao(r: RoleDaAgenda, mostrarCidade: boolean, posicao: number): string {
   const ini = emSP(r.starts_at);
   const imagem = r.photo_thumb_url ?? r.photo_url;
+  const carregar = posicao < CARTOES_NO_TOPO ? 'eager' : 'lazy';
   const capa = imagem
-    ? `<img src="${esc(imagem)}" alt="" width="88" height="88" loading="lazy" decoding="async">`
+    ? `<img src="${esc(imagem)}" alt="" width="88" height="88" loading="${carregar}" decoding="async">`
     : `<span class="data"><b>${ini.dia}</b>${ini.mes}</span>`;
   const onde = mostrarCidade ? `${esc(r.location)} · ${esc(r.city)}` : esc(r.location);
   return `<li><a class="role" href="/app/event/${esc(r.id)}">
@@ -96,7 +108,7 @@ function cartao(r: RoleDaAgenda, mostrarCidade: boolean): string {
     <span class="quando">${esc(quando(r))}</span>
     <strong>${esc(r.name)}</strong>
     <span class="onde">${onde}</span>
-    ${r.entry_note ? `<span class="entrada">Entrada: ${esc(r.entry_note)}</span>` : ''}
+    ${r.entry_note ? `<span class="entrada">${esc(linhaDaEntrada(r.entry_note))}</span>` : ''}
     ${r.organizer_instagram ? `<span class="org">@${esc(r.organizer_instagram)}</span>` : ''}
   </span>
 </a></li>`;
@@ -241,7 +253,7 @@ export function paginaDaAgenda(origem: string, roles: RoleDaAgenda[]): string {
 <p class="lead">Rolê de baixo, JDM, clássico, drift e track day. Com o que cada um pede na entrada e o que é proibido — antes de você sair de casa.</p>
 ${cidades.length ? `<h2>POR CIDADE</h2>${listaDeCidades(cidades)}` : ''}
 <h2>PRÓXIMOS</h2>
-${n ? `<ol class="lista">${roles.map((r) => cartao(r, true)).join('')}</ol>` : '<p class="vazio">Nenhum rolê agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'}`;
+${n ? `<ol class="lista">${roles.map((r, i) => cartao(r, true, i)).join('')}</ol>` : '<p class="vazio">Nenhum rolê agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'}`;
 
   return moldura({
     titulo: 'Encontros de carro: agenda dos próximos rolês · Downpipe',
@@ -289,7 +301,7 @@ export function paginaDaCidade(
       ? `Nenhum rolê agendado em ${esc(nome)} agora. Os próximos nas outras cidades estão logo abaixo.`
       : `${n === 1 ? 'O próximo rolê' : `Os ${n} próximos rolês`} em ${esc(nome)}, com o que cada um pede na entrada e o que é proibido.`
   }</p>
-${n ? `<ol class="lista">${daqui.map((r) => cartao(r, false)).join('')}</ol>` : ''}
+${n ? `<ol class="lista">${daqui.map((r, i) => cartao(r, false, i)).join('')}</ol>` : ''}
 ${outras.length ? `<h2>OUTRAS CIDADES</h2>${listaDeCidades(outras, slug)}` : ''}`;
 
   const trilha = {

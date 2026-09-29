@@ -110,3 +110,23 @@ describe('agenda geral', () => {
     expect(html).not.toContain('noindex');
   });
 });
+
+describe('detalhes do cartão', () => {
+  it('não repete "Entrada: Entrada gratuita"', () => {
+    const p = paginaDaCidade(ORIGEM, 'cotia', [role({ entry_note: 'Entrada gratuita' })], ['Cotia'])!;
+    expect(p.html).toContain('>Entrada gratuita<');
+    expect(p.html).not.toContain('Entrada: Entrada');
+  });
+
+  it('entrada sem a palavra ganha o rótulo', () => {
+    const p = paginaDaCidade(ORIGEM, 'cotia', [role({ entry_note: '2 litros de leite' })], ['Cotia'])!;
+    expect(p.html).toContain('>Entrada: 2 litros de leite<');
+  });
+
+  it('as capas do topo carregam na hora, as de baixo quando a pessoa rola', () => {
+    const muitos = Array.from({ length: 5 }, (_, i) => role({ id: `e${i}` }));
+    const p = paginaDaCidade(ORIGEM, 'cotia', muitos, ['Cotia'])!;
+    expect(p.html.match(/loading="eager"/g)).toHaveLength(3);
+    expect(p.html.match(/loading="lazy"/g)).toHaveLength(2);
+  });
+});
