@@ -224,6 +224,25 @@ export const eventsRepository = {
   },
 
   /**
+   * Rolês públicos que ainda não acabaram: o que vale mandar pro Google.
+   *
+   * Um dia de folga pra trás pra rolê que vira a noite não sumir do sitemap
+   * enquanto ainda está acontecendo. Rolê "só por link" nunca entra.
+   */
+  async listarParaSitemap(): Promise<{ id: string; updated_at: string }[]> {
+    const ontem = new Date(Date.now() - 86_400_000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('events')
+      .select('id, updated_at')
+      .eq('visibility', 'public')
+      .gte('starts_at', ontem)
+      .order('starts_at', { ascending: true })
+      .limit(5000);
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  /**
    * Foto e miniatura andam juntas: trocar a foto sem trocar a miniatura
    * deixaria o pino do mapa mostrando a arte antiga.
    */

@@ -12,11 +12,14 @@ import { postsService } from '@/modules/posts/posts.service';
 import { eventsService } from '@/modules/events/events.service';
 import { profilesService } from '@/modules/profiles/profiles.service';
 import { carsService } from '@/modules/cars/cars.service';
+import { tagsDeBusca, RoleParaBusca } from './busca';
 
 export interface Previa {
   titulo: string;
   descricao: string;
   imagem: string | null;
+  /** Só no rolê: vira a marcação de evento que o Google lê. */
+  role?: RoleParaBusca;
 }
 
 /**
@@ -82,6 +85,7 @@ export async function previaDoCaminho(tipo: string, chave: string): Promise<Prev
           titulo: evento.name,
           descricao: `${dataDoRole(evento.startsAt)} · ${evento.location}, ${evento.city} · ${confirmados}`,
           imagem: evento.photoUrl,
+          role: evento as RoleParaBusca,
         };
       }
       case 'user': {
@@ -139,6 +143,7 @@ export function comPrevia(html: string, previa: Previa, urlDoLink: string, image
     `<meta name="twitter:title" content="${titulo}"/>`,
     `<meta name="twitter:description" content="${descricao}"/>`,
     `<meta name="twitter:image" content="${imagem}"/>`,
+    previa.role ? tagsDeBusca(previa.role, urlDoLink) : '',
   ].join('');
 
   return html

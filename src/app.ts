@@ -32,6 +32,8 @@ import { eventPostsRouter } from '@/modules/posts/posts.routes';
 import geocodingRoutes from '@/modules/geocoding/geocoding.routes';
 import { eventChatRouter } from '@/modules/event-chat/event-chat.routes';
 import { previaDoCaminho, comPrevia } from '@/shared/web/linkPreview';
+import { destinoDaMudanca, robotsTxt, sitemapXml } from '@/shared/web/busca';
+import { eventsRepository } from '@/modules/events/events.repository';
 
 export function createApp() {
   const app = express();
@@ -120,6 +122,27 @@ export function createApp() {
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
   /**
+   * Troca de domínio (ver destinoDaMudanca em shared/web/busca.ts).
+   *
+   * Parado enquanto APP_URL for o próprio onrender.com, ou não existir. No
+   * dia em que APP_URL apontar pro domínio novo, toda página aberta pelo
+   * endereço antigo vira um 301 pro novo — que é como o Google entende que
+   * o site mudou de casa e leva junto o que já tinha indexado.
+   */
+  app.use((req, res, next) => {
+    const destino = destinoDaMudanca(
+      {
+        host: req.get('host') ?? '',
+        metodo: req.method,
+        aceita: req.get('accept') ?? '',
+        caminho: req.originalUrl,
+      },
+      env.APP_URL
+    );
+    return destino ? res.redirect(301, destino) : next();
+  });
+
+  /**
    * Teto geral, só nos prefixos da API. Depois do morgan, pra requisição
    * barrada ainda aparecer no log.
    *
@@ -151,6 +174,19 @@ export function createApp() {
     '/status',
   ];
   app.use(PREFIXOS_DA_API, limiteGeral);
+
+  /**
+   * A API pode ser lida pelo Google, mas não vira resultado de busca.
+   *
+   * Pra montar a página de um rolê, o robô do Google roda o app e o app
+   * chama /events/<id> — se o robots.txt barrasse a API, ele indexaria a
+   * tela de carregamento. Liberado lá, precisa deste cabeçalho aqui: sem
+   * ele o JSON cru da API poderia aparecer como página na busca.
+   */
+  app.use(PREFIXOS_DA_API, (_req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+  });
 
   app.get('/health', (_req, res) => {
     res.json({ data: { status: 'ok' }, error: null });
@@ -247,6 +283,39 @@ export function createApp() {
      * do app. Quem já tem sessão a própria página redireciona pra /app.
      */
     app.get('/', (_req, res) => res.sendFile(path.join(dist, 'landing.html')));
+
+    /**
+     * Sitemap montado na hora, a partir do banco.
+     *
+     * Era um arquivo fixo com a landing e as páginas legais. Rolê publicado
+     * hoje tem que estar no sitemap hoje — um arquivo gerado no build só
+     * mudaria no próximo deploy. Cinco minutos de cache: o Google não precisa
+     * de mais que isso, e o banco não precisa responder a cada visita dele.
+     */
+    app.get('/robots.txt', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('text/plain').setHeader('Cache-Control', 'public, max-age=3600').send(robotsTxt(origem));
+    });
+
+    app.get('/sitemap.xml', async (req, res, next) => {
+      try {
+        const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+        const roles = await eventsRepository.listarParaSitemap();
+        res
+          .type('application/xml')
+          .setHeader('Cache-Control', 'public, max-age=300')
+          .send(
+            sitemapXml(origem, [
+              { caminho: '/' },
+              { caminho: '/privacidade' },
+              { caminho: '/termos' },
+              ...roles.map((r) => ({ caminho: `/app/event/${r.id}`, atualizadoEm: r.updated_at })),
+            ])
+          );
+      } catch (err) {
+        next(err);
+      }
+    });
 
     /**
      * O app vive sob /app, e não na raiz.
