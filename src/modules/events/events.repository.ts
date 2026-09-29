@@ -244,6 +244,8 @@ export const eventsRepository = {
       photo_url: string | null;
       photo_thumb_url: string | null;
       organizer_instagram: string | null;
+      latitude: number | null;
+      longitude: number | null;
     }[];
     cidades: string[];
   }> {
@@ -253,7 +255,7 @@ export const eventsRepository = {
       supabaseAdmin
         .from('events')
         .select(
-          'id, name, starts_at, ends_at, ends_at_estimated, location, city, entry_note, photo_url, photo_thumb_url, organizer_instagram'
+          'id, name, starts_at, ends_at, ends_at_estimated, location, city, entry_note, photo_url, photo_thumb_url, organizer_instagram, latitude, longitude'
         )
         .eq('visibility', 'public')
         .gte('starts_at', desde)

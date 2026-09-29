@@ -21,6 +21,9 @@ export interface RoleDaAgenda {
   photo_url: string | null;
   photo_thumb_url: string | null;
   organizer_instagram: string | null;
+  /** Pro mapa do computador. Rolê sem ponto fica só na lista. */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /** "São Bernardo do Campo" → "sao-bernardo-do-campo". */
@@ -102,7 +105,9 @@ function cartao(r: RoleDaAgenda, mostrarCidade: boolean, posicao: number): strin
     ? `<img src="${esc(imagem)}" alt="" width="88" height="88" loading="${carregar}" decoding="async">`
     : `<span class="data"><b>${ini.dia}</b>${ini.mes}</span>`;
   const onde = mostrarCidade ? `${esc(r.location)} · ${esc(r.city)}` : esc(r.location);
-  return `<li><a class="role" href="/app/event/${esc(r.id)}">
+  // id e data-role ligam o cartão ao pino do mapa no computador: passar o
+  // mouse no cartão acende o pino, tocar no pino rola até o cartão.
+  return `<li id="role-${esc(r.id)}"><a class="role" data-role="${esc(r.id)}" href="/app/event/${esc(r.id)}">
   <span class="capa">${capa}</span>
   <span class="corpo">
     <span class="quando">${esc(quando(r))}</span>
@@ -155,8 +160,149 @@ h2{font-size:13px;letter-spacing:1.4px;color:var(--apagado);margin:40px 0 12px;f
 .acoes{display:flex;flex-wrap:wrap;gap:8px}
 footer{padding:26px 0 40px;color:var(--fraco);font-size:12px}
 footer a{color:var(--apagado)}
+.role.ativo{border-color:var(--marca)}
+
+/* ---------- computador: lista à esquerda, mapa parado à direita ---------- */
+.coluna-mapa{display:none}
+@media (min-width:1024px){
+  .centro{max-width:1180px;padding:0 32px}
+  .com-mapa{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:32px;align-items:start}
+  .coluna-mapa{display:block;position:sticky;top:76px;height:calc(100vh - 96px)}
+  /* Alinha o topo do mapa com o da lista quando ela abre com um título. */
+  .com-mapa.com-titulo .coluna-mapa{margin-top:40px}
+  #mapa{width:100%;height:100%;border:1px solid var(--borda);background:#121212}
+}
+
+/* O pino. SEM transform nem position no .pin: o MapLibre posiciona o
+   marcador com position:absolute + transform, e qualquer um dos dois aqui
+   venceria o dele — os pinos "saem andando" a cada zoom. Por isso o
+   destaque (scale) mora na bola de dentro. */
+.pin{cursor:pointer}
+.pin .bola{width:44px;height:44px;border-radius:22px;background:#1a1a1a center/cover no-repeat;border:2px solid var(--marca);box-shadow:0 2px 10px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;transition:transform .15s,border-color .15s}
+.pin.ativo .bola{transform:scale(1.2);border-color:#fff}
+.pin .quando{display:flex;flex-direction:column;align-items:center;color:#fff;font:700 13px/13px system-ui,sans-serif}
+.pin .quando small{font-size:8px;opacity:.75;margin-top:1px}
+.maplibregl-ctrl-group{background:#1a1a1a!important;border:1px solid #333}
+.maplibregl-ctrl-group button+button{border-top:1px solid #333!important}
+.maplibregl-ctrl-group button span{filter:invert(1)}
+.maplibregl-ctrl-attrib{font-size:9px;background:rgba(0,0,0,.5)!important}
+.maplibregl-ctrl-attrib a{color:#aaa!important}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 `;
+
+/**
+ * O mapa do computador, carregado só lá.
+ *
+ * O MapLibre pesa uns 800 KB, e no celular a agenda é só lista — então o
+ * script nem é baixado abaixo de 1024 px. Os pinos são as miniaturas das
+ * artes, os mesmos do mapa do app.
+ */
+const SCRIPT_DO_MAPA = `
+(function () {
+  var dados = window.__ROLES_DO_MAPA || [];
+  if (!dados.length || !window.matchMedia('(min-width: 1024px)').matches) return;
+  var css = document.createElement('link');
+  css.rel = 'stylesheet';
+  css.href = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+  document.head.appendChild(css);
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+  s.onload = iniciar;
+  document.head.appendChild(s);
+
+  function iniciar() {
+    var map = new maplibregl.Map({
+      container: 'mapa',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      center: [dados[0].lng, dados[0].lat],
+      zoom: 9,
+      attributionControl: { compact: true }
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    var pinos = {};
+    var limites = new maplibregl.LngLatBounds();
+
+    dados.forEach(function (r) {
+      var el = document.createElement('div');
+      el.className = 'pin';
+      el.title = r.nome;
+      var bola = document.createElement('div');
+      bola.className = 'bola';
+      if (r.foto) {
+        bola.style.backgroundImage = 'url(' + JSON.stringify(r.foto) + ')';
+      } else {
+        var q = document.createElement('span');
+        q.className = 'quando';
+        q.textContent = r.dia;
+        var m = document.createElement('small');
+        m.textContent = r.mes;
+        q.appendChild(m);
+        bola.appendChild(q);
+      }
+      el.appendChild(bola);
+      el.addEventListener('click', function () {
+        var c = document.getElementById('role-' + r.id);
+        if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        destacar(r.id);
+      });
+      new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(map);
+      pinos[r.id] = el;
+      limites.extend([r.lng, r.lat]);
+    });
+
+    if (dados.length > 1) map.fitBounds(limites, { padding: 60, maxZoom: 12, duration: 0 });
+    else map.jumpTo({ center: [dados[0].lng, dados[0].lat], zoom: 12 });
+
+    function destacar(id) {
+      Object.keys(pinos).forEach(function (k) {
+        pinos[k].classList.toggle('ativo', k === id);
+        // z-index pode, transform não (ver o CSS do .pin).
+        pinos[k].style.zIndex = k === id ? '2' : '';
+      });
+      document.querySelectorAll('.role[data-role]').forEach(function (c) {
+        c.classList.toggle('ativo', c.getAttribute('data-role') === id);
+      });
+    }
+    document.querySelectorAll('.role[data-role]').forEach(function (c) {
+      c.addEventListener('mouseenter', function () { destacar(c.getAttribute('data-role')); });
+    });
+  }
+})();
+`;
+
+/** Os rolês com ponto, no formato que o script do mapa lê. */
+function dadosDoMapa(roles: RoleDaAgenda[]) {
+  return roles
+    .filter((r) => r.latitude != null && r.longitude != null)
+    .map((r) => {
+      const ini = emSP(r.starts_at);
+      return {
+        id: r.id,
+        nome: r.name,
+        lat: r.latitude,
+        lng: r.longitude,
+        foto: r.photo_thumb_url ?? r.photo_url,
+        dia: ini.dia,
+        mes: ini.mes,
+      };
+    });
+}
+
+/**
+ * A lista com o mapa ao lado. No celular o mapa some (CSS) e o script nem
+ * carrega; fica só a lista, como antes.
+ */
+function listaComMapa(listaHtml: string, roles: RoleDaAgenda[], comTitulo = false): string {
+  const noMapa = dadosDoMapa(roles);
+  if (noMapa.length === 0) return listaHtml;
+  return `<div class="com-mapa${comTitulo ? ' com-titulo' : ''}">
+  <div>${listaHtml}</div>
+  <aside class="coluna-mapa" aria-label="Mapa dos rolês"><div id="mapa"></div></aside>
+</div>
+<script>window.__ROLES_DO_MAPA=${jsonNoScript(noMapa)};</script>
+<script>${SCRIPT_DO_MAPA}</script>`;
+}
 
 interface Moldura {
   titulo: string;
@@ -256,8 +402,15 @@ export function paginaDaAgenda(origem: string, roles: RoleDaAgenda[]): string {
 <h1>Encontros de carro: a agenda dos próximos rolês</h1>
 <p class="lead">Rolê de baixo, JDM, clássico, drift e track day. Com o que cada um pede na entrada e o que é proibido — antes de você sair de casa.</p>
 ${cidades.length ? `<h2>POR CIDADE</h2>${listaDeCidades(cidades)}` : ''}
-<h2>PRÓXIMOS</h2>
-${n ? `<ol class="lista">${roles.map((r, i) => cartao(r, true, i)).join('')}</ol>` : '<p class="vazio">Nenhum rolê agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'}`;
+${
+    n
+      ? listaComMapa(
+          `<h2>PRÓXIMOS</h2><ol class="lista">${roles.map((r, i) => cartao(r, true, i)).join('')}</ol>`,
+          roles,
+          true
+        )
+      : '<h2>PRÓXIMOS</h2><p class="vazio">Nenhum rolê agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'
+  }`;
 
   return moldura({
     titulo: 'Encontros de carro: agenda dos próximos rolês · Downpipe',
@@ -305,7 +458,7 @@ export function paginaDaCidade(
       ? `Nenhum rolê agendado em ${esc(nome)} agora. Os próximos nas outras cidades estão logo abaixo.`
       : `${n === 1 ? 'O próximo rolê' : `Os ${n} próximos rolês`} em ${esc(nome)}, com o que cada um pede na entrada e o que é proibido.`
   }</p>
-${n ? `<ol class="lista">${daqui.map((r, i) => cartao(r, false, i)).join('')}</ol>` : ''}
+${n ? listaComMapa(`<ol class="lista">${daqui.map((r, i) => cartao(r, false, i)).join('')}</ol>`, daqui) : ''}
 ${outras.length ? `<h2>OUTRAS CIDADES</h2>${listaDeCidades(outras, slug)}` : ''}`;
 
   const trilha = {

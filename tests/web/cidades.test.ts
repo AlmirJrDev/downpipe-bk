@@ -130,3 +130,38 @@ describe('detalhes do cartão', () => {
     expect(p.html.match(/loading="lazy"/g)).toHaveLength(2);
   });
 });
+
+describe('mapa do computador', () => {
+  it('rolê com ponto entra no mapa, com a miniatura', () => {
+    const p = paginaDaCidade(ORIGEM, 'cotia', [role({ latitude: -23.6, longitude: -46.9 })], ['Cotia'])!;
+    expect(p.html).toContain('id="mapa"');
+    expect(p.html).toContain('"lat":-23.6');
+    expect(p.html).toContain('"foto":"https://storage/mini.jpg"');
+  });
+
+  it('sem nenhum rolê com ponto, não tem mapa nem o script dele', () => {
+    const p = paginaDaCidade(ORIGEM, 'cotia', [role({ latitude: null, longitude: null })], ['Cotia'])!;
+    expect(p.html).not.toContain('id="mapa"');
+    expect(p.html).not.toContain('__ROLES_DO_MAPA');
+  });
+
+  it('nome com </script> não fecha a tag dos dados do mapa', () => {
+    const p = paginaDaCidade(
+      ORIGEM,
+      'cotia',
+      [role({ name: 'x</script><script>alert(1)</script>', latitude: -23.6, longitude: -46.9 })],
+      ['Cotia']
+    )!;
+    expect(p.html).not.toContain('x</script><script>alert(1)');
+  });
+
+  /**
+   * O bug do pino que "saía andando": o MapLibre posiciona o marcador com
+   * position + transform, e qualquer regra dessas no .pin vence a dele.
+   */
+  it('a regra do .pin não tem transform nem position', () => {
+    const html = paginaDaAgenda(ORIGEM, [role({ latitude: -23.6, longitude: -46.9 })]);
+    const regra = html.match(/\.pin\{[^}]*\}/)?.[0] ?? '';
+    expect(regra).not.toMatch(/transform|position/);
+  });
+});
