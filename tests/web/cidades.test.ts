@@ -165,3 +165,16 @@ describe('mapa do computador', () => {
     expect(regra).not.toMatch(/transform|position/);
   });
 });
+
+describe('chamados da página', () => {
+  it('"Publicar meu rolê" vem antes da agenda, logo abaixo do cabeçalho', () => {
+    const html = paginaDaAgenda(ORIGEM, [role()]);
+    expect(html.indexOf('href="/app/add-event"')).toBeGreaterThan(-1);
+    expect(html.indexOf('href="/app/add-event"')).toBeLessThan(html.indexOf('<h1>'));
+  });
+
+  it('"Avisar de um rolê" fica no fim, depois da lista', () => {
+    const html = paginaDaAgenda(ORIGEM, [role()]);
+    expect(html.indexOf('href="/app/sugerir-role"')).toBeGreaterThan(html.indexOf('class="lista"'));
+  });
+});
