@@ -152,6 +152,7 @@ h2{font-size:13px;letter-spacing:1.4px;color:var(--apagado);margin:40px 0 12px;f
 .avise{margin:44px 0 20px;padding:20px;background:var(--carbono);border:1px solid var(--borda);display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
 .avise p{margin:0;color:var(--apagado);font-size:14px;max-width:44ch}
 .avise strong{color:#fff;display:block;font-size:16px;margin-bottom:2px}
+.acoes{display:flex;flex-wrap:wrap;gap:8px}
 footer{padding:26px 0 40px;color:var(--fraco);font-size:12px}
 footer a{color:var(--apagado)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -195,8 +196,11 @@ ${m.marcacao.map((d) => `<script type="application/ld+json">${jsonNoScript(d)}</
 <main class="centro">
 ${m.miolo}
 <section class="avise">
-  <p><strong>Viu um rolê que não está aqui?</strong>Manda pra gente pelo app: a gente confere com o organizador e publica.</p>
-  <a class="botao linha" href="/app/sugerir-role">AVISAR DE UM ROLÊ</a>
+  <p><strong>Organiza um rolê?</strong>Publique aqui, de graça. Você preenche tudo primeiro e cria a conta só no fim, na hora de publicar.</p>
+  <div class="acoes">
+    <a class="botao" href="/app/add-event">PUBLICAR MEU ROLÊ</a>
+    <a class="botao linha" href="/app/sugerir-role">VI UM ROLÊ POR AÍ</a>
+  </div>
 </section>
 </main>
 <footer><div class="centro">Downpipe · a garagem do seu projeto e a agenda dos rolês · <a href="/privacidade">Privacidade</a> · <a href="/termos">Termos</a></div></footer>

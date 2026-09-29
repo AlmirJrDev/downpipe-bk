@@ -2,6 +2,7 @@ import { AppError } from '@/shared/utils/AppError';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { storageService } from '@/shared/storage/storage.service';
 import { miniaturaService } from '@/shared/storage/miniatura.service';
+import { avisarSeContaNova } from './aviso-de-conta-nova';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { assertCarOwnership } from '@/modules/cars/cars.service';
@@ -373,6 +374,9 @@ export const eventsService = {
     await eventsRepository.createAttendance(id, organizerId);
 
     await resolveCoords(id, input.location, input.city, input);
+
+    // Sem await: o aviso não segura a resposta de quem publicou.
+    void avisarSeContaNova(organizerId, { id, nome: input.name, cidade: input.city });
 
     const event = await findEventOrThrow(id);
     return toPublicEvent(event, true);
