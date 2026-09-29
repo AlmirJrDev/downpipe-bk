@@ -65,10 +65,31 @@
       background-color: #0A0A0A;
     }
   }
+
+  /* Logado no computador: o app ocupa a janela inteira, com o menu lateral
+     à esquerda e o conteúdo numa coluna central (components/desktop). Quem
+     limita a largura passa a ser a coluna, não a moldura. Vem por último pra
+     vencer a regra de cima, que tem a mesma especificidade. */
+  @media (min-width: 1024px) {
+    html[data-app="desktop"] #root {
+      max-width: none;
+      border-left: 0;
+      border-right: 0;
+      background-color: #0A0A0A;
+    }
+  }
 </style><script>
   if (window.innerWidth >= 1024 && /^\/app\/event\//.test(window.location.pathname)) {
     document.documentElement.dataset.largura = 'ampla';
   }
+  // Quem tem sessão guardada vai cair no modo desktop assim que o app
+  // montar; abrir a moldura já aqui evita a página nascer com 460 px e
+  // pular. Se a sessão estiver vencida, o app desfaz ao descobrir.
+  try {
+    if (window.innerWidth >= 1024 && window.localStorage.getItem('gearhead_session')) {
+      document.documentElement.dataset.app = 'desktop';
+    }
+  } catch (e) {}
 </script><script>
   window.__promptInstalar = null;
   window.addEventListener('beforeinstallprompt', function (e) {
@@ -412,5 +433,5 @@ input::-webkit-search-cancel-button,input::-webkit-search-decoration,input::-web
 @keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
 @keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
 @keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
-@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="preload" href="/app/_expo/static/css/web-6d829d327aed0cde42c562ac7716754d.css" as="style"><link rel="stylesheet" href="/app/_expo/static/css/web-6d829d327aed0cde42c562ac7716754d.css"></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"></div></div><script src="/app/_expo/static/js/web/entry-39f678f6e240c6a2340ad3f8e5656b36.js" defer></script>
+@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="preload" href="/app/_expo/static/css/web-6d829d327aed0cde42c562ac7716754d.css" as="style"><link rel="stylesheet" href="/app/_expo/static/css/web-6d829d327aed0cde42c562ac7716754d.css"></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"></div></div><script src="/app/_expo/static/js/web/entry-34f33559f0592a0f6d1d7c06f1d77ea2.js" defer></script>
 </body></html>
