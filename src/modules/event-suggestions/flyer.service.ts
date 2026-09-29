@@ -61,6 +61,40 @@ export function imagemAnunciada(html: string): string | null {
   return null;
 }
 
+/**
+ * Link de perfil do Instagram, e não de post.
+ *
+ * A página de perfil também anuncia uma og:image — a foto do perfil, o logo
+ * da equipe em 150 px. Foi assim que o primeiro rolê publicado pela fila
+ * ganhou o logo da organizadora no lugar do cartaz.
+ */
+export function ehPerfilDoInstagram(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (!/(^|\.)instagram\.com$/i.test(u.hostname)) return false;
+    return !/^\/(p|reel|reels|tv)\//i.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+
+/** Abaixo disso não é a arte de um post — é avatar ou ícone. */
+const MENOR_LADO_DE_ARTE = 400;
+
+/**
+ * O maior lado da imagem, ou null se não der pra ler. Import dinâmico pelo
+ * mesmo motivo da miniatura: módulo nativo não pode derrubar o servidor.
+ */
+async function maiorLado(buffer: Buffer): Promise<number | null> {
+  try {
+    const { default: sharp } = await import('sharp');
+    const { width, height } = await sharp(buffer).metadata();
+    return width && height ? Math.max(width, height) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const flyerService = {
   /**
    * Busca a imagem da página e devolve a cópia já no nosso Storage.
@@ -69,6 +103,12 @@ export const flyerService = {
    * sair, as imagens que ela trouxe saem junto, como qualquer upload dela.
    */
   async copiarDaPagina(paginaUrl: string, donoId: string): Promise<string> {
+    if (ehPerfilDoInstagram(paginaUrl)) {
+      throw AppError.validation(
+        'A fonte é o link do perfil, não de um post — a imagem seria a foto de perfil. Troque a fonte pelo link do post do rolê.'
+      );
+    }
+
     let html: string;
     try {
       const pagina = await buscar(paginaUrl, 'text/html');
@@ -100,6 +140,15 @@ export const flyerService = {
     const buffer = Buffer.from(await imagem.arrayBuffer());
     if (buffer.length > MAX_IMAGE_SIZE_BYTES) {
       throw AppError.validation('A imagem da fonte é grande demais.');
+    }
+
+    // A segunda trava, pra fonte que não é Instagram: logo e avatar passam
+    // pelo teste de URL, mas não pelo de tamanho.
+    const lado = await maiorLado(buffer);
+    if (lado !== null && lado < MENOR_LADO_DE_ARTE) {
+      throw AppError.validation(
+        `A imagem da fonte tem só ${lado} px — é logo ou foto de perfil, não a arte do rolê. Suba a arte à mão.`
+      );
     }
 
     const { publicUrl } = await storageService.uploadImage({

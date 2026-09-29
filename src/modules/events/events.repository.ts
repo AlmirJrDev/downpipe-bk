@@ -27,6 +27,7 @@ export interface EventRow {
   source_note: string | null;
   organizer_instagram: string | null;
   tipped_by: string | null;
+  photo_thumb_url: string | null;
   created_at: string;
   updated_at: string;
   reminder_sent_at: string | null;
@@ -68,7 +69,7 @@ const EVENT_SELECT = `
   id, organizer_id, name, description, starts_at, location, city, address, photo_url,
   visibility, latitude, longitude, coords_precision, created_at, updated_at,
   ends_at, ends_at_estimated, entry_note, attractions, rules, kind, car_categories,
-  source_url, source_note, organizer_instagram, tipped_by,
+  source_url, source_note, organizer_instagram, tipped_by, photo_thumb_url,
   profiles!events_organizer_id_fkey ( username, display_name, avatar_url, is_organizer ),
   avisou:profiles!events_tipped_by_fkey ( username ),
   event_attendees ( count )
@@ -222,8 +223,15 @@ export const eventsRepository = {
     if (error) throw error;
   },
 
-  async updatePhoto(id: string, photoUrl: string): Promise<void> {
-    const { error } = await supabaseAdmin.from('events').update({ photo_url: photoUrl }).eq('id', id);
+  /**
+   * Foto e miniatura andam juntas: trocar a foto sem trocar a miniatura
+   * deixaria o pino do mapa mostrando a arte antiga.
+   */
+  async updatePhoto(id: string, photoUrl: string, thumbUrl: string | null): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('events')
+      .update({ photo_url: photoUrl, photo_thumb_url: thumbUrl })
+      .eq('id', id);
     if (error) throw error;
   },
 

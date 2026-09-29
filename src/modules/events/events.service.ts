@@ -1,6 +1,7 @@
 import { AppError } from '@/shared/utils/AppError';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { storageService } from '@/shared/storage/storage.service';
+import { miniaturaService } from '@/shared/storage/miniatura.service';
 import { STORAGE_BUCKETS } from '@/shared/storage/storage.constants';
 import { profilesRepository } from '@/modules/profiles/profiles.repository';
 import { assertCarOwnership } from '@/modules/cars/cars.service';
@@ -27,6 +28,8 @@ function toPublicEvent(
     city: row.city,
     address: row.address,
     photoUrl: row.photo_url,
+    /** Quadrada e pequena, pro pino do mapa. Null = a tela usa a foto cheia. */
+    photoThumbUrl: row.photo_thumb_url,
     visibility: row.visibility,
     latitude: row.latitude,
     longitude: row.longitude,
@@ -413,7 +416,11 @@ export const eventsService = {
       mimeType,
     });
 
-    await eventsRepository.updatePhoto(id, publicUrl);
+    // A miniatura sai do mesmo buffer, que ainda está em memória: baixar a
+    // foto de volta do Storage só pra reduzir seria rede à toa.
+    const miniatura = await miniaturaService.doBuffer(buffer, userId);
+
+    await eventsRepository.updatePhoto(id, publicUrl, miniatura);
     const updated = await findEventOrThrow(id);
     const attendingByMe = await eventsRepository.attendanceExists(id, userId);
     return toPublicEvent(updated, attendingByMe);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { imagemAnunciada } from '@/modules/event-suggestions/flyer.service';
+import { imagemAnunciada, ehPerfilDoInstagram } from '@/modules/event-suggestions/flyer.service';
 
 describe('achar a arte anunciada pela página', () => {
   it('lê a og:image na ordem comum', () => {
@@ -28,5 +28,24 @@ describe('achar a arte anunciada pela página', () => {
 
   it('página sem prévia devolve null — é o caso do muro de login', () => {
     expect(imagemAnunciada('<html><body>Entre para continuar</body></html>')).toBeNull();
+  });
+});
+
+describe('link de perfil não é link de post', () => {
+  /**
+   * Foi o que aconteceu com o Sexta Point: a fonte era o perfil da
+   * organizadora, a og:image era o logo dela em 100 px, e o rolê foi pro ar
+   * com o logo no lugar do cartaz.
+   */
+  it('perfil é recusado antes de baixar qualquer coisa', () => {
+    expect(ehPerfilDoInstagram('https://www.instagram.com/automeet_br/')).toBe(true);
+    expect(ehPerfilDoInstagram('https://instagram.com/automeet_br')).toBe(true);
+  });
+
+  it('post, reel e página de outro site passam', () => {
+    expect(ehPerfilDoInstagram('https://www.instagram.com/p/DdjtyR_xk0G/')).toBe(false);
+    expect(ehPerfilDoInstagram('https://www.instagram.com/reel/Abc123/')).toBe(false);
+    expect(ehPerfilDoInstagram('https://www.sympla.com.br/evento/x/1')).toBe(false);
+    expect(ehPerfilDoInstagram('não é url')).toBe(false);
   });
 });

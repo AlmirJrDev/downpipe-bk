@@ -15,6 +15,10 @@ vi.mock('@/modules/events/events.service', () => ({
   eventsService: { create: vi.fn() },
 }));
 
+vi.mock('@/shared/storage/miniatura.service', () => ({
+  miniaturaService: { daUrl: vi.fn(async () => 'https://storage/mini.jpg') },
+}));
+
 vi.mock('@/modules/events/events.repository', () => ({
   eventsRepository: { update: vi.fn(), updatePhoto: vi.fn() },
 }));
@@ -226,7 +230,11 @@ describe('a arte do rolê', () => {
       city: 'y',
     });
 
-    expect(eventsRepository.updatePhoto).toHaveBeenCalledWith('e1', 'https://storage/flyer.jpg');
+    expect(eventsRepository.updatePhoto).toHaveBeenCalledWith(
+      'e1',
+      'https://storage/flyer.jpg',
+      'https://storage/mini.jpg'
+    );
   });
 
   it('sem foto puxada, o rolê nasce sem foto e ninguém reclama', async () => {

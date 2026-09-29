@@ -3,6 +3,7 @@ import { eventsService } from '@/modules/events/events.service';
 import { eventsRepository } from '@/modules/events/events.repository';
 import { eventSuggestionsRepository, SuggestionRow } from './event-suggestions.repository';
 import { flyerService } from './flyer.service';
+import { miniaturaService } from '@/shared/storage/miniatura.service';
 import {
   ApproveSuggestionInput,
   CreateSuggestionInput,
@@ -138,9 +139,11 @@ export const eventSuggestionsService = {
       tippedBy: sugestao.suggested_by,
     } as never);
 
-    // A arte que quem revisou puxou do post vira a foto do rolê.
+    // A arte que quem revisou puxou do post vira a foto do rolê, com a
+    // miniatura do pino gerada a partir dela.
     if (sugestao.photo_url) {
-      await eventsRepository.updatePhoto(evento.id, sugestao.photo_url);
+      const miniatura = await miniaturaService.daUrl(sugestao.photo_url, adminId);
+      await eventsRepository.updatePhoto(evento.id, sugestao.photo_url, miniatura);
     }
 
     await eventSuggestionsRepository.marcar(id, 'approved', adminId, evento.id);
