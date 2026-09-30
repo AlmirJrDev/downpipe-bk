@@ -121,6 +121,12 @@ describe('troca de domínio', () => {
     expect(destinoDaMudanca({ ...pagina, metodo: 'POST' }, 'https://downpipe.com.br')).toBeNull();
   });
 
+  it('o arquivo de verificação do Google continua respondendo no endereço antigo', () => {
+    expect(
+      destinoDaMudanca({ ...pagina, caminho: '/google38365711ffec7a13.html' }, 'https://downpipe.com.br')
+    ).toBeNull();
+  });
+
   it('máquina de desenvolvimento nunca é mandada pra produção', () => {
     expect(
       destinoDaMudanca({ ...pagina, host: 'localhost:3000' }, 'https://downpipe.com.br')

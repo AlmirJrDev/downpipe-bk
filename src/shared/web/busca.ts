@@ -188,6 +188,10 @@ export function sitemapXml(origem: string, entradas: EntradaDoSitemap[]): string
  * endereço antigo parava de funcionar no mesmo dia (POST redirecionado vira
  * GET, e chamada entre domínios esbarra no CORS). E só o host do Render,
  * pra máquina de desenvolvimento nunca ser mandada pra produção.
+ *
+ * O arquivo de verificação do Search Console fica de fora: a ferramenta de
+ * mudança de endereço do Google exige o endereço antigo ainda verificado, e
+ * a verificação por arquivo não aceita redirecionamento pra outro domínio.
  */
 export function destinoDaMudanca(
   pedido: { host: string; metodo: string; aceita: string; caminho: string },
@@ -201,6 +205,7 @@ export function destinoDaMudanca(
     return null;
   }
   if (!pedido.host.endsWith('.onrender.com')) return null;
+  if (/^\/google[0-9a-f]+\.html$/.test(pedido.caminho)) return null;
   if (pedido.host === novo.host) return null;
   if (pedido.metodo !== 'GET' && pedido.metodo !== 'HEAD') return null;
   if (!pedido.aceita.includes('text/html')) return null;
