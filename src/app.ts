@@ -128,27 +128,6 @@ export function createApp() {
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
   /**
-   * Troca de domínio (ver destinoDaMudanca em shared/web/busca.ts).
-   *
-   * Parado enquanto APP_URL for o próprio onrender.com, ou não existir. No
-   * dia em que APP_URL apontar pro domínio novo, toda página aberta pelo
-   * endereço antigo vira um 301 pro novo — que é como o Google entende que
-   * o site mudou de casa e leva junto o que já tinha indexado.
-   */
-  app.use((req, res, next) => {
-    const destino = destinoDaMudanca(
-      {
-        host: req.get('host') ?? '',
-        metodo: req.method,
-        aceita: req.get('accept') ?? '',
-        caminho: req.originalUrl,
-      },
-      env.APP_URL
-    );
-    return destino ? res.redirect(301, destino) : next();
-  });
-
-  /**
    * Teto geral, só nos prefixos da API. Depois do morgan, pra requisição
    * barrada ainda aparecer no log.
    *
@@ -179,6 +158,39 @@ export function createApp() {
     '/admin',
     '/status',
   ];
+
+  /**
+   * O que é da API, e não página: nunca redireciona na troca de domínio.
+   * /health é do Render; /sw.js fica no endereço antigo pra o service worker
+   * de quem instalou por lá conseguir se atualizar (navegador não aceita
+   * redirecionamento no script do service worker).
+   */
+  const ehDaApi = (caminho: string) =>
+    caminho === '/health' ||
+    caminho === '/sw.js' ||
+    PREFIXOS_DA_API.some((p) => caminho === p || caminho.startsWith(`${p}/`));
+
+  /**
+   * Troca de domínio (ver destinoDaMudanca em shared/web/busca.ts).
+   *
+   * Parado enquanto APP_URL for o próprio onrender.com, ou não existir. No
+   * dia em que APP_URL apontar pro domínio novo, toda página aberta pelo
+   * endereço antigo vira um 301 pro novo — que é como o Google entende que
+   * o site mudou de casa e leva junto o que já tinha indexado.
+   */
+  app.use((req, res, next) => {
+    const destino = destinoDaMudanca(
+      {
+        host: req.get('host') ?? '',
+        metodo: req.method,
+        caminho: req.originalUrl,
+        ehApi: ehDaApi(req.path),
+      },
+      env.APP_URL
+    );
+    return destino ? res.redirect(301, destino) : next();
+  });
+
   app.use(PREFIXOS_DA_API, limiteGeral);
 
   /**

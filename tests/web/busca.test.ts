@@ -96,8 +96,8 @@ describe('troca de domínio', () => {
   const pagina = {
     host: 'downpipe.onrender.com',
     metodo: 'GET',
-    aceita: 'text/html,application/xhtml+xml',
     caminho: '/app/event/e1?x=1',
+    ehApi: false,
   };
 
   it('fica parado enquanto o APP_URL é o próprio onrender, ou não existe', () => {
@@ -117,8 +117,20 @@ describe('troca de domínio', () => {
    * chamada entre domínios esbarra no CORS.
    */
   it('chamada de API não é redirecionada', () => {
-    expect(destinoDaMudanca({ ...pagina, aceita: 'application/json' }, 'https://downpipe.com.br')).toBeNull();
+    expect(
+      destinoDaMudanca({ ...pagina, caminho: '/events/e1', ehApi: true }, 'https://downpipe.com.br')
+    ).toBeNull();
     expect(destinoDaMudanca({ ...pagina, metodo: 'POST' }, 'https://downpipe.com.br')).toBeNull();
+  });
+
+  /**
+   * O validador de mudança de endereço do Search Console pede a página
+   * inicial sem se anunciar navegador. Recebendo 200, ele recusa a mudança.
+   */
+  it('a página inicial redireciona pra qualquer um, não só pra navegador', () => {
+    expect(destinoDaMudanca({ ...pagina, caminho: '/' }, 'https://downpipe.com.br')).toBe(
+      'https://downpipe.com.br/'
+    );
   });
 
   it('o arquivo de verificação do Google continua respondendo no endereço antigo', () => {

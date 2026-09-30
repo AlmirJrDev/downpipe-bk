@@ -183,10 +183,14 @@ export function sitemapXml(origem: string, entradas: EntradaDoSitemap[]): string
  *
  * Fica parado até APP_URL apontar pra um domínio diferente do onrender.com —
  * aí vira um 301, que é o que diz ao Google "mudou de endereço, leve o que
- * este aqui tinha". Só navegação de página é redirecionada: a API continua
- * respondendo nos dois endereços, senão o app de quem instalou pelo
- * endereço antigo parava de funcionar no mesmo dia (POST redirecionado vira
- * GET, e chamada entre domínios esbarra no CORS). E só o host do Render,
+ * este aqui tinha". Toda leitura de página é redirecionada, venha de quem
+ * vier — a primeira versão só redirecionava quem se anunciava navegador
+ * (Accept: text/html), e o validador de mudança de endereço do Search
+ * Console, que pede aceitando qualquer tipo, recebia 200 e recusava a mudança.
+ *
+ * A API fica de fora e continua respondendo nos dois endereços, senão o
+ * app de quem instalou pelo endereço antigo parava de funcionar no mesmo dia
+ * (POST redirecionado vira GET, e chamada entre domínios esbarra no CORS). E só o host do Render,
  * pra máquina de desenvolvimento nunca ser mandada pra produção.
  *
  * O arquivo de verificação do Search Console fica de fora: a ferramenta de
@@ -194,7 +198,13 @@ export function sitemapXml(origem: string, entradas: EntradaDoSitemap[]): string
  * a verificação por arquivo não aceita redirecionamento pra outro domínio.
  */
 export function destinoDaMudanca(
-  pedido: { host: string; metodo: string; aceita: string; caminho: string },
+  pedido: {
+    host: string;
+    metodo: string;
+    caminho: string;
+    /** Rota da API (ou /health, /sw.js): nunca redireciona. Quem sabe é o app.ts. */
+    ehApi: boolean;
+  },
   appUrl: string | undefined
 ): string | null {
   if (!appUrl) return null;
@@ -208,6 +218,6 @@ export function destinoDaMudanca(
   if (/^\/google[0-9a-f]+\.html$/.test(pedido.caminho)) return null;
   if (pedido.host === novo.host) return null;
   if (pedido.metodo !== 'GET' && pedido.metodo !== 'HEAD') return null;
-  if (!pedido.aceita.includes('text/html')) return null;
+  if (pedido.ehApi) return null;
   return `${novo.origin}${pedido.caminho}`;
 }
