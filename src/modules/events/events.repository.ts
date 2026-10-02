@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/config/supabase';
+import { novoCodigoDeIngresso } from '@/modules/tickets/codigo';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { CreateEventInput, UpdateEventInput } from './events.schema';
 
@@ -346,9 +347,13 @@ export const eventsRepository = {
     userId: string,
     carId?: string | null
   ): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('event_attendees')
-      .insert({ event_id: eventId, user_id: userId, car_id: carId ?? null });
+    // Confirmar presença já gera o ingresso: ver 0038_ingressos.sql.
+    const { error } = await supabaseAdmin.from('event_attendees').insert({
+      event_id: eventId,
+      user_id: userId,
+      car_id: carId ?? null,
+      ticket_code: novoCodigoDeIngresso(),
+    });
 
     if (error) throw error;
   },

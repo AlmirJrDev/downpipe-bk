@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, attachUserIfPresent } from '@/shared/middleware/auth.middleware';
 import { imageUpload } from '@/shared/middleware/upload.middleware';
+import { getMyTicket, getCheckinList, syncCheckins } from '@/modules/tickets/tickets.controller';
 import {
   list,
   listByOrganizer,
@@ -33,6 +34,11 @@ eventsRouter.post('/:eventId/attend', requireAuth, attend);
 eventsRouter.delete('/:eventId/attend', requireAuth, unattend);
 eventsRouter.patch('/:eventId/attend/car', requireAuth, updateAttendanceCar);
 eventsRouter.get('/:eventId/attendees', listAttendees);
+
+// Ingresso (de quem confirmou) e portaria (de quem organiza).
+eventsRouter.get('/:eventId/ticket', requireAuth, getMyTicket);
+eventsRouter.get('/:eventId/checkin', requireAuth, getCheckinList);
+eventsRouter.post('/:eventId/checkin', requireAuth, syncCheckins);
 
 // Rota em /profiles/:username/events
 export const profileEventsRouter = Router();
