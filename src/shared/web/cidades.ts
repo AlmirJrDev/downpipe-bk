@@ -123,7 +123,8 @@ const ESTILO = `
 :root{--preto:#0E0E0E;--carbono:#161616;--borda:#2A2A2A;--texto:#fff;--apagado:#A8A8A8;--fraco:#6E6E6E;--marca:#E53935}
 *{box-sizing:border-box}
 html{background:var(--preto)}
-body{margin:0;background:var(--preto);color:var(--texto);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
+@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/inter-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/inter-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+body{margin:0;background:var(--preto);color:var(--texto);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
 a{color:inherit}
 .centro{width:100%;max-width:760px;margin:0 auto;padding:0 16px}
 header{position:sticky;top:0;z-index:5;height:60px;display:flex;align-items:center;background:rgba(14,14,14,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--borda)}

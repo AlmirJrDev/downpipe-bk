@@ -1,4 +1,32 @@
-<!DOCTYPE html><html  lang="pt-BR"><head><title data-rh="true"></title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Downpipe</title><meta name="description" content="Rede social automotiva: sua garagem, os rolês e quem vai estar lá."/><link rel="manifest" href="/manifest.json"/><meta name="theme-color" content="#131313"/><link rel="icon" href="/icon-192.png" type="image/png"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Downpipe"/><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style>
+<!DOCTYPE html><html  lang="pt-BR"><head><title data-rh="true"></title><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Downpipe</title><meta name="description" content="Rede social automotiva: sua garagem, os rolês e quem vai estar lá."/><link rel="manifest" href="/manifest.json"/><meta name="theme-color" content="#131313"/><link rel="icon" href="/icon-192.png" type="image/png"/><link rel="apple-touch-icon" href="/apple-touch-icon.png"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Downpipe"/><link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin=""/><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style>
+  /* Inter variável: um arquivo cobre do 100 ao 900, então o fontWeight do
+     app continua valendo sem um arquivo por peso. */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(/fonts/inter-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+  }
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(/fonts/inter-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+  }
+
+  /* A mesma letra em todo aparelho. Antes cada um usava a do sistema — San
+     Francisco no iPhone, Roboto no Android, Segoe UI no Windows — e o app
+     tinha uma cara em cada lugar. O !important é porque o react-native-web
+     escreve a pilha do sistema numa classe de cada texto, e uma regra
+     herdada não passaria por cima dela. */
+  html, body, body * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  }
+
   html, body, #root { background-color: #131313; }
   body { overscroll-behavior-y: none; }
 
@@ -438,5 +466,5 @@ input::-webkit-search-cancel-button,input::-webkit-search-decoration,input::-web
 @keyframes r-1pzkwqh{0%{transform:translateY(100%);}100%{transform:translateY(0%);}}
 @keyframes r-imtty0{0%{opacity:0;}100%{opacity:1;}}
 @keyframes r-q67da2{0%{transform:translateX(-100%);}100%{transform:translateX(400%);}}
-@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="preload" href="/app/_expo/static/css/web-4c892090a6e9fced632ef1afa3ecc35c.css" as="style"><link rel="stylesheet" href="/app/_expo/static/css/web-4c892090a6e9fced632ef1afa3ecc35c.css"></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"><!--$--><div class="css-g5y9jx" style="flex:1;background-color:rgba(18,18,18,1.00)"><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx" style="flex:1;align-items:center;justify-content:center;background-color:rgba(18,18,18,1.00)"><div role="progressbar" aria-valuemax="1" aria-valuemin="0" class="css-g5y9jx r-1awozwy r-1777fci"><div class="css-g5y9jx r-z80fyv r-19wmn03 r-17bb2tj r-1muvv40 r-1yef0xd r-1ldzwu0"><svg height="100%" viewBox="0 0 32 32" width="100%"><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke:#ff4a3d;opacity:0.2"></circle><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke:#ff4a3d;stroke-dasharray:80;stroke-dashoffset:60"></circle></svg></div></div></div></div></div><!--/$--></div></div><script src="/app/_expo/static/js/web/entry-32fa061a655f70bd3940960d5b6f5587.js" defer></script>
+@keyframes r-t2lo5v{0%{opacity:1;}100%{opacity:0;}}</style><script type="module">globalThis.__EXPO_ROUTER_HYDRATE__=true;</script><link rel="preload" href="/app/_expo/static/css/web-fe79579925c2d110d8eafc70c41f5827.css" as="style"><link rel="stylesheet" href="/app/_expo/static/css/web-fe79579925c2d110d8eafc70c41f5827.css"></head><body><div id="root"><div class="css-g5y9jx r-13awgt0"><!--$--><div class="css-g5y9jx" style="flex:1;background-color:rgba(18,18,18,1.00)"><div class="css-g5y9jx r-13awgt0"><div class="css-g5y9jx" style="flex:1;align-items:center;justify-content:center;background-color:rgba(18,18,18,1.00)"><div role="progressbar" aria-valuemax="1" aria-valuemin="0" class="css-g5y9jx r-1awozwy r-1777fci"><div class="css-g5y9jx r-z80fyv r-19wmn03 r-17bb2tj r-1muvv40 r-1yef0xd r-1ldzwu0"><svg height="100%" viewBox="0 0 32 32" width="100%"><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke:#ff4a3d;opacity:0.2"></circle><circle cx="16" cy="16" fill="none" r="14" stroke-width="4" style="stroke:#ff4a3d;stroke-dasharray:80;stroke-dashoffset:60"></circle></svg></div></div></div></div></div><!--/$--></div></div><script src="/app/_expo/static/js/web/entry-3f702e43d1944f4db056a8b62fe233c5.js" defer></script>
 </body></html>
