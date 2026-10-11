@@ -36,10 +36,12 @@ export function renderStatusPage({ appOnline, expoUrl, qrDataUri, updatedAtLabel
      mudar sem precisar atualizar na mão. -->
 <meta http-equiv="refresh" content="30">
 <style>
+  /* A mesma Inter do app, servida pelo próprio site (web/fonts). */
+  @font-face { font-family: 'Inter'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(/fonts/inter-latin.woff2) format('woff2'); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: ${COLORS.surface}; color: ${COLORS.onSurface};
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
     padding: 24px;
   }
