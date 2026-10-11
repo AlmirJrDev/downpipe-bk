@@ -206,8 +206,12 @@ export function createApp() {
     next();
   });
 
+  // Quando o processo subiu: se mudar sem ter havido deploy, o servidor
+  // reiniciou sozinho (falta de memória, queda) — e quem estava usando o
+  // app naquele instante viu "sem conexão".
+  const ligadoEm = new Date().toISOString();
   app.get('/health', (_req, res) => {
-    res.json({ data: { status: 'ok' }, error: null });
+    res.json({ data: { status: 'ok', ligadoEm }, error: null });
   });
 
   // Fase 1
