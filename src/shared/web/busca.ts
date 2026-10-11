@@ -45,6 +45,27 @@ function descricaoDoRole(r: RoleParaBusca): string {
 }
 
 /**
+ * O preço da entrada, quando o texto livre do organizador deixa isso claro.
+ *
+ * A entrada é um campo escrito à mão ("Expositor R$ 20 · estacionamento R$
+ * 12", "Entrada gratuita", "1 brinquedo novo"). Só vira preço pro Google
+ * quando não há dúvida: grátis sem nenhum valor, ou um valor só. Dois
+ * valores no mesmo texto (expositor e estacionamento) não dizem qual é o
+ * ingresso — e um preço errado no resultado da busca é pior que nenhum.
+ */
+export function precoDaEntrada(entrada: string | null | undefined): string | null {
+  if (!entrada) return null;
+  const valores = [...entrada.matchAll(/R\$\s*(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?/g)];
+  const gratis = /gr[aá]t(?:is|uit)|entrada (?:livre|franca)/i.test(entrada);
+  if (gratis && valores.length === 0) return '0';
+  if (!gratis && valores.length === 1) {
+    const [, reais, centavos] = valores[0];
+    return `${reais.replace(/\./g, '')}.${(centavos ?? '00').padEnd(2, '0')}`;
+  }
+  return null;
+}
+
+/**
  * A marcação schema.org/Event do rolê.
  *
  * Os obrigatórios do Google são nome, início e local com nome e endereço; o
@@ -77,6 +98,23 @@ export function marcacaoDeEvento(r: RoleParaBusca, url: string): Record<string, 
       ? { '@type': 'Person', name: r.organizer.displayName }
       : undefined;
 
+  // Encontro de carro não tem atração no palco: quem "se apresenta" é a
+  // equipe ou o perfil que organiza. Sem performer o Google marca o evento
+  // como incompleto.
+  const atracao = organizador ? { '@type': 'PerformingGroup', name: organizador.name } : undefined;
+
+  const preco = precoDaEntrada(r.entryNote);
+  const oferta =
+    preco != null
+      ? {
+          '@type': 'Offer',
+          price: preco,
+          priceCurrency: 'BRL',
+          availability: 'https://schema.org/InStock',
+          url,
+        }
+      : undefined;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -89,6 +127,8 @@ export function marcacaoDeEvento(r: RoleParaBusca, url: string): Record<string, 
     location: local,
     ...(r.photoUrl ? { image: [r.photoUrl] } : {}),
     ...(organizador ? { organizer: organizador } : {}),
+    ...(atracao ? { performer: atracao } : {}),
+    ...(oferta ? { offers: oferta } : {}),
     url,
   };
 }

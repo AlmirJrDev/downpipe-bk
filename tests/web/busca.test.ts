@@ -3,6 +3,7 @@ import {
   destinoDaMudanca,
   robotsTxt,
   marcacaoDeEvento,
+  precoDaEntrada,
   sitemapXml,
   tagsDeBusca,
   RoleParaBusca,
@@ -53,9 +54,40 @@ describe('marcação de evento pro Google', () => {
     expect(m.description).toBe('Encontro de carros em Shopping Central Park, Cotia. Entrada: Expositor R$ 20.');
   });
 
+  it('quem organiza também aparece como a atração do encontro', () => {
+    const m = marcacaoDeEvento(role(), URL) as Record<string, any>;
+    expect(m.performer).toEqual({ '@type': 'PerformingGroup', name: '@low_meeting' });
+  });
+
+  it('entrada com um valor só vira oferta em reais', () => {
+    const m = marcacaoDeEvento(role(), URL) as Record<string, any>;
+    expect(m.offers).toMatchObject({ '@type': 'Offer', price: '20.00', priceCurrency: 'BRL', url: URL });
+  });
+
+  it('entrada ambígua não vira oferta', () => {
+    const m = marcacaoDeEvento(role({ entryNote: 'Expositor R$ 20 · estacionamento R$ 12' }), URL) as Record<string, any>;
+    expect(m.offers).toBeUndefined();
+  });
+
   it('sem coordenada, não inventa geo', () => {
     const m = marcacaoDeEvento(role({ latitude: null, longitude: null }), URL) as Record<string, any>;
     expect(m.location.geo).toBeUndefined();
+  });
+});
+
+describe('preço da entrada', () => {
+  it('lê o que não deixa dúvida', () => {
+    expect(precoDaEntrada('Entrada gratuita')).toBe('0');
+    expect(precoDaEntrada('Grátis pra visitante')).toBe('0');
+    expect(precoDaEntrada('R$ 25,00 por carro')).toBe('25.00');
+    expect(precoDaEntrada('Ingresso R$ 1.200,5')).toBe('1200.50');
+  });
+
+  it('na dúvida, não chuta', () => {
+    expect(precoDaEntrada('1 brinquedo novo ou 1 pacote de doces')).toBeNull();
+    expect(precoDaEntrada('Visitante grátis · expositor R$ 20')).toBeNull();
+    expect(precoDaEntrada('Expositor R$ 20 · estacionamento R$ 12')).toBeNull();
+    expect(precoDaEntrada(null)).toBeNull();
   });
 });
 
