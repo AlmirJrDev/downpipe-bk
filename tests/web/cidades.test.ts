@@ -40,7 +40,7 @@ describe('página da cidade', () => {
     role({ id: 'e3', name: 'AFR288', city: 'Campinas' }),
   ];
 
-  it('lista só os rolês daquela cidade', () => {
+  it('lista só os encontros daquela cidade', () => {
     const p = paginaDaCidade(ORIGEM, 'campinas', roles, ['Campinas', 'Cotia'])!;
     expect(p.html).toContain('Encontros de carro em Campinas');
     expect(p.html).toContain('Rota 17');
@@ -64,14 +64,14 @@ describe('página da cidade', () => {
    * tem rolê de novo, e o Google esqueceria a página. Mas também não deve
    * ser indexada vazia.
    */
-  it('cidade que já teve rolê, sem nenhum agora: existe, mas com noindex', () => {
+  it('cidade que já teve encontro, sem nenhum agora: existe, mas com noindex', () => {
     const p = paginaDaCidade(ORIGEM, 'jundiai', roles, ['Campinas', 'Cotia', 'Jundiaí'])!;
     expect(p.indexar).toBe(false);
     expect(p.html).toContain('noindex');
-    expect(p.html).toContain('Nenhum rolê agendado em Jundiaí');
+    expect(p.html).toContain('Nenhum encontro agendado em Jundiaí');
   });
 
-  it('cidade que nunca teve rolê: null, e o servidor responde 404', () => {
+  it('cidade que nunca teve encontro: null, e o servidor responde 404', () => {
     expect(paginaDaCidade(ORIGEM, 'manaus', roles, ['Campinas'])).toBeNull();
   });
 
@@ -132,14 +132,14 @@ describe('detalhes do cartão', () => {
 });
 
 describe('mapa do computador', () => {
-  it('rolê com ponto entra no mapa, com a miniatura', () => {
+  it('encontro com ponto entra no mapa, com a miniatura', () => {
     const p = paginaDaCidade(ORIGEM, 'cotia', [role({ latitude: -23.6, longitude: -46.9 })], ['Cotia'])!;
     expect(p.html).toContain('id="mapa"');
     expect(p.html).toContain('"lat":-23.6');
     expect(p.html).toContain('"foto":"https://storage/mini.jpg"');
   });
 
-  it('sem nenhum rolê com ponto, não tem mapa nem o script dele', () => {
+  it('sem nenhum encontro com ponto, não tem mapa nem o script dele', () => {
     const p = paginaDaCidade(ORIGEM, 'cotia', [role({ latitude: null, longitude: null })], ['Cotia'])!;
     expect(p.html).not.toContain('id="mapa"');
     expect(p.html).not.toContain('__ROLES_DO_MAPA');
@@ -167,13 +167,13 @@ describe('mapa do computador', () => {
 });
 
 describe('chamados da página', () => {
-  it('"Publicar meu rolê" vem antes da agenda, logo abaixo do cabeçalho', () => {
+  it('"Publicar meu encontro" vem antes da agenda, logo abaixo do cabeçalho', () => {
     const html = paginaDaAgenda(ORIGEM, [role()]);
     expect(html.indexOf('href="/app/add-event"')).toBeGreaterThan(-1);
     expect(html.indexOf('href="/app/add-event"')).toBeLessThan(html.indexOf('<h1>'));
   });
 
-  it('"Avisar de um rolê" fica no fim, depois da lista', () => {
+  it('"Avisar de um encontro" fica no fim, depois da lista', () => {
     const html = paginaDaAgenda(ORIGEM, [role()]);
     expect(html.indexOf('href="/app/sugerir-role"')).toBeGreaterThan(html.indexOf('class="lista"'));
   });

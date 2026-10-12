@@ -48,7 +48,7 @@ const DAQUI_A_UMA_SEMANA = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOStri
 const ONTEM = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
 
 function evento(startsAt = DAQUI_A_UMA_SEMANA) {
-  return { id: EVENTO, organizer_id: ORGANIZADOR, name: 'Rolê de teste', starts_at: startsAt } as never;
+  return { id: EVENTO, organizer_id: ORGANIZADOR, name: 'Encontro de teste', starts_at: startsAt } as never;
 }
 
 function mensagem(autor: string | null, texto = 'bora') {
@@ -206,7 +206,7 @@ describe('cancelamento', () => {
     expect(avisados().sort()).toEqual([ANA, BETO].sort());
   });
 
-  it('rolê que já aconteceu não avisa ninguém', async () => {
+  it('encontro que já aconteceu não avisa ninguém', async () => {
     const enviar = await eventChatService.prepararAvisoDeCancelamento(evento(ONTEM));
     await enviar();
 

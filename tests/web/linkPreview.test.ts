@@ -8,12 +8,12 @@ describe('prévia de link compartilhado', () => {
   it('troca título e descrição e põe as tags Open Graph', () => {
     const html = comPrevia(
       CASCA,
-      { titulo: 'Rolê de sábado', descricao: 'Posto Graal, São Paulo', imagem: 'https://x/y.jpg' },
+      { titulo: 'Encontro de sábado', descricao: 'Posto Graal, São Paulo', imagem: 'https://x/y.jpg' },
       'https://downpipe.onrender.com/app/event/1',
       'https://downpipe.onrender.com/og-banner.png'
     );
 
-    expect(html).toContain('<title>Rolê de sábado</title>');
+    expect(html).toContain('<title>Encontro de sábado</title>');
     expect(html).toContain('<meta property="og:image" content="https://x/y.jpg"/>');
     expect(html).not.toContain('content="padrão"');
     expect(html.match(/<title>/g)).toHaveLength(1);

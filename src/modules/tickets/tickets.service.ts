@@ -49,7 +49,7 @@ async function assertOrganizador(eventId: string, userId: string) {
   const event = await eventsRepository.findById(eventId);
   if (!event) throw AppError.notFound('EVENT_NOT_FOUND', 'Evento não encontrado');
   if (event.organizer_id !== userId) {
-    throw AppError.forbidden('A portaria é só de quem organiza o rolê');
+    throw AppError.forbidden('A portaria é só de quem organiza o encontro');
   }
 }
 
@@ -66,7 +66,7 @@ export const ticketsService = {
   async getMine(eventId: string, userId: string) {
     const row = await ticketsRepository.findByAttendee(eventId, userId);
     if (!row) {
-      throw AppError.notFound('TICKET_NOT_FOUND', 'Confirme presença no rolê para ter ingresso');
+      throw AppError.notFound('TICKET_NOT_FOUND', 'Confirme presença no encontro para ter ingresso');
     }
     return toTicket(row);
   },

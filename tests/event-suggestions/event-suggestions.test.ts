@@ -68,7 +68,7 @@ beforeEach(() => {
   vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1', latitude: null } as never);
 });
 
-describe('sugerir um rolê', () => {
+describe('sugerir um encontro', () => {
   it('quem sugere recebe a mesma resposta mesmo se alguém já tinha avisado', async () => {
     vi.mocked(eventSuggestionsRepository.create).mockResolvedValue(null);
 
@@ -96,7 +96,7 @@ describe('sugerir um rolê', () => {
 });
 
 describe('aprovar', () => {
-  it('cria o rolê e guarda a fonte junto', async () => {
+  it('cria o encontro e guarda a fonte junto', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
 
     const r = await eventSuggestionsService.aprovar('s1', ADMIN, {
@@ -123,7 +123,7 @@ describe('aprovar', () => {
     expect(eventSuggestionsRepository.marcar).toHaveBeenCalledWith('s1', 'approved', ADMIN, 'e1');
   });
 
-  it('o @ de quem organiza vai junto: o rolê é dele, não de quem aprovou', async () => {
+  it('o @ de quem organiza vai junto: o encontro é dele, não de quem aprovou', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
       sugestao({ organizer_instagram: 'amante_dos_baixos' })
     );
@@ -156,7 +156,7 @@ describe('aprovar', () => {
     });
   });
 
-  it('sugestão já revisada não vira rolê duas vezes', async () => {
+  it('sugestão já revisada não vira encontro duas vezes', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
       sugestao({ status: 'approved' })
     );
@@ -218,8 +218,8 @@ describe('crédito de quem avisou', () => {
   });
 });
 
-describe('a arte do rolê', () => {
-  it('a foto puxada do post vira a foto do rolê', async () => {
+describe('a arte do encontro', () => {
+  it('a foto puxada do post vira a foto do encontro', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(
       sugestao({ photo_url: 'https://storage/flyer.jpg' })
     );
@@ -237,7 +237,7 @@ describe('a arte do rolê', () => {
     );
   });
 
-  it('sem foto puxada, o rolê nasce sem foto e ninguém reclama', async () => {
+  it('sem foto puxada, o encontro nasce sem foto e ninguém reclama', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
 
     await eventSuggestionsService.aprovar('s1', ADMIN, {
@@ -250,13 +250,13 @@ describe('a arte do rolê', () => {
   });
 });
 
-describe('rolê sem ponto no mapa', () => {
+describe('encontro sem ponto no mapa', () => {
   /**
    * Endereço de flyer é onde o geocodificador mais erra, e rolê sem
    * coordenada não existe no "perto de mim". Quem aprovou precisa saber na
    * hora — depois de publicado, ninguém volta pra conferir.
    */
-  it('avisa quando o rolê saiu sem coordenada', async () => {
+  it('avisa quando o encontro saiu sem coordenada', async () => {
     vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
     vi.mocked(eventsService.create).mockResolvedValue({ id: 'e1', latitude: null } as never);
 

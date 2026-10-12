@@ -27,21 +27,21 @@ beforeEach(() => {
   vi.mocked(moderationRepository.listAdminIds).mockResolvedValue(['admin']);
 });
 
-describe('aviso de rolê de conta nova', () => {
-  it('conta de uma hora publicando: quem modera é avisado, com o link do rolê', async () => {
+describe('aviso de encontro de conta nova', () => {
+  it('conta de uma hora publicando: quem modera é avisado, com o link do encontro', async () => {
     vi.mocked(profilesRepository.findById).mockResolvedValue(contaCriadaHa(1));
 
     await avisarSeContaNova('u1', ROLE, AGORA);
 
     expect(pushService.sendToUser).toHaveBeenCalledWith('admin', {
-      title: 'Rolê novo de conta nova',
+      title: 'Encontro novo de conta nova',
       body: 'Encontro da Marginal · Campinas',
       url: '/app/event/e1',
       badge: 0,
     });
   });
 
-  it('conta com mais de um dia não avisa — viraria ruído a cada rolê', async () => {
+  it('conta com mais de um dia não avisa — viraria ruído a cada encontro', async () => {
     vi.mocked(profilesRepository.findById).mockResolvedValue(contaCriadaHa(30));
 
     await avisarSeContaNova('u1', ROLE, AGORA);
@@ -49,7 +49,7 @@ describe('aviso de rolê de conta nova', () => {
     expect(pushService.sendToUser).not.toHaveBeenCalled();
   });
 
-  it('quem modera e publica o próprio rolê não recebe o próprio aviso', async () => {
+  it('quem modera e publica o próprio encontro não recebe o próprio aviso', async () => {
     vi.mocked(profilesRepository.findById).mockResolvedValue(contaCriadaHa(1));
     vi.mocked(moderationRepository.listAdminIds).mockResolvedValue(['u1']);
 

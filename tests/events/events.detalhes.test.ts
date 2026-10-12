@@ -9,13 +9,13 @@ const base = {
   city: 'São Paulo',
 };
 
-describe('carro aceito no rolê', () => {
+describe('carro aceito no encontro', () => {
   it('sem lista, qualquer carro entra — que é a maioria dos encontros', () => {
     expect(carroAceitoNoRole([], 'Stance')).toBe(true);
     expect(carroAceitoNoRole(null, 'Stance')).toBe(true);
   });
 
-  it('com lista, só as categorias que o rolê espera', () => {
+  it('com lista, só as categorias que o encontro espera', () => {
     expect(carroAceitoNoRole(['Clássicos'], 'Clássicos')).toBe(true);
     expect(carroAceitoNoRole(['Clássicos'], 'Stance')).toBe(false);
   });
@@ -25,7 +25,7 @@ describe('carro aceito no rolê', () => {
   });
 });
 
-describe('campos novos do rolê', () => {
+describe('campos novos do encontro', () => {
   it('aceita atrações, proibições, tipo e carros esperados', () => {
     const r = createEventSchema.safeParse({
       ...base,
@@ -45,7 +45,7 @@ describe('campos novos do rolê', () => {
     expect(createEventSchema.safeParse({ ...base, rules: ['sem_nada'] }).success).toBe(false);
   });
 
-  it('rolê que termina antes de começar é erro de digitação', () => {
+  it('encontro que termina antes de começar é erro de digitação', () => {
     const r = createEventSchema.safeParse({
       ...base,
       endsAt: '2026-10-10T20:00:00.000Z',
@@ -61,7 +61,7 @@ describe('campos novos do rolê', () => {
     expect(r.success).toBe(false);
   });
 
-  it('tirar o fim do rolê é permitido (volta a ser em aberto)', () => {
+  it('tirar o fim do encontro é permitido (volta a ser em aberto)', () => {
     expect(updateEventSchema.safeParse({ endsAt: null }).success).toBe(true);
   });
 });

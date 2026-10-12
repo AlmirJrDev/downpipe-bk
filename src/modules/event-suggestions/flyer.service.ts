@@ -105,7 +105,7 @@ export const flyerService = {
   async copiarDaPagina(paginaUrl: string, donoId: string): Promise<string> {
     if (ehPerfilDoInstagram(paginaUrl)) {
       throw AppError.validation(
-        'A fonte é o link do perfil, não de um post — a imagem seria a foto de perfil. Troque a fonte pelo link do post do rolê.'
+        'A fonte é o link do perfil, não de um post — a imagem seria a foto de perfil. Troque a fonte pelo link do post do encontro.'
       );
     }
 
@@ -147,7 +147,7 @@ export const flyerService = {
     const lado = await maiorLado(buffer);
     if (lado !== null && lado < MENOR_LADO_DE_ARTE) {
       throw AppError.validation(
-        `A imagem da fonte tem só ${lado} px — é logo ou foto de perfil, não a arte do rolê. Suba a arte à mão.`
+        `A imagem da fonte tem só ${lado} px — é logo ou foto de perfil, não a arte do encontro. Suba a arte à mão.`
       );
     }
 

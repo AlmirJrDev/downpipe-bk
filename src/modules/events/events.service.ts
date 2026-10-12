@@ -147,7 +147,7 @@ async function anunciarMudancas(antes: EventRow, depois: EventRow) {
     // A edição já foi salva; falhar no aviso não pode desfazer isso na tela
     // de quem organiza.
     // eslint-disable-next-line no-console
-    console.warn('Falha ao anunciar mudança do rolê:', err instanceof Error ? err.message : err);
+    console.warn('Falha ao anunciar mudança do encontro:', err instanceof Error ? err.message : err);
   }
 }
 
@@ -205,7 +205,7 @@ async function resolveCoords(
 
     if (!coords) {
       // eslint-disable-next-line no-console
-      console.warn(`Rolê ${id} ficou sem ponto no mapa: "${location}, ${city}" não resolveu.`);
+      console.warn(`Encontro ${id} ficou sem ponto no mapa: "${location}, ${city}" não resolveu.`);
     }
     await eventsRepository.updateCoords(id, coords);
   } catch (err) {
@@ -450,7 +450,7 @@ export const eventsService = {
       const carro = await assertCarOwnership(carId, userId);
       if (!carroAceitoNoRole(evento.car_categories, carro.category)) {
         throw AppError.validation(
-          `Este rolê é pra ${(evento.car_categories ?? []).join(', ')}. Escolha outro carro ou confirme sem declarar um.`
+          `Este encontro é pra ${(evento.car_categories ?? []).join(', ')}. Escolha outro carro ou confirme sem declarar um.`
         );
       }
     }

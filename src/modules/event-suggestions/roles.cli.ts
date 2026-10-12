@@ -90,7 +90,7 @@ async function aprovar(id: string) {
     location: sugestao.location,
     city: sugestao.city,
   });
-  console.log(`Rolê publicado: ${eventId}`);
+  console.log(`Encontro publicado: ${eventId}`);
 }
 
 async function descartar(id: string) {

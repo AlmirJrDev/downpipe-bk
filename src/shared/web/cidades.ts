@@ -302,7 +302,7 @@ function listaComMapa(listaHtml: string, roles: RoleDaAgenda[], comTitulo = fals
   if (noMapa.length === 0) return listaHtml;
   return `<div class="com-mapa${comTitulo ? ' com-titulo' : ''}">
   <div>${listaHtml}</div>
-  <aside class="coluna-mapa" aria-label="Mapa dos rolês"><div id="mapa"></div></aside>
+  <aside class="coluna-mapa" aria-label="Mapa dos encontros"><div id="mapa"></div></aside>
 </div>
 <script>window.__ROLES_DO_MAPA=${jsonNoScript(noMapa)};</script>
 <script>${SCRIPT_DO_MAPA}</script>`;
@@ -344,21 +344,21 @@ ${m.marcacao.map((d) => `<script type="application/ld+json">${jsonNoScript(d)}</
   <a class="botao" href="/app/">ABRIR O APP</a>
 </div></header>
 <main class="centro">
-<!-- Logo abaixo do cabeçalho: quem chega querendo divulgar o próprio rolê
+<!-- Logo abaixo do cabeçalho: quem chega querendo divulgar o próprio encontro
      não pode ter que rolar a agenda inteira pra achar onde publicar. -->
 <section class="organiza" aria-label="Para quem organiza">
-  <p><strong>Organiza um rolê?</strong> Publique de graça: você preenche tudo e cria a conta só no fim.</p>
-  <a class="botao" href="/app/add-event">PUBLICAR MEU ROLÊ</a>
+  <p><strong>Organiza um encontro?</strong> Publique de graça: você preenche tudo e cria a conta só no fim.</p>
+  <a class="botao" href="/app/add-event">PUBLICAR MEU ENCONTRO</a>
 </section>
 ${m.miolo}
-<!-- No fim: é aqui que chega quem rolou a lista inteira e não achou o rolê
+<!-- No fim: é aqui que chega quem rolou a lista inteira e não achou o encontro
      que viu por aí. -->
 <section class="avise">
-  <p><strong>Viu um rolê que não está aqui?</strong>Manda pra gente: a gente confere com o organizador e publica.</p>
-  <a class="botao linha" href="/app/sugerir-role">AVISAR DE UM ROLÊ</a>
+  <p><strong>Viu um encontro que não está aqui?</strong>Manda pra gente: a gente confere com o organizador e publica.</p>
+  <a class="botao linha" href="/app/sugerir-role">AVISAR DE UM ENCONTRO</a>
 </section>
 </main>
-<footer><div class="centro">Downpipe · a garagem do seu projeto e a agenda dos rolês · <a href="/privacidade">Privacidade</a> · <a href="/termos">Termos</a></div></footer>
+<footer><div class="centro">Downpipe · a garagem do seu projeto e a agenda dos encontros · <a href="/privacidade">Privacidade</a> · <a href="/termos">Termos</a></div></footer>
 </body>
 </html>`;
 }
@@ -408,8 +408,8 @@ export function paginaDaAgenda(origem: string, roles: RoleDaAgenda[]): string {
       : 'A agenda dos encontros de carro: data, endereço, o que pede na entrada e o que é proibido.';
 
   const miolo = `<nav class="trilha" aria-label="Você está em"><a href="/">Downpipe</a> › Encontros</nav>
-<h1>Encontros de carro: a agenda dos próximos rolês</h1>
-<p class="lead">Rolê de baixo, JDM, clássico, drift e track day. Com o que cada um pede na entrada e o que é proibido — antes de você sair de casa.</p>
+<h1>Encontros de carro: a agenda dos próximos</h1>
+<p class="lead">Encontro de baixo, JDM, clássico, drift e track day. Com o que cada um pede na entrada e o que é proibido — antes de você sair de casa.</p>
 ${cidades.length ? `<h2>POR CIDADE</h2>${listaDeCidades(cidades)}` : ''}
 ${
     n
@@ -418,11 +418,11 @@ ${
           roles,
           true
         )
-      : '<h2>PRÓXIMOS</h2><p class="vazio">Nenhum rolê agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'
+      : '<h2>PRÓXIMOS</h2><p class="vazio">Nenhum encontro agendado agora. Viu algum por aí? Avisa a gente aqui embaixo.</p>'
   }`;
 
   return moldura({
-    titulo: 'Encontros de carro: agenda dos próximos rolês · Downpipe',
+    titulo: 'Agenda de encontros de carro em SP e região · Downpipe',
     descricao,
     canonica: `${origem}/encontros`,
     indexar: true,
@@ -455,7 +455,7 @@ export function paginaDaCidade(
 
   const descricao =
     n === 0
-      ? `Nenhum encontro de carro agendado em ${nome} agora. Veja os próximos rolês nas cidades perto.`
+      ? `Nenhum encontro de carro agendado em ${nome} agora. Veja os próximos encontros nas cidades perto.`
       : n === 1
         ? `O próximo encontro de carro em ${nome}: data, endereço, o que pede na entrada e o que é proibido.`
         : `${n} próximos encontros de carro em ${nome}: data, endereço, o que pede na entrada e o que é proibido. Atualizado todo dia.`;
@@ -464,8 +464,8 @@ export function paginaDaCidade(
 <h1>Encontros de carro em ${esc(nome)}</h1>
 <p class="lead">${
     n === 0
-      ? `Nenhum rolê agendado em ${esc(nome)} agora. Os próximos nas outras cidades estão logo abaixo.`
-      : `${n === 1 ? 'O próximo rolê' : `Os ${n} próximos rolês`} em ${esc(nome)}, com o que cada um pede na entrada e o que é proibido.`
+      ? `Nenhum encontro agendado em ${esc(nome)} agora. Os próximos nas outras cidades estão logo abaixo.`
+      : `${n === 1 ? 'O próximo encontro' : `Os ${n} próximos encontros`} em ${esc(nome)}, com o que cada um pede na entrada e o que é proibido.`
   }</p>
 ${n ? listaComMapa(`<ol class="lista">${daqui.map((r, i) => cartao(r, false, i)).join('')}</ol>`, daqui) : ''}
 ${outras.length ? `<h2>OUTRAS CIDADES</h2>${listaDeCidades(outras, slug)}` : ''}`;

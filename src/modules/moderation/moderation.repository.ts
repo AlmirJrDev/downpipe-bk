@@ -50,7 +50,7 @@ export const moderationRepository = {
       // O link é o do próprio rolê: quem modera precisa ver a data, o lugar
       // e a fonte antes de decidir, e é tudo isso que a tela do rolê mostra.
       return {
-        rotulo: data?.name ? `rolê "${data.name}"${data.city ? ` · ${data.city}` : ''}` : 'rolê já removido',
+        rotulo: data?.name ? `encontro "${data.name}"${data.city ? ` · ${data.city}` : ''}` : 'encontro já removido',
         url: data?.name ? `/app/event/${input.eventId}` : '/app',
       };
     }

@@ -37,7 +37,7 @@ export async function avisarSeContaNova(
       if (adminId === organizadorId) continue;
       const badge = await notificationsRepository.countUnread(adminId);
       await pushService.sendToUser(adminId, {
-        title: 'Rolê novo de conta nova',
+        title: 'Encontro novo de conta nova',
         body: `${role.nome} · ${role.cidade}`,
         url: `/app/event/${role.id}`,
         badge,
@@ -45,6 +45,6 @@ export async function avisarSeContaNova(
     }
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('Falha ao avisar rolê de conta nova:', err instanceof Error ? err.message : err);
+    console.warn('Falha ao avisar encontro de conta nova:', err instanceof Error ? err.message : err);
   }
 }

@@ -91,18 +91,18 @@ describe('preço da entrada', () => {
   });
 });
 
-describe('tags da página do rolê', () => {
+describe('tags da página do encontro', () => {
   /**
    * Nome de rolê é escrito por usuário. Um "</script>" no nome fecharia a
    * marcação e o resto viraria código na página de quem abrisse.
    */
   it('nome com </script> não fecha a tag', () => {
-    const tags = tagsDeBusca(role({ name: 'Rolê</script><script>alert(1)</script>' }), URL);
+    const tags = tagsDeBusca(role({ name: 'Encontro</script><script>alert(1)</script>' }), URL);
     expect(tags.match(/<\/script>/g)).toHaveLength(1);
     expect(tags).toContain('\\u003c/script>');
   });
 
-  it('rolê só por link ganha noindex e não ganha marcação', () => {
+  it('encontro só por link ganha noindex e não ganha marcação', () => {
     const tags = tagsDeBusca(role({ visibility: 'link' }), URL);
     expect(tags).toContain('noindex');
     expect(tags).not.toContain('application/ld+json');
@@ -203,7 +203,7 @@ function googlePode(robots: string, caminho: string): boolean {
 describe('robots.txt', () => {
   const robots = robotsTxt('https://downpipe.onrender.com');
 
-  it('o Google pode ler a página do rolê, e o que ela carrega pra montar', () => {
+  it('o Google pode ler a página do encontro, e o que ela carrega pra montar', () => {
     expect(googlePode(robots, '/app/event/ac81e59e-8631-4c16-bf63-faab4d8cac35')).toBe(true);
     expect(googlePode(robots, '/app/_expo/static/js/web/entry-abc.js')).toBe(true);
     expect(googlePode(robots, '/events/ac81e59e-8631-4c16-bf63-faab4d8cac35')).toBe(true);

@@ -132,7 +132,7 @@ export const createEventSchema = z
   .object(eventBaseSchema)
   .strict()
   .refine(fimDepoisDoInicio, {
-    message: 'O fim do rolê tem que ser depois do começo',
+    message: 'O fim do encontro tem que ser depois do começo',
     path: ['endsAt'],
   });
 
@@ -149,7 +149,7 @@ export const updateEventSchema = z
     message: 'Envie ao menos um campo para atualizar',
   })
   .refine(fimDepoisDoInicio, {
-    message: 'O fim do rolê tem que ser depois do começo',
+    message: 'O fim do encontro tem que ser depois do começo',
     path: ['endsAt'],
   });
 

@@ -50,7 +50,7 @@ async function participacao(eventId: string, userId: string) {
   const event = await eventoOuErro(eventId);
   const organizador = event.organizer_id === userId;
   if (!organizador && !(await eventChatRepository.isAttendee(eventId, userId))) {
-    throw new AppError('CHAT_SO_CONFIRMADOS', 'Confirme presença no rolê pra entrar no chat.', 403);
+    throw new AppError('CHAT_SO_CONFIRMADOS', 'Confirme presença no encontro pra entrar no chat.', 403);
   }
   return { event, organizador };
 }
@@ -121,7 +121,7 @@ async function avisar(event: EventRow, mensagem: MessageRow) {
     }
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('Falha ao avisar o chat do rolê:', err instanceof Error ? err.message : err);
+    console.warn('Falha ao avisar o chat do encontro:', err instanceof Error ? err.message : err);
   }
 }
 
@@ -199,7 +199,7 @@ export const eventChatService = {
     const event = await eventoOuErro(mensagem.event_id);
     const podeApagar = mensagem.author_id === userId || event.organizer_id === userId;
     if (!podeApagar) {
-      throw AppError.forbidden('Só quem escreveu ou quem organiza o rolê pode apagar a mensagem');
+      throw AppError.forbidden('Só quem escreveu ou quem organiza o encontro pode apagar a mensagem');
     }
 
     await eventChatRepository.delete(messageId);
@@ -247,7 +247,7 @@ export const eventChatService = {
      * organizador: "cancelado pelo organizador" seria mentira num rolê
      * removido pela moderação porque ninguém encontrou o encontro lá.
      */
-    motivo = 'Rolê cancelado pelo organizador.'
+    motivo = 'Encontro cancelado pelo organizador.'
   ): Promise<() => Promise<void>> {
     const semAviso = async () => undefined;
     if (Date.parse(event.starts_at) < Date.now()) return semAviso;

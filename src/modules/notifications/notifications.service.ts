@@ -19,7 +19,7 @@ const FRASE: Record<TipoComPush, string> = {
   comment: 'comentou na sua publicação',
   follow: 'começou a seguir você',
   project_update: 'publicou uma atualização do projeto',
-  event_attend: 'vai num rolê',
+  event_attend: 'vai num encontro',
   car_tag: 'marcou seu carro numa foto',
 };
 

@@ -1,7 +1,7 @@
 {
   "name": "Downpipe",
   "short_name": "Downpipe",
-  "description": "Rede social automotiva: sua garagem, os rolês e quem vai estar lá.",
+  "description": "Rede social automotiva: sua garagem, os encontros e quem vai estar lá.",
   "lang": "pt-BR",
   "start_url": "/app/",
   "scope": "/",

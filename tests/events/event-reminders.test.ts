@@ -53,13 +53,13 @@ describe('como a hora é escrita', () => {
     expect(quandoPorExtenso('2026-09-26T17:00:00Z', AGORA)).toContain('sábado');
   });
 
-  it('rolê de manhã cedo continua sendo "amanhã", não "hoje"', () => {
+  it('encontro de manhã cedo continua sendo "amanhã", não "hoje"', () => {
     // 15h de distância, mas outro dia no calendário de quem lê.
     expect(quandoPorExtenso('2026-09-21T09:00:00Z', AGORA)).toBe('amanhã às 06:00');
   });
 });
 
-describe('lembrete do rolê', () => {
+describe('lembrete do encontro', () => {
   it('avisa todo mundo que vai, inclusive quem organiza', async () => {
     vi.mocked(eventsRepository.paraLembrar).mockResolvedValue([
       evento('e1', '2026-09-21T15:00:00Z'),
@@ -84,7 +84,7 @@ describe('lembrete do rolê', () => {
     expect(eventsRepository.marcarLembreteEnviado).toHaveBeenCalledWith('e1');
   });
 
-  it('rolê só com o organizador não vira push — ele sabe do próprio rolê', async () => {
+  it('encontro só com o organizador não vira push — ele sabe do próprio encontro', async () => {
     vi.mocked(eventChatRepository.participantIds).mockResolvedValue([ORGANIZADOR]);
     vi.mocked(eventsRepository.paraLembrar).mockResolvedValue([
       evento('e1', '2026-09-21T15:00:00Z'),
@@ -98,7 +98,7 @@ describe('lembrete do rolê', () => {
     expect(eventsRepository.marcarLembreteEnviado).toHaveBeenCalledWith('e1');
   });
 
-  it('um rolê com erro não derruba o lembrete dos outros', async () => {
+  it('um encontro com erro não derruba o lembrete dos outros', async () => {
     vi.mocked(eventsRepository.paraLembrar).mockResolvedValue([
       evento('ruim', '2026-09-21T15:00:00Z'),
       evento('bom', '2026-09-21T16:00:00Z'),
@@ -116,7 +116,7 @@ describe('lembrete do rolê', () => {
     expect(eventsRepository.marcarLembreteEnviado).not.toHaveBeenCalledWith('ruim');
   });
 
-  it('pede só os rolês dentro da janela de antecedência', async () => {
+  it('pede só os encontros dentro da janela de antecedência', async () => {
     await eventRemindersService.enviarPendentes(AGORA);
 
     const [ate] = vi.mocked(eventsRepository.paraLembrar).mock.calls[0];

@@ -17,7 +17,7 @@ import {
  */
 export const createSuggestionSchema = z
   .object({
-    name: z.string().min(3, 'Diga o nome do rolê').max(120),
+    name: z.string().min(3, 'Diga o nome do encontro').max(120),
     description: z.string().max(2000).nullable().optional(),
     startsAt: z.string().datetime({ offset: true }).nullable().optional(),
     endsAt: z.string().datetime({ offset: true }).nullable().optional(),

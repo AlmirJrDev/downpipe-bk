@@ -110,7 +110,7 @@ describe('apagar conteúdo denunciado', () => {
   });
 });
 
-describe('apagar um rolê denunciado', () => {
+describe('apagar um encontro denunciado', () => {
   const EVENTO = { id: 'e1', name: 'Encontro fantasma', starts_at: '2026-12-01T22:00:00.000Z' };
 
   it('avisa quem confirmou ANTES de apagar — depois a lista some em cascata', async () => {
@@ -154,7 +154,7 @@ describe('apagar um rolê denunciado', () => {
     expect(ordemDaMarca).toBeLessThan(ordemDoDelete);
   });
 
-  it('rolê que já sumiu vira 404, e nada é apagado', async () => {
+  it('encontro que já sumiu vira 404, e nada é apagado', async () => {
     vi.mocked(moderationRepository.findEvent).mockResolvedValue(null as never);
 
     await expect(moderationService.apagarConteudo('evento', 'e1')).rejects.toMatchObject({

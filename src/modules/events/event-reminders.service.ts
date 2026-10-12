@@ -95,7 +95,7 @@ export const eventRemindersService = {
         // Um rolê com problema não pode impedir o lembrete dos outros. Sem a
         // marca, ele entra de novo na próxima rodada.
         // eslint-disable-next-line no-console
-        console.warn('Falha no lembrete do rolê', evento.id, err instanceof Error ? err.message : err);
+        console.warn('Falha no lembrete do encontro', evento.id, err instanceof Error ? err.message : err);
       }
     }
 
@@ -125,12 +125,12 @@ const rodar = () => {
       .then(({ roles, avisos }) => {
         if (roles > 0) {
           // eslint-disable-next-line no-console
-          console.log(`Lembretes de rolê: ${roles} rolê(s), ${avisos} aviso(s).`);
+          console.log(`Lembretes de encontro: ${roles} encontro(s), ${avisos} aviso(s).`);
         }
       })
       .catch((err) => {
         // eslint-disable-next-line no-console
-        console.warn('Lembretes de rolê falharam:', err instanceof Error ? err.message : err);
+        console.warn('Lembretes de encontro falharam:', err instanceof Error ? err.message : err);
       });
 
     maintenanceRemindersService

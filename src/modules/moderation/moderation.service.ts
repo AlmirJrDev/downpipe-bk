@@ -16,7 +16,7 @@ export const MOTIVO: Record<ReportReason, string> = {
   assedio: 'Assédio ou ofensa',
   carro_nao_e_meu: 'Foto de carro usada sem permissão',
   informacao_falsa: 'Informação falsa',
-  role_nao_aconteceu: 'Fui e o rolê não existia',
+  role_nao_aconteceu: 'Fui e o encontro não existia',
   outro: 'Outro motivo',
 };
 
@@ -208,13 +208,13 @@ export const moderationService = {
   async apagarConteudo(tipo: 'post' | 'comentario' | 'mensagem' | 'evento', id: string) {
     if (tipo === 'evento') {
       const evento = await moderationRepository.findEvent(id);
-      if (!evento) throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+      if (!evento) throw AppError.notFound('EVENT_NOT_FOUND', 'Encontro não encontrado');
 
       // Quem confirmou presença é avisado antes de tudo sumir em cascata —
       // é justamente essa gente que ia viajar até lá.
       const avisar = await eventChatService.prepararAvisoDeCancelamento(
         evento as never,
-        'Este rolê saiu do ar: não deu pra confirmar que ele existe.'
+        'Este encontro saiu do ar: não deu pra confirmar que ele existe.'
       );
 
       // A sugestão volta pra descartada ANTES de o rolê sumir: a coluna que
@@ -225,7 +225,7 @@ export const moderationService = {
       await moderationRepository.rejeitarSugestaoDoEvento(id);
 
       if (!(await moderationRepository.deleteEvent(id))) {
-        throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+        throw AppError.notFound('EVENT_NOT_FOUND', 'Encontro não encontrado');
       }
       void avisar();
       return { apagado: true };

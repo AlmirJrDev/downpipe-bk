@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Downpipe — a rede do seu carro e dos seus rolês</title>
+<title>Downpipe — a rede do seu carro e dos seus encontros</title>
 <meta name="description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá. O Downpipe é a rede social de quem vive carro.">
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
@@ -13,7 +13,7 @@
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Downpipe">
-<meta property="og:title" content="Downpipe — a rede do seu carro e dos seus rolês">
+<meta property="og:title" content="Downpipe — a rede do seu carro e dos seus encontros">
 <meta property="og:description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá.">
 <!-- URL absoluta, não caminho: o robô do WhatsApp e do Instagram não
      resolve "/og-banner.png" contra a página, e o link aparecia sem
@@ -144,7 +144,7 @@ h1 em { color: var(--marca); font-style: normal; }
 .oculto { display: none !important; }
 .aviso { color: var(--fraco); font-size: 12px; margin: 18px 0 0; }
 
-/* ---------- carrossel de rolês ---------- */
+/* ---------- carrossel de encontros ---------- */
 .esteira { padding: 34px 0 10px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .trilho { display: flex; gap: 12px; width: max-content; animation: correr 46s linear infinite; }
 .esteira:hover .trilho { animation-play-state: paused; }
@@ -319,10 +319,10 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
 
       <div class="selo"><span class="ponto"></span> Rede social automotiva</div>
 
-      <h1>A rede do seu carro <em>e dos seus rolês</em></h1>
+      <h1>A rede do seu carro <em>e dos seus encontros</em></h1>
       <p class="chamada-sub">
         Sua garagem, os encontros perto de você e as fotos de quem esteve lá.
-        Feito pra quem vive carro — e pra quem vive os rolês sem ter um.
+        Feito pra quem vive carro — e pra quem vive os encontros sem ter um.
       </p>
 
       <div class="acoes">
@@ -341,7 +341,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
     </div>
   </div>
 
-  <!-- ============ CARROSSEL DE ROLÊS ============ -->
+  <!-- ============ CARROSSEL DE ENCONTROS ============ -->
   <div class="esteira" aria-hidden="true">
     <div class="trilho" id="trilho"></div>
   </div>
@@ -361,10 +361,10 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
         </div>
         <div class="passo revela">
           <div class="n">02</div>
-          <h3>Ache um rolê</h3>
+          <h3>Ache um encontro</h3>
           <p>Veja os encontros perto de você no mapa, confirme presença e diga qual carro vai levar.</p>
           <!-- Link de verdade pra agenda: é por ele que o Google acha as
-               páginas de cidade, e quem só quer ver os rolês não precisa
+               páginas de cidade, e quem só quer ver os encontros não precisa
                criar conta pra isso. -->
           <a class="link-agenda" href="/encontros">Ver a agenda de encontros →</a>
         </div>
@@ -395,13 +395,13 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
         </div>
         <div class="carta revela">
           <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          <h3>Rolês no mapa</h3>
+          <h3>Encontros no mapa</h3>
           <p>Local exato marcado pelo organizador, com a distância de onde você está. Nada de "é ali por perto".</p>
         </div>
         <div class="carta revela">
           <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h3l1.5-2h7L17 7h3v12H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
           <h3>As fotos do encontro</h3>
-          <p>Todo mundo que foi joga as fotos no mesmo lugar. O rolê vira memória coletiva, não 40 álbuns soltos.</p>
+          <p>Todo mundo que foi joga as fotos no mesmo lugar. O encontro vira memória coletiva, não 40 álbuns soltos.</p>
         </div>
         <div class="carta revela">
           <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6 9 17l-5-5"/></svg>
@@ -427,7 +427,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
     <div class="centro">
       <p class="rotulo revela">Por dentro</p>
       <h2 class="titulo revela">Como é usar</h2>
-      <p class="linha revela">Escuro por padrão, porque rolê bom é de noite.</p>
+      <p class="linha revela">Escuro por padrão, porque encontro bom é de noite.</p>
 
       <div class="telas">
         <!-- feed -->
@@ -454,7 +454,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
             </div>
           </div>
           <h3>O feed</h3>
-          <p>Carros de gente real, com o rolê onde a foto foi tirada marcado embaixo.</p>
+          <p>Carros de gente real, com o encontro onde a foto foi tirada marcado embaixo.</p>
         </div>
 
         <!-- mapa -->
@@ -476,7 +476,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
               </div>
             </div>
           </div>
-          <h3>Os rolês</h3>
+          <h3>Os encontros</h3>
           <p>Cada pino é um encontro com quantos já confirmaram. Verde é onde você vai.</p>
         </div>
 
@@ -552,14 +552,14 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
         </details>
         <details class="pergunta">
           <summary>Preciso ter carro pra usar?</summary>
-          <p class="resposta">Não. Dá pra usar só pelos rolês e pelas fotos. Seu perfil fica completo do mesmo jeito, sem garagem vazia anunciada.</p>
+          <p class="resposta">Não. Dá pra usar só pelos encontros e pelas fotos. Seu perfil fica completo do mesmo jeito, sem garagem vazia anunciada.</p>
         </details>
         <details class="pergunta">
           <summary>Qualquer um pode marcar o meu carro numa foto?</summary>
           <p class="resposta">Marcar sim, mas a marcação só vale depois que você aceita. Você recebe a notificação e decide. Se recusar, a foto continua existindo — ela é de quem tirou —, só não fica ligada ao seu carro.</p>
         </details>
         <details class="pergunta">
-          <summary>Quem pode criar um rolê?</summary>
+          <summary>Quem pode criar um encontro?</summary>
           <p class="resposta">Qualquer pessoa. Dá pra deixar o encontro aberto no app ou só por link, pra quem você mandar.</p>
         </details>
         <details class="pergunta">
@@ -573,7 +573,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
   <!-- ================= FECHO ================= -->
   <section class="faixa fecho">
     <div class="centro estreito">
-      <h2 class="titulo revela">O próximo rolê já tem gente confirmada</h2>
+      <h2 class="titulo revela">O próximo encontro já tem gente confirmada</h2>
       <p class="linha revela" style="margin:0 auto;max-width:26em">
         Leva dois minutos pra entrar e ver quem vai estar lá.
       </p>
@@ -608,9 +608,9 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
     if (localStorage.getItem('gearhead_session')) { location.replace('/app/'); return; }
   } catch (e) { /* navegação privada: segue mostrando a landing */ }
 
-  /* ---------- carrossel: rolês de verdade, vindos da API ----------
+  /* ---------- carrossel: encontros de verdade, vindos da API ----------
    * Nada aqui é escrito à mão. Uma landing que anuncia encontro que não
-   * existe queima a confiança no primeiro clique — se não houver rolê
+   * existe queima a confiança no primeiro clique — se não houver encontro
    * marcado, a faixa some inteira em vez de inventar. */
   var MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
   var esteira = document.querySelector('.esteira');
@@ -641,7 +641,7 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
       var lista = (j.data || []).filter(function (e) { return new Date(e.startsAt).getTime() > agora; });
       if (!lista.length) { sumirEsteira(); return; }
 
-      // Com poucos rolês a faixa ficaria vazia: repete até encher a tela,
+      // Com poucos encontros a faixa ficaria vazia: repete até encher a tela,
       // e duplica o conjunto porque a animação anda -50% e precisa emendar.
       var base = [];
       while (base.length < 8) base = base.concat(lista);

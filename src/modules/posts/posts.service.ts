@@ -42,13 +42,13 @@ async function assertEventTaggable(eventId: string) {
   const event = await eventsRepository.findById(eventId);
 
   if (!event) {
-    throw AppError.notFound('EVENT_NOT_FOUND', 'Rolê não encontrado');
+    throw AppError.notFound('EVENT_NOT_FOUND', 'Encontro não encontrado');
   }
 
   const comeca = new Date(event.starts_at).getTime();
   if (Date.now() + ANTECEDENCIA_TOLERADA_MS < comeca) {
     throw AppError.validation(
-      'Este rolê ainda não começou. Dá pra marcar a partir do dia do encontro.'
+      'Este encontro ainda não começou. Dá pra marcar a partir do dia do encontro.'
     );
   }
 }
