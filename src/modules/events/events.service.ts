@@ -1,4 +1,5 @@
 import { AppError } from '@/shared/utils/AppError';
+import { supabaseAdmin } from '@/config/supabase';
 import { PaginationParams } from '@/shared/middleware/pagination.middleware';
 import { storageService } from '@/shared/storage/storage.service';
 import { miniaturaService } from '@/shared/storage/miniatura.service';
@@ -14,10 +15,30 @@ import { eventChatService } from '@/modules/event-chat/event-chat.service';
 import { eventsRepository, EventRow, AttendeeRow } from './events.repository';
 import { CreateEventInput, UpdateEventInput } from './events.schema';
 
+/**
+ * Quem administra o Downpipe cadastra encontro dos outros pra agenda não
+ * ficar vazia — e aparecer como "organizado por" esse perfil faria parecer
+ * que ele organiza todos, e que o app é dele. Encontro cadastrado pela
+ * equipe sai sem organizador pra fora; o crédito fica com o @ do Instagram
+ * de quem organiza de verdade, quando ele foi informado.
+ *
+ * A lista muda quase nunca: guardada por 5 minutos.
+ */
+let equipeEmCache: { ids: Set<string>; em: number } | null = null;
+
+async function equipe(): Promise<Set<string>> {
+  if (equipeEmCache && Date.now() - equipeEmCache.em < 5 * 60_000) return equipeEmCache.ids;
+  const { data, error } = await supabaseAdmin.from('admins').select('user_id');
+  if (error) return equipeEmCache?.ids ?? new Set();
+  equipeEmCache = { ids: new Set((data ?? []).map((r: { user_id: string }) => r.user_id)), em: Date.now() };
+  return equipeEmCache.ids;
+}
+
 function toPublicEvent(
   row: EventRow,
   attendingByMe: boolean | null,
-  friendsGoing: number | null = null
+  friendsGoing: number | null = null,
+  daEquipe = false
 ) {
   return {
     id: row.id,
@@ -54,7 +75,8 @@ function toPublicEvent(
     tippedBy: row.avisou?.username ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    organizer: row.profiles
+    organizer:
+      row.profiles && !daEquipe
       ? {
           username: row.profiles.username,
           displayName: row.profiles.display_name,
@@ -222,6 +244,7 @@ async function buildResponse(
 ) {
   let attendingSet = new Set<string>();
   let friendsMap = new Map<string, number>();
+  const daEquipe = await equipe();
 
   if (viewerId && rows.length > 0) {
     const ids = rows.map((row) => row.id);
@@ -238,7 +261,8 @@ async function buildResponse(
       const event = toPublicEvent(
         row,
         viewerId ? attendingSet.has(row.id) : null,
-        viewerId ? friendsMap.get(row.id) ?? 0 : null
+        viewerId ? friendsMap.get(row.id) ?? 0 : null,
+        daEquipe.has(row.organizer_id) && row.organizer_id !== viewerId
       );
       // distanceKm só existe quando houve um centro de busca — é o "a 42 km
       // de você" do card, não um campo fixo do evento.
@@ -340,6 +364,10 @@ export const eventsService = {
     // qualquer outra pessoa vê só os públicos.
     const onlyPublic = viewerId !== profile.id;
 
+    // Perfil da equipe não mostra pros outros os encontros que cadastrou:
+    // são dos organizadores de verdade, não dele (ver equipe()).
+    if (onlyPublic && (await equipe()).has(profile.id)) return { events: [], total: 0 };
+
     const { rows, total } = await eventsRepository.list(
       { organizerId: profile.id, onlyPublic },
       pagination
@@ -353,8 +381,9 @@ export const eventsService = {
    */
   async getById(id: string, viewerId?: string) {
     const event = await findEventOrThrow(id);
+    const daEquipe = (await equipe()).has(event.organizer_id) && event.organizer_id !== viewerId;
 
-    if (!viewerId) return toPublicEvent(event, null, null);
+    if (!viewerId) return toPublicEvent(event, null, null, daEquipe);
 
     const followingIds = await followsRepository.listFollowingIds(viewerId);
     const [attendingByMe, friendsMap] = await Promise.all([
@@ -362,7 +391,7 @@ export const eventsService = {
       eventsRepository.countFriendsGoing([id], followingIds),
     ]);
 
-    return toPublicEvent(event, attendingByMe, friendsMap.get(id) ?? 0);
+    return toPublicEvent(event, attendingByMe, friendsMap.get(id) ?? 0, daEquipe);
   },
 
   async create(organizerId: string, input: CreateEventInput) {
