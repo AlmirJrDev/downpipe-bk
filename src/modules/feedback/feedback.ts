@@ -14,6 +14,7 @@ import { requireAdmin } from '@/shared/middleware/admin.middleware';
 import { limiteRelato } from '@/shared/middleware/rateLimit.middleware';
 import { sendSuccess } from '@/shared/utils/apiResponse';
 import { AppError } from '@/shared/utils/AppError';
+import { aparelho } from '@/shared/web/aparelho';
 
 export const createFeedbackSchema = z.object({
   rating: z.number().int().min(1).max(5).nullable().optional(),
@@ -25,29 +26,7 @@ export const createFeedbackSchema = z.object({
   canContact: z.boolean().optional(),
 });
 
-/**
- * "Celular · Chrome" a partir do user-agent. O texto inteiro não serve pra
- * nada na hora de ler o relato e ainda carrega versão de sistema que não
- * precisamos guardar.
- */
-export function aparelho(userAgent: string | undefined): string | null {
-  if (!userAgent) return null;
-  const ua = userAgent.toLowerCase();
-  const tipo = /iphone|android.*mobile|mobile/.test(ua) ? 'Celular' : /ipad|tablet|android/.test(ua) ? 'Tablet' : 'Computador';
-  const sistema = /iphone|ipad|ios/.test(ua) ? 'iOS' : /android/.test(ua) ? 'Android' : /windows/.test(ua) ? 'Windows' : /mac os/.test(ua) ? 'Mac' : null;
-  const navegador = /edg\//.test(ua)
-    ? 'Edge'
-    : /samsungbrowser/.test(ua)
-      ? 'Samsung Internet'
-      : /crios|chrome\//.test(ua)
-        ? 'Chrome'
-        : /fxios|firefox/.test(ua)
-          ? 'Firefox'
-          : /safari/.test(ua)
-            ? 'Safari'
-            : null;
-  return [tipo, sistema, navegador].filter(Boolean).join(' · ');
-}
+export { aparelho };
 
 const idSchema = z.object({ id: z.string().uuid() });
 

@@ -17,6 +17,7 @@ import { carModificationsRouter, modificationsRouter } from '@/modules/modificat
 import { carMaintenancesRouter, maintenancesRouter } from '@/modules/maintenances/maintenances.routes';
 import { suggestionsRouter, adminSuggestionsRouter } from '@/modules/event-suggestions/event-suggestions.routes';
 import { feedbackRouter, adminFeedbackRouter } from '@/modules/feedback/feedback';
+import { adminTrafegoRouter, contarPaginas, visitasRouter } from '@/modules/visitas/visitas';
 import { feedRouter, postsRouter, profilePostsRouter, carPostsRouter } from '@/modules/posts/posts.routes';
 import likesRoutes from '@/modules/likes/likes.routes';
 import { postSaveRouter, savedPostsRouter } from '@/modules/saved-posts/saved-posts.routes';
@@ -159,6 +160,7 @@ export function createApp() {
     '/admin',
     '/status',
     '/feedback',
+    '/visitas',
   ];
 
   /**
@@ -194,6 +196,10 @@ export function createApp() {
   });
 
   app.use(PREFIXOS_DA_API, limiteGeral);
+
+  // Anota as páginas que o servidor entrega (landing, /encontros…) pra
+  // tela Tráfego. As telas do app chegam por POST /visitas.
+  app.use(contarPaginas);
 
   /**
    * A API pode ser lida pelo Google, mas não vira resultado de busca.
@@ -276,6 +282,10 @@ export function createApp() {
   // Relatos de experiência: quem usa conta, quem modera lê.
   app.use('/feedback', feedbackRouter);
   app.use('/admin/feedback', adminFeedbackRouter);
+
+  // Visitas: o aviso do app a cada tela, e o resumo pra quem administra.
+  app.use('/visitas', visitasRouter);
+  app.use('/admin/trafego', adminTrafegoRouter);
 
   // Moderação: denunciar conteúdo e bloquear pessoas.
   app.use('/reports', reportsRouter);

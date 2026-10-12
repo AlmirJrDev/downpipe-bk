@@ -38,6 +38,13 @@ const envSchema = z.object({
    */
   INGRESSOS_LIGADOS: z.string().optional(),
 
+  /**
+   * Segredo que embaralha o código do visitante (ver modules/visitas).
+   * Opcional: sem ele, usa a chave de serviço do Supabase, que também
+   * nunca sai do servidor.
+   */
+  VISITAS_SEGREDO: z.string().min(16).optional(),
+
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:19006')
