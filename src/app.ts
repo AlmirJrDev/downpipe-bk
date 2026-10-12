@@ -16,6 +16,7 @@ import projectStepsRoutes from '@/modules/project-steps/project-steps.routes';
 import { carModificationsRouter, modificationsRouter } from '@/modules/modifications/modifications.routes';
 import { carMaintenancesRouter, maintenancesRouter } from '@/modules/maintenances/maintenances.routes';
 import { suggestionsRouter, adminSuggestionsRouter } from '@/modules/event-suggestions/event-suggestions.routes';
+import { feedbackRouter, adminFeedbackRouter } from '@/modules/feedback/feedback';
 import { feedRouter, postsRouter, profilePostsRouter, carPostsRouter } from '@/modules/posts/posts.routes';
 import likesRoutes from '@/modules/likes/likes.routes';
 import { postSaveRouter, savedPostsRouter } from '@/modules/saved-posts/saved-posts.routes';
@@ -157,6 +158,7 @@ export function createApp() {
     '/reports',
     '/admin',
     '/status',
+    '/feedback',
   ];
 
   /**
@@ -270,6 +272,10 @@ export function createApp() {
 
   // Página de status da sessão de testes (não faz parte da API do produto).
   app.use('/status', statusRoutes);
+
+  // Relatos de experiência: quem usa conta, quem modera lê.
+  app.use('/feedback', feedbackRouter);
+  app.use('/admin/feedback', adminFeedbackRouter);
 
   // Moderação: denunciar conteúdo e bloquear pessoas.
   app.use('/reports', reportsRouter);

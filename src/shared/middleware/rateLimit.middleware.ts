@@ -80,6 +80,14 @@ export const limiteLoginPorIp = limite({
   mensagem: TENTE_DEPOIS,
 });
 
+/** Relato de experiência: ninguém tem 10 relatos por hora pra contar. */
+export const limiteRelato = limite({
+  windowMs: 60 * MINUTO,
+  limit: 10,
+  mensagem: 'Já chegou bastante relato seu agora. Manda o resto daqui a pouco.',
+  chave: (req) => `relato:${req.user?.id ?? ipKeyGenerator(req.ip ?? '')}`,
+});
+
 export const limiteCadastro = limite({ windowMs: 60 * MINUTO, limit: 30, mensagem: TENTE_DEPOIS });
 
 export const limiteRecuperacaoPorConta = limite({
