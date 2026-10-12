@@ -276,13 +276,4 @@ export const postsRepository = {
     }
     return porPost;
   },
-
-  async countAll(): Promise<number> {
-    const { count, error } = await supabaseAdmin
-      .from('posts')
-      .select('*', { count: 'exact', head: true });
-
-    if (error) throw error;
-    return count ?? 0;
-  },
 };

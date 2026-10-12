@@ -172,7 +172,7 @@ async function buildPostsResponse(rows: PostRow[], total: number, viewerId: stri
 
 export const postsService = {
   async list(
-    filters: { authorId?: string; carId?: string; eventId?: string; idIn?: string[] },
+    filters: { authorId?: string; authorIdIn?: string[]; carId?: string; eventId?: string; idIn?: string[] },
     pagination: PaginationParams,
     viewerId?: string
   ) {
@@ -188,55 +188,27 @@ export const postsService = {
   },
 
   /**
-   * Feed (Fase 6): na primeira página, se o usuário autenticado segue
-   * alguém, prioriza posts recentes de quem ele segue e completa o
-   * restante da página com posts recentes em geral (sem duplicar). A
-   * prioridade vale pra decidir QUAIS posts entram na página; o que é
-   * exibido sai sempre em ordem cronológica (mais recente primeiro).
-   * Deliberadamente simples (sem ranking/algoritmo de recomendação),
-   * conforme a especificação. Da segunda página em diante, cai para a
-   * ordenação padrão por recência — manter a mesma mistura em páginas
-   * subsequentes exigiria um cursor mais sofisticado, fora do escopo do MVP.
+   * Feed: só quem a pessoa segue, mais as publicações dela mesma, em ordem
+   * cronológica. Antes era um feed global com os seguidos na frente — e
+   * quem chegava agora via a rede inteira de desconhecidos, o que num app
+   * pequeno é a vida dos amigos de quem fez o app.
+   *
+   * Quem ainda não segue ninguém vê só o que publicou; o app mostra "Quem
+   * seguir" e os encontros em cima, que é por onde se começa.
+   *
+   * Sem login (a API é aberta, o app não mostra o feed pra visitante) fica
+   * o global de sempre: as publicações são públicas pelo link de qualquer
+   * jeito.
    */
   async getFeed(pagination: PaginationParams, viewerId?: string) {
-    if (viewerId && pagination.page === 1) {
-      const escondidos = await moderationService.hiddenIdsFor(viewerId);
-      const todosOsSeguidos = await followsRepository.listFollowingIds(viewerId);
-      // Bloquear já desfaz o seguir, mas quem me bloqueou depois pode ter
-      // ficado na lista — filtrar aqui fecha essa brecha.
-      const followingIds = todosOsSeguidos.filter((id) => !escondidos.includes(id));
-
-      if (followingIds.length > 0) {
-        const followed = await postsRepository.list(
-          { authorIdIn: followingIds },
-          { ...pagination, offset: 0 }
-        );
-
-        if (followed.rows.length >= pagination.limit) {
-          return buildPostsResponse(followed.rows.slice(0, pagination.limit), followed.total, viewerId);
-        }
-
-        const remaining = pagination.limit - followed.rows.length;
-        const recent = await postsRepository.list(
-          { excludeIds: followed.rows.map((row) => row.id), authorIdNotIn: escondidos },
-          { limit: remaining, offset: 0, page: 1 }
-        );
-
-        // Reordena por data depois de juntar: quem o usuário segue continua
-        // tendo prioridade na ESCOLHA dos posts da primeira página, mas a
-        // ORDEM mostrada é cronológica. Sem isto, concatenar os dois grupos
-        // colocava um post antigo de quem se segue acima de um post novo de
-        // outra pessoa, e o feed não começava pelo mais recente.
-        const combinedRows = [...followed.rows, ...recent.rows].sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        const overallTotal = await postsRepository.countAll();
-
-        return buildPostsResponse(combinedRows, overallTotal, viewerId);
-      }
-    }
-
-    return this.list({}, pagination, viewerId);
+    if (!viewerId) return this.list({}, pagination, viewerId);
+    // Bloquear já desfaz o seguir, mas quem me bloqueou depois pode ter
+    // ficado na lista; o list() também filtra, isto só evita pedir à toa.
+    const escondidos = await moderationService.hiddenIdsFor(viewerId);
+    const seguidos = (await followsRepository.listFollowingIds(viewerId)).filter(
+      (id) => !escondidos.includes(id)
+    );
+    return this.list({ authorIdIn: [viewerId, ...seguidos] }, pagination, viewerId);
   },
 
   async listByUsername(username: string, pagination: PaginationParams, viewerId?: string) {
