@@ -57,6 +57,16 @@ const envSchema = z.object({
   WEB_PUSH_VAPID_PRIVATE_KEY: z.string().optional(),
   /** E-mail de contato que os serviços de push podem usar em caso de abuso. */
   WEB_PUSH_SUBJECT: z.string().default('mailto:downpipeapp@gmail.com'),
+
+  /**
+   * Credencial OAuth do Google (Google Cloud → Clientes → Downpipe Web).
+   * Com as duas, o servidor conversa direto com o Google e a tela de
+   * escolher a conta diz "downpipe.com.br" (ver auth/loginSocial.ts). Sem
+   * elas, o login com Google segue pelo Supabase, que aparece como
+   * "supabase.co" pra pessoa.
+   */
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
