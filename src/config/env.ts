@@ -31,6 +31,13 @@ const envSchema = z.object({
    */
   APP_URL: z.string().url().optional(),
 
+  /**
+   * Ingresso e portaria (QR) ainda em teste. Fora de produção ficam
+   * sempre ligados; em produção só com INGRESSOS_LIGADOS=1. O app tem a
+   * mesma chave (EXPO_PUBLIC_INGRESSOS).
+   */
+  INGRESSOS_LIGADOS: z.string().optional(),
+
   CORS_ORIGINS: z
     .string()
     .default('http://localhost:19006')

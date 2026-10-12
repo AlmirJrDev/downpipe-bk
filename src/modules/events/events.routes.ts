@@ -1,4 +1,6 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Request, type Response } from 'express';
+import { env } from '@/config/env';
+import { sendError } from '@/shared/utils/apiResponse';
 import { requireAuth, attachUserIfPresent } from '@/shared/middleware/auth.middleware';
 import { imageUpload } from '@/shared/middleware/upload.middleware';
 import { getMyTicket, getCheckinList, syncCheckins } from '@/modules/tickets/tickets.controller';
@@ -35,10 +37,15 @@ eventsRouter.delete('/:eventId/attend', requireAuth, unattend);
 eventsRouter.patch('/:eventId/attend/car', requireAuth, updateAttendanceCar);
 eventsRouter.get('/:eventId/attendees', listAttendees);
 
-// Ingresso (de quem confirmou) e portaria (de quem organiza).
-eventsRouter.get('/:eventId/ticket', requireAuth, getMyTicket);
-eventsRouter.get('/:eventId/checkin', requireAuth, getCheckinList);
-eventsRouter.post('/:eventId/checkin', requireAuth, syncCheckins);
+// Ingresso (de quem confirmou) e portaria (de quem organiza). Ainda em
+// teste: em produção respondem 404 até INGRESSOS_LIGADOS=1.
+const ingressosLigados = (_req: Request, res: Response, next: NextFunction) => {
+  if (env.NODE_ENV !== 'production' || env.INGRESSOS_LIGADOS === '1') return next();
+  sendError(res, 404, 'NOT_FOUND', 'Ingressos ainda não estão disponíveis.');
+};
+eventsRouter.get('/:eventId/ticket', ingressosLigados, requireAuth, getMyTicket);
+eventsRouter.get('/:eventId/checkin', ingressosLigados, requireAuth, getCheckinList);
+eventsRouter.post('/:eventId/checkin', ingressosLigados, requireAuth, syncCheckins);
 
 // Rota em /profiles/:username/events
 export const profileEventsRouter = Router();
