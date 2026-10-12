@@ -1,0 +1,15 @@
+Fotos de carros do modo demonstração — Unsplash (licença Unsplash: uso livre,
+inclusive comercial, sem crédito obrigatório). Origem de cada uma:
+
+golf.jpg       https://unsplash.com/photos/SuD4h8Gpgok
+golf-2.jpg     https://unsplash.com/photos/tmhW9YUAFPw
+golf-3.jpg     recorte de golf.jpg
+civic.jpg      https://unsplash.com/photos/zE2VGbJSYns
+impala.jpg     https://unsplash.com/photos/qijkjkJm63c
+350z.jpg       https://unsplash.com/photos/1w_Hul7OkFY
+350z-2.jpg     https://unsplash.com/photos/Mo3UXcu8jUw
+mk2-antes.jpg  https://unsplash.com/photos/LQWPYsKnyh4
+mk2-depois.jpg https://unsplash.com/photos/dZr-Q9ZQ1dk
+
+Avatares e flyers foram gerados pra demonstração (pessoas e encontros
+inventados).
