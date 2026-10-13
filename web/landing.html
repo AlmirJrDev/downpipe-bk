@@ -487,8 +487,9 @@ footer nav a:hover { color: var(--texto); }
     a.querySelector('.info').textContent =
       [SEMANA[d.getDay()] + ' · ' + hora, ev.entryNote || ev.city].filter(Boolean).join(' · ');
     a.querySelector('.km').textContent = ev.distanceKm != null ? ev.distanceKm + ' km' : (ev.city || '');
+    // "0 vão" desanima mais do que não dizer nada.
     var n = ev.attendeesCount || 0;
-    a.querySelector('.vao').textContent = n === 1 ? '1 vai' : n + ' vão';
+    a.querySelector('.vao').textContent = n === 0 ? '' : n === 1 ? '1 vai' : n + ' vão';
     return a;
   }
 
