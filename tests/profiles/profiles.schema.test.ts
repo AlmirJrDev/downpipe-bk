@@ -31,3 +31,15 @@ describe('updateProfileSchema', () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe('viveCarro (onboarding)', () => {
+  it('aceita uma ou mais respostas conhecidas', () => {
+    expect(updateProfileSchema.safeParse({ viveCarro: ['carro'] }).success).toBe(true);
+    expect(updateProfileSchema.safeParse({ viveCarro: ['carro', 'fotografo', 'organizador'] }).success).toBe(true);
+  });
+
+  it('recusa lista vazia e resposta que não existe', () => {
+    expect(updateProfileSchema.safeParse({ viveCarro: [] }).success).toBe(false);
+    expect(updateProfileSchema.safeParse({ viveCarro: ['piloto'] }).success).toBe(false);
+  });
+});

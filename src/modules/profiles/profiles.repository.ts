@@ -10,6 +10,7 @@ export interface ProfileRow {
   gearhead_since: number | null;
   instagram: string | null;
   is_organizer: boolean;
+  vive_carro: string[];
   created_at: string;
   updated_at: string;
 }
@@ -112,6 +113,13 @@ export const profilesRepository = {
     if (input.gearheadSince !== undefined) payload.gearhead_since = input.gearheadSince;
     if (input.instagram !== undefined) payload.instagram = input.instagram;
     if (input.isOrganizer !== undefined) payload.is_organizer = input.isOrganizer;
+    if (input.viveCarro !== undefined) {
+      payload.vive_carro = [...new Set(input.viveCarro)];
+      // Quem diz que organiza ganha a marca de organizador, que põe os
+      // encontros em destaque no perfil — a não ser que tenha mandado a marca
+      // junto, aí vale a escolha dele.
+      if (input.isOrganizer === undefined && input.viveCarro.includes('organizador')) payload.is_organizer = true;
+    }
 
     const { data, error } = await supabaseAdmin
       .from('profiles')

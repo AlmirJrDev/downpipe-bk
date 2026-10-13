@@ -27,6 +27,12 @@ export const updateProfileSchema = z
      */
     isOrganizer: z.boolean().optional(),
     instagram: instagramSchema,
+    /** "Como você vive carro?" do onboarding — pelo menos uma resposta. */
+    viveCarro: z
+      .array(z.enum(['carro', 'fotografo', 'organizador', 'sem_carro']))
+      .min(1, 'Marque pelo menos uma opção')
+      .max(4)
+      .optional(),
   })
   .strict()
   // impede explicitamente qualquer tentativa de sobrescrever o id via body

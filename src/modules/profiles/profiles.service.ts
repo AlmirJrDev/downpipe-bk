@@ -43,6 +43,7 @@ export const profilesService = {
       gearheadSince: profile.gearhead_since,
       instagram: profile.instagram,
       isOrganizer: profile.is_organizer,
+      viveCarro: profile.vive_carro ?? [],
       // Só no próprio perfil: é o que faz a fila de denúncias aparecer no app.
       isAdmin: await moderationRepository.isAdmin(profile.id),
       createdAt: profile.created_at,
@@ -101,6 +102,7 @@ export const profilesService = {
       gearheadSince: updated.gearhead_since,
       instagram: updated.instagram,
       isOrganizer: updated.is_organizer,
+      viveCarro: updated.vive_carro ?? [],
       updatedAt: updated.updated_at,
     };
   },
