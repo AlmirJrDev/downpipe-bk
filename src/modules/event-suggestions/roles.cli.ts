@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { supabaseAdmin } from '@/config/supabase';
 import { eventSuggestionsService } from './event-suggestions.service';
 import { createSuggestionSchema } from './event-suggestions.schema';
+import { linksDeEncontro } from './links';
 
 /**
  * Fila de rolês pela linha de comando.
@@ -16,6 +17,11 @@ import { createSuggestionSchema } from './event-suggestions.schema';
  *   npm run roles -- importar <arquivo>    joga um JSON de sugestões na fila
  *   npm run roles -- aprovar <id>          vira rolê de verdade
  *   npm run roles -- descartar <id>
+ *   npm run roles -- links                 a caixa de links que a equipe colou no app
+ *   npm run roles -- link-descartar <id> [motivo]
+ *
+ * No arquivo do importar, um item pode trazer "linkId": o link da caixa
+ * que ele lançou fica marcado como lançado, ligado à sugestão.
  *
  * O formato do arquivo é uma lista dos mesmos campos que a API aceita:
  *   [{ "name": "...", "startsAt": "2026-10-18T12:00:00.000Z", "location": "...",
@@ -61,11 +67,13 @@ async function importar(arquivo: string) {
   let novas = 0;
   let repetidas = 0;
   for (const item of lista) {
-    const entrada = createSuggestionSchema.parse(item);
+    const { linkId, ...campos } = item as { linkId?: string };
+    const entrada = createSuggestionSchema.parse(campos);
     const criada = await eventSuggestionsService.registrarDaWeb(entrada);
     if (criada) {
       novas += 1;
       console.log(`+ ${entrada.name}`);
+      if (linkId) await linksDeEncontro.marcar(linkId, 'lancado', criada.id);
     } else {
       repetidas += 1;
       console.log(`· ${entrada.name} (já estava na fila)`);
@@ -99,6 +107,22 @@ async function descartar(id: string) {
   console.log('Sugestão descartada.');
 }
 
+async function links() {
+  const novos = await linksDeEncontro.listar('novo');
+  if (novos.length === 0) {
+    console.log('Caixa de links vazia.');
+    return;
+  }
+  for (const l of novos) {
+    console.log(`
+${l.id}
+  ${l.url}${l.note ? `
+  nota: ${l.note}` : ''}`);
+  }
+  console.log(`
+${novos.length} link(s) pra lançar.`);
+}
+
 async function main() {
   const [comando, ...resto] = process.argv.slice(2);
 
@@ -111,8 +135,15 @@ async function main() {
       return aprovar(resto[0]);
     case 'descartar':
       return descartar(resto[0]);
+    case 'links':
+      return links();
+    case 'link-descartar':
+      if (!resto[0]) throw new Error('faltou o id do link');
+      await linksDeEncontro.marcar(resto[0], 'descartado', undefined, resto.slice(1).join(' ') || undefined);
+      console.log('Link descartado.');
+      return;
     default:
-      throw new Error(`comando desconhecido: "${comando}" (use fila, importar, aprovar ou descartar)`);
+      throw new Error(`comando desconhecido: "${comando}" (use fila, importar, aprovar, descartar, links ou link-descartar)`);
   }
 }
 
