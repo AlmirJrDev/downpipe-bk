@@ -442,6 +442,30 @@ export function createApp() {
       }
     };
 
+    let cascaDoJogo: string | null = null;
+    /**
+     * O link do jogo, que é o que vai no "compartilhar resultado": chega no
+     * WhatsApp com título, número do dia e a arte do jogo, em vez da prévia
+     * genérica do app. Antes do express.static: o build gera um
+     * nave-do-dia.html próprio, que seria servido sem a prévia.
+     */
+    app.get('/app/nave-do-dia', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      cascaDoJogo ??= fs.readFileSync(path.join(dist, fs.existsSync(path.join(dist, 'nave-do-dia.html')) ? 'nave-do-dia.html' : 'index.html'), 'utf8');
+      res.type('html').send(
+        comPrevia(
+          cascaDoJogo,
+          {
+            titulo: `Nave do Dia #${numeroDaNaveDoDia()} · Adivinhe o carro de hoje`,
+            descricao: 'Um carro secreto por dia. Chuta, veja o que bate e acerte com menos palpites que a galera. Grátis, sem cadastro.',
+            imagem: `${origem}/og-nave-do-dia.png`,
+          },
+          `${origem}/app/nave-do-dia`,
+          `${origem}/og-banner.png`
+        )
+      );
+    });
+
     app.use('/app', express.static(dist, { extensions: ['html'], setHeaders: cacheDosAssets }));
 
     /**
@@ -480,28 +504,6 @@ export function createApp() {
         }
       }
     );
-
-    /**
-     * O link do jogo, que é o que vai no "compartilhar resultado": chega no
-     * WhatsApp com título, número do dia e a arte do jogo, em vez da prévia
-     * genérica do app.
-     */
-    app.get('/app/nave-do-dia', (req, res) => {
-      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
-      casca ??= fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
-      res.type('html').send(
-        comPrevia(
-          casca,
-          {
-            titulo: `Nave do Dia #${numeroDaNaveDoDia()} · Adivinhe o carro de hoje`,
-            descricao: 'Um carro secreto por dia. Chuta, veja o que bate e acerte com menos palpites que a galera. Grátis, sem cadastro.',
-            imagem: `${origem}/og-nave-do-dia.png`,
-          },
-          `${origem}/app/nave-do-dia`,
-          `${origem}/og-banner.png`
-        )
-      );
-    });
 
     // Rota dinâmica (/app/event/abc) não tem HTML próprio: devolve a casca
     // e o expo-router resolve o caminho no navegador.
