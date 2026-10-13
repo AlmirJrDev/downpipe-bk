@@ -334,7 +334,6 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
         <h2 id="instrucoesTitulo"></h2>
         <p id="instrucoesTexto"></p>
         <ol id="instrucoesPassos"></ol>
-        <button id="copiar" class="botao botao-secundario largo oculto" style="margin-top:12px">COPIAR ENDEREÇO</button>
       </div>
 
       <p class="aviso">Grátis. Abre no navegador, sem precisar de loja.</p>
@@ -709,23 +708,21 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
     ios: { titulo: 'Coloque na tela inicial',
       texto: 'Três toques e o Downpipe vira um ícone como qualquer outro app.',
       passos: ['Toque em Compartilhar, na barra de baixo', 'Role e escolha "Adicionar à Tela de Início"', 'Confirme em "Adicionar"'] },
-    iosOutroNavegador: { titulo: 'Abra no Safari',
-      texto: 'No iPhone, só o Safari coloca um site na tela inicial.',
-      passos: ['Toque em COPIAR ENDEREÇO aqui embaixo', 'Abra o Safari e cole na barra de endereço', 'Compartilhar → Adicionar à Tela de Início'], copiar: true },
-    navegadorInterno: { titulo: 'Abra fora do WhatsApp',
-      texto: 'Este navegador não instala apps. Leve o endereço pro Chrome ou Safari.',
-      passos: ['Toque em COPIAR ENDEREÇO aqui embaixo', 'Abra o Chrome (ou o Safari, no iPhone)', 'Cole o endereço e siga o convite de lá'], copiar: true },
     android: { titulo: 'Coloque na tela inicial',
       texto: 'Pelo menu do navegador, o Downpipe vira um ícone como qualquer app.',
-      passos: ['Toque nos três pontinhos do navegador', 'Escolha "Instalar app" ou "Adicionar à tela inicial"', 'Confirme, e o ícone aparece junto dos seus apps'] },
-    desktop: { titulo: 'Instale no computador',
-      texto: 'Dá pra instalar aqui, mas o app foi feito pro celular — vale abrir lá.',
-      passos: ['Clique no ícone de instalar, na barra de endereço do navegador'] }
+      passos: ['Toque nos três pontinhos do navegador', 'Escolha "Instalar app" ou "Adicionar à tela inicial"', 'Confirme, e o ícone aparece junto dos seus apps'] }
   };
 
   function mostrar() {
     var s = situacao();
     if (s === 'nenhuma') return;
+    // Na página de apresentação, só ensina a instalar onde dá pra instalar
+    // agora. Quem chega pelo anúncio está no navegador do Instagram: pedir
+    // pra copiar o endereço e abrir em outro lugar, antes de a pessoa saber
+    // o que é o Downpipe, tomava o lugar do botão de entrar — e falava do
+    // WhatsApp pra quem veio do Instagram. Lá dentro do app, depois de usar,
+    // o convite de instalar continua.
+    if (s === 'navegadorInterno' || s === 'iosOutroNavegador' || s === 'desktop') return;
 
     var botoes = [document.getElementById('instalar'), document.getElementById('instalar2')];
     if (s === 'instalando') {
@@ -750,19 +747,6 @@ footer .legal a:hover { color: var(--texto); text-decoration: underline; }
       ol.appendChild(li);
     });
 
-    if (c.copiar) {
-      var copiar = document.getElementById('copiar');
-      copiar.classList.remove('oculto');
-      copiar.onclick = function () {
-        var endereco = location.origin;
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(endereco).then(function () {
-            copiar.textContent = 'ENDEREÇO COPIADO';
-            setTimeout(function () { copiar.textContent = 'COPIAR ENDEREÇO'; }, 2500);
-          }, function () { window.prompt('Copie o endereço:', endereco); });
-        } else { window.prompt('Copie o endereço:', endereco); }
-      };
-    }
     document.getElementById('instrucoes').classList.remove('oculto');
   }
 
