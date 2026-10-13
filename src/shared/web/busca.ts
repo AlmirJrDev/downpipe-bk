@@ -168,6 +168,7 @@ export function robotsTxt(origem: string): string {
     'Allow: /termos',
     'Allow: /app/event/',
     'Allow: /encontros',
+    'Allow: /jogos',
     '',
     '# Os arquivos do app: o Google roda o JavaScript pra montar a página do',
     '# encontro, e sem eles veria só a tela de carregamento.',

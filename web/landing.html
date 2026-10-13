@@ -176,6 +176,17 @@ a.encontro:hover { background: #1a1a1a; color: var(--texto); }
 .numeros .miolo { padding-top: 28px; padding-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; }
 .numeros .v { font-weight: 900; font-stretch: 75%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
 
+/* ---------- faixa do jogo ---------- */
+.faixa-jogo { border-bottom: 1px solid var(--linha); }
+.faixa-jogo a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 22px; padding-bottom: 22px; color: var(--texto); }
+.faixa-jogo a:hover { color: var(--texto); }
+.faixa-jogo a:hover .ir { color: var(--marca-viva); }
+.faixa-jogo .quadros { display: flex; gap: 3px; flex: none; }
+.faixa-jogo .quadros i { width: 14px; height: 14px; display: block; }
+.faixa-jogo b { font-weight: 900; font-stretch: 78%; font-size: 24px; text-transform: uppercase; display: block; }
+.faixa-jogo .ir { font: 700 13px var(--mono); letter-spacing: .14em; white-space: nowrap; }
+@media (max-width: 560px) { .faixa-jogo .quadros { display: none; } }
+
 /* ---------- passos ---------- */
 .passos { display: flex; flex-wrap: wrap; gap: 1px; background: var(--linha); border: 1px solid var(--linha); }
 .passo { flex: 1 1 240px; background: var(--fundo); padding: 36px 32px; display: flex; flex-direction: column; gap: 16px; }
@@ -316,6 +327,16 @@ footer nav a:hover { color: var(--texto); }
     </div>
   </section>
 
+  <!-- O jogo do dia: é o que se manda no grupo, e traz gente que ainda nem
+       tem carro pra cadastrar. -->
+  <section class="faixa-jogo">
+    <a class="miolo" href="/jogos/nave-do-dia">
+      <span class="quadros" aria-hidden="true"><i style="background:#7f1d1d"></i><i style="background:#15803d"></i><i style="background:#a16207"></i><i style="background:#15803d"></i><i style="background:#15803d"></i></span>
+      <span style="flex:1;min-width:0"><span class="mono-12">JOGO DIÁRIO</span><b>Nave do Dia: adivinhe o carro de hoje</b></span>
+      <span class="ir">JOGAR →</span>
+    </a>
+  </section>
+
   <section class="miolo secao pilha" style="gap:48px">
     <div class="pilha" style="gap:16px;max-width:720px">
       <div class="rotulo">Como funciona</div>
@@ -440,6 +461,7 @@ footer nav a:hover { color: var(--texto); }
     </div>
     <nav>
       <a href="/encontros">Agenda</a>
+      <a href="/jogos">Jogos</a>
       <a href="/privacidade">Privacidade</a>
       <a href="/termos">Termos de uso</a>
     </nav>

@@ -42,6 +42,7 @@ import {
   slugDaCidade,
 } from '@/shared/web/cidades';
 import { eventsRepository } from '@/modules/events/events.repository';
+import { numeroDaNaveDoDia, paginaDaNaveDoDia, paginaDosJogos } from '@/shared/web/jogos';
 
 export function createApp() {
   const app = express();
@@ -367,6 +368,20 @@ export function createApp() {
       }
     });
 
+    /**
+     * Os jogos (ver shared/web/jogos.ts): páginas prontas pro Google, que
+     * levam pro jogo dentro do app. Cinco minutos de cache: o número do dia
+     * muda à meia-noite.
+     */
+    app.get('/jogos', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDosJogos(origem));
+    });
+    app.get('/jogos/nave-do-dia', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDaNaveDoDia(origem));
+    });
+
     app.get('/robots.txt', (req, res) => {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
       res.type('text/plain').setHeader('Cache-Control', 'public, max-age=3600').send(robotsTxt(origem));
@@ -389,6 +404,8 @@ export function createApp() {
             sitemapXml(origem, [
               { caminho: '/' },
               { caminho: '/encontros' },
+              { caminho: '/jogos' },
+              { caminho: '/jogos/nave-do-dia' },
               ...cidades.map((c) => ({ caminho: `/encontros/${slugDaCidade(c.nome)}` })),
               { caminho: '/privacidade' },
               { caminho: '/termos' },
@@ -463,6 +480,28 @@ export function createApp() {
         }
       }
     );
+
+    /**
+     * O link do jogo, que é o que vai no "compartilhar resultado": chega no
+     * WhatsApp com título, número do dia e a arte do jogo, em vez da prévia
+     * genérica do app.
+     */
+    app.get('/app/nave-do-dia', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      casca ??= fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+      res.type('html').send(
+        comPrevia(
+          casca,
+          {
+            titulo: `Nave do Dia #${numeroDaNaveDoDia()} · Adivinhe o carro de hoje`,
+            descricao: 'Um carro secreto por dia. Chuta, veja o que bate e acerte com menos palpites que a galera. Grátis, sem cadastro.',
+            imagem: `${origem}/og-nave-do-dia.png`,
+          },
+          `${origem}/app/nave-do-dia`,
+          `${origem}/og-banner.png`
+        )
+      );
+    });
 
     // Rota dinâmica (/app/event/abc) não tem HTML próprio: devolve a casca
     // e o expo-router resolve o caminho no navegador.
