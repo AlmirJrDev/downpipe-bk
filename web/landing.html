@@ -3,18 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Downpipe — a rede do seu carro e dos seus encontros</title>
-<meta name="description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá. O Downpipe é a rede social de quem vive carro.">
+<title>Downpipe — encontros de carro perto de você</title>
+<meta name="description" content="Os encontros de carro de Campinas e região num mapa só. Confirme com o carro que vai levar, monte sua garagem e junte as fotos que a galera tirou da sua nave.">
+<link rel="canonical" href="https://downpipe.com.br/">
 <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
-<link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#0E0E0E">
+<link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/jetbrains-mono-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/lp/hero.webp" as="image">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Downpipe">
-<meta property="og:title" content="Downpipe — a rede do seu carro e dos seus encontros">
-<meta property="og:description" content="Sua garagem, os encontros da sua região e as fotos de quem esteve lá.">
+<meta property="og:title" content="Downpipe — encontros de carro perto de você">
+<meta property="og:description" content="Os encontros de carro da sua região num mapa só, sua garagem e as fotos de quem esteve lá.">
 <!-- URL absoluta, não caminho: o robô do WhatsApp e do Instagram não
      resolve "/og-banner.png" contra a página, e o link aparecia sem
      imagem nenhuma. -->
@@ -24,735 +27,548 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 
-<style>
-/* A mesma Inter do app, servida daqui (public/fonts). */
-@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/inter-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-@font-face{font-family:'Inter';font-style:normal;font-display:swap;font-weight:100 900;src:url(/fonts/inter-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+<script>
+  // Quem já entrou não precisa da apresentação: vai direto pro app. Aqui
+  // em cima, antes de desenhar, pra não piscar a landing.
+  try { if (localStorage.getItem('gearhead_session')) location.replace('/app/'); } catch (e) {}
+</script>
 
-*, *::before, *::after { box-sizing: border-box; }
+<style>
+/* Archivo (largura variável, pros títulos condensados) e JetBrains Mono,
+   servidas daqui (public/fonts): a política de segurança do site não deixa
+   buscar fonte do Google, e é um pedido a menos pra quem abre no 4G. */
+@font-face{font-family:'Archivo';font-style:normal;font-display:swap;font-weight:100 900;font-stretch:62% 125%;src:url(/fonts/archivo-latin.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Archivo';font-style:normal;font-display:swap;font-weight:100 900;font-stretch:62% 125%;src:url(/fonts/archivo-latin-ext.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-display:swap;font-weight:500;src:url(/fonts/jetbrains-mono-500.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-display:swap;font-weight:700;src:url(/fonts/jetbrains-mono-700.woff2) format('woff2')}
 
 :root {
-  --preto: #0E0E0E;
-  --carbono: #161616;
-  --carbono2: #1C1C1C;
-  --borda: #2A2A2A;
-  --texto: #FFFFFF;
-  --apagado: #A8A8A8;
-  --fraco: #6E6E6E;
-  --marca: #E53935;
-  --verde: #4CAF50;
-  --topo: 64px;
+  --fundo: #0e0e0e;
+  --fundo-2: #121212;
+  --fundo-3: #141414;
+  --painel: rgba(20,20,20,0.92);
+  --linha: #222;
+  --linha-2: #2a2a2a;
+  --linha-3: #333;
+  --linha-forte: #4d4d4d;
+  --texto: #f0f0f0;
+  --texto-2: #c4c4c4;
+  --apagado: #a3a3a3;
+  --fraco: #8a8a8a;
+  --marca: #da291c;
+  --marca-viva: #ff4a3d;
+  --verde: #22c55e;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --display: 'Archivo', 'Arial Narrow', Helvetica, Arial, sans-serif;
+  --largura: 1240px;
+  --lado: 24px;
 }
+@media (max-width: 560px) { :root { --lado: 16px; } }
 
+*, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-html, body { margin: 0; padding: 0; background: var(--preto); }
+html, body { margin: 0; background: var(--fundo); }
 body {
   color: var(--texto);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--display);
   -webkit-font-smoothing: antialiased;
-  line-height: 1.55;
   overflow-x: hidden;
 }
-
-/* Só as laterais, e nunca o atalho "padding".
-   .faixa é classe e section é elemento, então o atalho aqui vencia por
-   especificidade e zerava o padding vertical das seções — todas ficavam
-   coladas, separadas só pela linha de 1px. */
-.faixa { padding-left: 20px; padding-right: 20px; }
-.centro { width: 100%; max-width: 1080px; margin: 0 auto; }
-.estreito { max-width: 720px; margin: 0 auto; }
-
-/* ---------- cabeçalho fixo ---------- */
-.cabecalho {
-  position: sticky; top: 0; z-index: 60;
-  height: var(--topo);
-  display: flex; align-items: center;
-  background: rgba(14,14,14,.82);
-  backdrop-filter: saturate(140%) blur(12px);
-  -webkit-backdrop-filter: saturate(140%) blur(12px);
-  border-bottom: 1px solid transparent;
-  transition: border-color .25s ease;
+img { max-width: 100%; display: block; }
+a { color: var(--marca-viva); text-decoration: none; }
+a:hover { color: var(--marca); }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible {
+  outline: 2px solid var(--marca-viva); outline-offset: 3px;
 }
-.cabecalho.rolou { border-bottom-color: var(--borda); }
-.cabecalho .centro { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.cabecalho img { height: 20px; width: auto; display: block; }
+
+.miolo { max-width: var(--largura); margin: 0 auto; padding-left: var(--lado); padding-right: var(--lado); }
+.rotulo { font: 700 13px var(--mono); letter-spacing: .18em; color: var(--marca-viva); text-transform: uppercase; }
+.mono-12 { font: 500 12px var(--mono); letter-spacing: .12em; color: var(--fraco); }
+.secao { padding-top: clamp(72px, 9vw, 128px); padding-bottom: clamp(72px, 9vw, 128px); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 {
+  font-weight: 900; font-stretch: 74%; text-transform: uppercase;
+  font-size: clamp(40px, 5.5vw, 72px); line-height: .92;
+}
+p { margin: 0; text-wrap: pretty; }
+.corpo { font-size: 18px; line-height: 1.55; color: var(--apagado); }
+.pilha { display: flex; flex-direction: column; }
 
 /* ---------- botões ---------- */
 .botao {
-  display: inline-block; text-align: center; text-decoration: none;
-  padding: 14px 22px; font-size: 13px; font-weight: 700; letter-spacing: 1.4px;
-  border: 1px solid transparent; cursor: pointer; font-family: inherit;
-  transition: transform .12s ease, background-color .2s ease, border-color .2s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font: 700 15px var(--mono); letter-spacing: .14em; text-transform: uppercase;
+  padding: 20px 32px; border: 0; cursor: pointer;
 }
-.botao:active { transform: translateY(1px); }
-.botao-principal { background: var(--marca); color: #fff; }
-.botao-principal:hover { background: #F04A46; }
-.botao-secundario { background: transparent; color: var(--texto); border-color: var(--borda); }
-.botao-secundario:hover { border-color: #454545; }
-.botao-pequeno { padding: 9px 16px; font-size: 11px; letter-spacing: 1.2px; }
-.botao:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
-.largo { display: block; width: 100%; }
-
-/* ---------- hero ---------- */
-.hero {
-  padding: clamp(52px, 11vw, 104px) 0 clamp(40px, 7vw, 64px);
-  text-align: center;
-  position: relative;
-  /* O brilho abaixo usa inset negativo pra sangrar nas laterais; sem isto
-     ele alarga o documento e a página ganha rolagem horizontal. */
-  overflow: hidden;
-}
-/* brilho vermelho de fundo, bem discreto — dá profundidade sem virar gradiente de banco */
-.hero::before {
-  content: ""; position: absolute; inset: -10% -20% auto; height: 460px;
-  background: radial-gradient(60% 100% at 50% 0%, rgba(229,57,53,.16), transparent 70%);
-  pointer-events: none;
-}
-.hero > * { position: relative; }
-.hero .marca { width: min(440px, 76vw); height: auto; margin: 0 auto 30px; display: block; }
-
-.selo {
-  display: inline-flex; align-items: center; gap: 8px;
-  border: 1px solid var(--borda); background: var(--carbono);
-  padding: 6px 13px; font-size: 11px; letter-spacing: 1.4px;
-  color: var(--apagado); text-transform: uppercase; margin-bottom: 24px;
-}
-.selo .ponto { width: 6px; height: 6px; background: var(--marca); border-radius: 50%; }
-
-h1 {
-  font-size: clamp(30px, 6.4vw, 58px);
-  line-height: 1.06; font-weight: 800; letter-spacing: -0.03em;
-  margin: 0 0 18px; text-wrap: balance;
-}
-h1 em { color: var(--marca); font-style: normal; }
-.chamada-sub {
-  color: var(--apagado); font-size: clamp(15px, 2.4vw, 19px);
-  margin: 0 auto 32px; max-width: 30em;
-}
-
-.acoes { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 28px auto 0; }
-@media (min-width: 620px) { .acoes { flex-direction: row; justify-content: center; } .acoes .botao { min-width: 210px; } }
-
-.instrucoes {
-  border: 1px solid var(--borda); background: var(--carbono);
-  padding: 16px 18px; margin: 16px auto 0; max-width: 420px; text-align: left;
-}
-.instrucoes h2 { margin: 0 0 4px; font-size: 15px; }
-.instrucoes p { margin: 0; color: var(--apagado); font-size: 13px; }
-.instrucoes ol { margin: 10px 0 0; padding-left: 20px; color: var(--apagado); font-size: 13px; list-style: decimal; }
-.instrucoes li { margin-bottom: 3px; }
+.botao-vermelho { background: var(--marca); color: #fff; }
+.botao-vermelho:hover { background: var(--marca-viva); color: #fff; }
+.botao-contorno { background: transparent; color: var(--texto); border: 1px solid var(--linha-forte); }
+.botao-contorno:hover { border-color: var(--texto); color: var(--texto); }
+.link-sublinhado { color: var(--texto); font-weight: 600; font-size: 16px; border-bottom: 1px solid var(--linha-forte); padding-bottom: 3px; }
+.link-sublinhado:hover { color: #fff; border-color: #fff; }
 .oculto { display: none !important; }
-.aviso { color: var(--fraco); font-size: 12px; margin: 18px 0 0; }
 
-/* ---------- carrossel de encontros ---------- */
-.esteira { padding: 34px 0 10px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
-.trilho { display: flex; gap: 12px; width: max-content; animation: correr 46s linear infinite; }
-.esteira:hover .trilho { animation-play-state: paused; }
-@keyframes correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-.role {
-  flex: 0 0 auto; width: 250px;
-  border: 1px solid var(--borda); background: var(--carbono);
-  padding: 13px 15px; display: flex; gap: 13px; align-items: center;
+/* ---------- cabeçalho ---------- */
+.topo {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(14,14,14,.92);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--linha);
 }
-.role .data {
-  flex: 0 0 auto; width: 46px; text-align: center; border: 1px solid var(--borda);
-  padding: 5px 0; background: var(--carbono2);
-}
-.role .data .dia { font-size: 17px; font-weight: 800; line-height: 1; }
-.role .data .mes { font-size: 9px; letter-spacing: 1.4px; color: var(--marca); font-weight: 700; }
-.role .nome { font-size: 13px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.role .info { font-size: 11px; color: var(--fraco); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.role .info b { color: var(--apagado); font-weight: 600; }
+.topo .miolo { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 14px; padding-bottom: 14px; }
+.topo img { height: 26px; width: auto; }
+.topo nav { display: flex; align-items: center; gap: 28px; }
+.topo nav a.secundario { color: var(--apagado); font-size: 15px; font-weight: 600; }
+.topo nav a.secundario:hover { color: var(--texto); }
+.topo .entrar { font: 700 13px var(--mono); letter-spacing: .12em; color: var(--texto); border: 1px solid var(--linha-forte); padding: 10px 18px; }
+.topo .entrar:hover { border-color: var(--texto); color: var(--texto); }
+@media (max-width: 760px) { .topo nav a.secundario { display: none; } }
 
-/* ---------- seções ---------- */
-section { padding: clamp(56px, 9vw, 96px) 0; border-top: 1px solid var(--borda); }
-.rotulo {
-  font-size: 11px; letter-spacing: 2.4px; text-transform: uppercase;
-  color: var(--marca); font-weight: 700; margin: 0 0 12px;
+/* ---------- herói ---------- */
+.heroi { position: relative; overflow: hidden; }
+.heroi .foto { position: absolute; inset: 0; background: url(/lp/hero.webp) center / cover no-repeat; }
+.heroi .veu { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,14,14,.97) 0%, rgba(14,14,14,.85) 45%, rgba(14,14,14,.35) 100%); }
+@media (max-width: 900px) {
+  /* Empilhado no celular: o véu escurece de cima pra baixo, senão o
+     título fica em cima da parte clara da foto. */
+  .heroi .veu { background: linear-gradient(180deg, rgba(14,14,14,.82) 0%, rgba(14,14,14,.94) 55%, rgba(14,14,14,.98) 100%); }
 }
-h2.titulo {
-  font-size: clamp(24px, 4.4vw, 38px); line-height: 1.13; font-weight: 800;
-  letter-spacing: -0.02em; margin: 0 0 14px; text-wrap: balance;
+.heroi .grade {
+  position: relative;
+  padding-top: clamp(48px, 10vw, 140px); padding-bottom: clamp(48px, 7vw, 96px);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 48px; align-items: end;
 }
-.linha { color: var(--apagado); font-size: clamp(15px, 2vw, 17px); margin: 0; max-width: 34em; }
-
-/* passos */
-.passos { display: grid; gap: 14px; margin-top: 38px; }
-@media (min-width: 760px) { .passos { grid-template-columns: repeat(3, 1fr); } }
-.passo { border: 1px solid var(--borda); background: var(--carbono); padding: 22px 20px; position: relative; overflow: hidden; }
-.passo .n {
-  font-size: 46px; font-weight: 800; line-height: 1; color: transparent;
-  -webkit-text-stroke: 1.5px var(--borda); position: absolute; top: 12px; right: 16px;
+.heroi h1 {
+  font-weight: 900; font-stretch: 72%; text-transform: uppercase;
+  font-size: clamp(48px, 8vw, 108px); line-height: .9;
 }
-.passo h3 { margin: 0 0 7px; font-size: 17px; font-weight: 700; }
-.passo p { margin: 0; color: var(--apagado); font-size: 14px; }
-.link-agenda { display: inline-block; margin-top: 12px; color: var(--marca); font-size: 13px; font-weight: 700; text-decoration: none; }
-.link-agenda:hover { text-decoration: underline; }
-.link-agenda:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
+.heroi .chamada { font-size: clamp(17px, 1.6vw, 20px); line-height: 1.5; color: var(--texto-2); max-width: 520px; }
+.heroi .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
 
-/* grade de recursos */
-.grade { display: grid; gap: 14px; margin-top: 38px; }
-@media (min-width: 700px) { .grade { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1000px) { .grade { grid-template-columns: repeat(3, 1fr); } }
-.carta {
-  border: 1px solid var(--borda); background: var(--carbono);
-  padding: 22px 20px; transition: border-color .22s ease, transform .22s ease;
+/* painel dos próximos encontros */
+.painel { background: var(--painel); border: 1px solid var(--linha-3); }
+.painel .cabeca { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--linha-2); }
+.painel .cabeca .mono { font: 700 12px var(--mono); letter-spacing: .16em; color: var(--apagado); }
+.ao-vivo { display: flex; align-items: center; gap: 8px; font: 700 12px var(--mono); color: var(--verde); white-space: nowrap; }
+.ao-vivo i { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); }
+@media (prefers-reduced-motion: no-preference) {
+  .ao-vivo i { animation: pulso 2s ease-in-out infinite; }
+  @keyframes pulso { 50% { opacity: .35; } }
 }
-.carta:hover { border-color: #3D3D3D; transform: translateY(-2px); }
-.carta .icone { width: 30px; height: 30px; margin-bottom: 14px; color: var(--marca); }
-.carta h3 { margin: 0 0 7px; font-size: 16px; font-weight: 700; }
-.carta p { margin: 0; color: var(--apagado); font-size: 14px; }
+.encontro { display: flex; gap: 18px; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--linha); color: var(--texto); }
+a.encontro:hover { background: #1a1a1a; color: var(--texto); }
+.encontro .data { width: 52px; flex: none; text-align: center; }
+.encontro .dia { font-weight: 900; font-stretch: 75%; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.encontro .mes { font: 700 11px var(--mono); letter-spacing: .12em; color: var(--marca-viva); }
+.encontro .meio { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.encontro .nome { font-weight: 700; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.encontro .info { font-size: 14px; color: var(--apagado); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.encontro .lado { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.encontro .km { font: 700 13px var(--mono); color: var(--texto); font-variant-numeric: tabular-nums; }
+.encontro .vao { font-size: 12px; color: var(--fraco); }
+.encontro.esqueleto .barra { height: 12px; background: #222; }
+.painel .rodape { display: block; padding: 16px 22px; font: 700 12px var(--mono); letter-spacing: .14em; color: var(--marca-viva); }
+.painel .rodape:hover { color: #fff; background: #1a1a1a; }
 
-/* ---------- telas do app ---------- */
-.telas { display: grid; gap: 34px; margin-top: 44px; align-items: center; }
-@media (min-width: 900px) { .telas { grid-template-columns: repeat(3, 1fr); gap: 26px; } }
-.tela-bloco { text-align: center; }
-.tela-bloco h3 { font-size: 16px; margin: 20px 0 5px; font-weight: 700; }
-.tela-bloco p { color: var(--apagado); font-size: 13.5px; margin: 0 auto; max-width: 26em; }
+/* ---------- faixa de números ---------- */
+.numeros { border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); background: var(--fundo-2); }
+.numeros .miolo { padding-top: 28px; padding-bottom: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px; }
+.numeros .v { font-weight: 900; font-stretch: 75%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
 
-.celular {
-  width: 232px; margin: 0 auto; border: 8px solid #242424; border-radius: 30px;
-  background: var(--preto); overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.6);
-  animation: flutuar 7s ease-in-out infinite;
+/* ---------- passos ---------- */
+.passos { display: flex; flex-wrap: wrap; gap: 1px; background: var(--linha); border: 1px solid var(--linha); }
+.passo { flex: 1 1 240px; background: var(--fundo); padding: 36px 32px; display: flex; flex-direction: column; gap: 16px; }
+.passo .n { font: 700 14px var(--mono); color: var(--marca-viva); }
+.passo h3 { font-weight: 800; font-stretch: 85%; font-size: 28px; }
+.passo p { font-size: 17px; line-height: 1.5; color: var(--apagado); }
+
+/* ---------- duas colunas ---------- */
+.duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 56px; align-items: center; }
+
+/* antes e depois */
+.comparar { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: #111; }
+.comparar .img { position: absolute; inset: 0; background: url(/lp/depois.webp) center / cover no-repeat; }
+.comparar .antes { position: absolute; left: 0; top: 0; bottom: 0; width: 50%; overflow: hidden; border-right: 3px solid #fff; }
+.comparar .antes .img { filter: grayscale(1) brightness(.62) contrast(.9); }
+.comparar input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+.selo { position: absolute; top: 16px; font: 700 12px var(--mono); letter-spacing: .14em; padding: 8px 12px; pointer-events: none; }
+.selo.antes-s { left: 16px; background: rgba(10,10,10,.86); }
+.selo.depois-s { right: 16px; background: var(--marca); }
+.investido { position: absolute; right: 16px; bottom: 16px; background: rgba(10,10,10,.9); border: 1px solid var(--linha-3); padding: 14px 18px; pointer-events: none; }
+.investido .v { font-weight: 900; font-stretch: 80%; font-size: 28px; font-variant-numeric: tabular-nums; }
+.lista { border-top: 1px solid var(--linha-2); }
+.lista > div { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--linha-2); font-size: 16px; }
+.lista b { font-weight: 600; }
+.lista span { color: var(--fraco); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* fotos */
+.fotos-secao { background: var(--fundo-3); border-top: 1px solid var(--linha); border-bottom: 1px solid var(--linha); }
+.fotos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 8px; }
+@media (max-width: 560px) { .fotos { grid-template-columns: 1fr 1fr; } }
+.fotos figure { margin: 0; position: relative; aspect-ratio: 4 / 5; background: #1a1a1a center / cover no-repeat; }
+.fotos figcaption { position: absolute; left: 10px; bottom: 10px; background: rgba(10,10,10,.88); font: 500 12px var(--mono); padding: 7px 9px; }
+
+/* arte pronta */
+.formatos { display: flex; flex-wrap: wrap; gap: 8px; }
+.formatos span { border: 1px solid var(--linha-forte); padding: 10px 14px; font: 700 12px var(--mono); letter-spacing: .12em; }
+.story { position: relative; width: min(100%, 300px); aspect-ratio: 9 / 16; overflow: hidden; border: 1px solid var(--linha-3); margin: 0 auto; background: url(/lp/story.webp) center / cover no-repeat; }
+.story::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,7,7,0) 40%, rgba(7,7,7,.95) 85%); }
+.story .conteudo { position: absolute; z-index: 1; left: 20px; right: 20px; bottom: 22px; display: flex; flex-direction: column; gap: 12px; }
+.story .titulo { font-weight: 900; font-stretch: 72%; font-size: 36px; line-height: .9; text-transform: uppercase; }
+.story .dados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.story .dados b { display: block; font-weight: 900; font-size: 18px; }
+.story .dados small { font: 500 9px var(--mono); color: var(--apagado); }
+.story .pe { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--linha-3); padding-top: 10px; font: 500 12px var(--mono); }
+.story .pe img { height: 14px; width: auto; }
+
+/* organizadores */
+.org { background: var(--marca); color: #fff; }
+.org .rotulo { color: var(--fundo); }
+.org h2 { font-stretch: 72%; font-size: clamp(44px, 6vw, 80px); line-height: .9; }
+.org .lista { border-top-color: rgba(255,255,255,.35); }
+.org .lista > div { border-bottom-color: rgba(255,255,255,.35); justify-content: flex-start; font-size: 17px; }
+.org .lista .n { font: 700 13px var(--mono); padding-top: 3px; }
+.org .botao { background: var(--fundo); color: #fff; }
+.org .botao:hover { background: #000; color: #fff; }
+.confirmados { background: var(--fundo); padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+.confirmados .placar { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 16px; gap: 12px; }
+.confirmados .placar b { font-weight: 900; font-stretch: 72%; font-size: 64px; line-height: .85; color: var(--verde); font-variant-numeric: tabular-nums; }
+.confirmados .placar span { font-weight: 700; font-size: 16px; color: var(--apagado); }
+.confirmados .linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #161616; border: 1px solid var(--linha-3); padding: 16px 18px; }
+.confirmados .linha b { font-weight: 800; font-stretch: 85%; font-size: 20px; }
+.confirmados .linha span { font: 500 13px var(--mono); color: var(--apagado); text-align: right; }
+
+/* dúvidas */
+.duvidas { max-width: 900px; }
+.duvidas details { border-bottom: 1px solid var(--linha-2); }
+.duvidas summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  padding: 24px 0; font-weight: 700; font-size: 19px; color: var(--texto);
 }
-.celular:nth-of-type(1) { animation-delay: -1s; }
-@keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-.celular .topo-tela { height: 22px; display: flex; align-items: center; justify-content: center; background: var(--preto); }
-.celular .entalhe { width: 62px; height: 5px; background: #242424; border-radius: 4px; }
-.celular .conteudo { height: 372px; padding: 10px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.duvidas summary::-webkit-details-marker { display: none; }
+.duvidas summary:hover { color: var(--marca-viva); }
+.duvidas summary::after { content: "+"; font: 500 22px var(--mono); color: var(--marca-viva); }
+.duvidas details[open] summary::after { content: "−"; }
+.duvidas details p { padding: 0 48px 24px 0; font-size: 17px; line-height: 1.6; color: var(--apagado); }
 
-.mini { border: 1px solid var(--borda); background: var(--carbono); padding: 9px 10px; }
-.mini .cabeca { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
-.bolinha { width: 21px; height: 21px; border-radius: 50%; background: #303030; flex: 0 0 auto; }
-.mini .quem { font-size: 10px; font-weight: 700; }
-.mini .carro { font-size: 8.5px; color: var(--fraco); }
-.foto { height: 92px; background: linear-gradient(135deg, #3a2a2a, #262a33 55%, #2c2c30); position: relative; overflow: hidden; }
-.foto::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.09) 50%, transparent 65%);
-  transform: translateX(-100%); animation: brilho 4.5s ease-in-out infinite;
-}
-@keyframes brilho { 0%, 62% { transform: translateX(-100%); } 88%, 100% { transform: translateX(100%); } }
-.acoes-mini { display: flex; gap: 10px; margin-top: 7px; align-items: center; }
-.acoes-mini span { font-size: 9px; color: var(--fraco); }
-.marca-carro {
-  display: inline-flex; align-items: center; gap: 4px; margin-top: 7px;
-  border: 1px solid var(--borda); padding: 3px 7px; font-size: 8.5px; color: var(--apagado);
-}
-.marca-carro .pt { width: 4px; height: 4px; background: var(--marca); }
-
-.mini-role { display: flex; gap: 9px; align-items: center; }
-.mini-role .d { width: 34px; text-align: center; border: 1px solid var(--borda); padding: 3px 0; }
-.mini-role .d .dd { font-size: 13px; font-weight: 800; line-height: 1; }
-.mini-role .d .mm { font-size: 7px; color: var(--marca); letter-spacing: 1px; font-weight: 700; }
-.mini-role .nn { font-size: 10.5px; font-weight: 700; }
-.mini-role .ii { font-size: 8.5px; color: var(--fraco); }
-.btn-mini { margin-top: 7px; background: var(--marca); color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: .8px; text-align: center; padding: 6px; }
-.btn-mini.indo { background: transparent; border: 1px solid var(--verde); color: var(--verde); }
-
-.mapa { flex: 1; position: relative; background: #101216; overflow: hidden; }
-.mapa .rua { position: absolute; background: #1E2129; }
-.pino {
-  position: absolute; transform: translate(-50%, -50%);
-  min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
-  background: var(--marca); color: #fff; font-size: 9px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,.5);
-  animation: pulsar 3.2s ease-in-out infinite;
-}
-.pino.vou { background: var(--verde); }
-@keyframes pulsar { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.13); } }
-
-/* ---------- perguntas ---------- */
-.perguntas { margin-top: 34px; border-top: 1px solid var(--borda); }
-.pergunta { border-bottom: 1px solid var(--borda); }
-.pergunta summary {
-  list-style: none; cursor: pointer; padding: 19px 42px 19px 0; position: relative;
-  font-size: 16px; font-weight: 600;
-}
-.pergunta summary::-webkit-details-marker { display: none; }
-.pergunta summary::after {
-  content: "+"; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  color: var(--marca); font-size: 21px; font-weight: 400; line-height: 1;
-  transition: transform .2s ease;
-}
-.pergunta[open] summary::after { content: "−"; }
-.pergunta .resposta { padding: 0 0 19px; color: var(--apagado); font-size: 14.5px; margin: 0; max-width: 44em; }
-
-/* ---------- fecho ---------- */
-.fecho { text-align: center; }
-.fecho .acoes { margin-top: 28px; }
-footer { border-top: 1px solid var(--borda); padding: 32px 0 52px; }
-footer .centro { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
-footer img { height: 17px; width: auto; opacity: .55; }
-footer p { color: var(--fraco); font-size: 12px; margin: 0; }
-footer .legal a { color: var(--apagado); text-decoration: none; margin: 0 10px; font-size: 12px; }
-footer .legal a:hover { color: var(--texto); text-decoration: underline; }
-
-/* ---------- revelação no scroll ---------- */
-.revela { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
-.revela.visivel { opacity: 1; transform: none; }
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .revela { opacity: 1; transform: none; transition: none; }
-  .trilho, .celular, .foto::after, .pino { animation: none !important; }
-}
+/* fechamento e rodapé */
+.fim h2 { font-stretch: 72%; font-size: clamp(48px, 7vw, 96px); line-height: .9; max-width: 960px; }
+footer .miolo { padding-top: 32px; padding-bottom: 32px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; }
+footer img { height: 22px; width: auto; }
+footer nav { display: flex; gap: 24px; font-size: 14px; }
+footer nav a { color: var(--apagado); }
+footer nav a:hover { color: var(--texto); }
 </style>
 </head>
 <body>
 
-<header class="cabecalho" id="cabecalho">
-  <div class="centro faixa">
-    <a href="#topo" aria-label="Downpipe"><img src="/logo-lp.png" alt="Downpipe"></a>
-    <a href="/app/" class="botao botao-principal botao-pequeno">ENTRAR</a>
+<header class="topo">
+  <div class="miolo">
+    <a href="/" aria-label="Downpipe"><img src="/logo-lp.png" alt="Downpipe" width="140" height="26"></a>
+    <nav>
+      <a class="secundario" href="#encontros">Encontros</a>
+      <a class="secundario" href="#organizadores">Pra quem organiza</a>
+      <a class="secundario" href="#duvidas">Dúvidas</a>
+      <a class="entrar" href="/app/">ENTRAR</a>
+    </nav>
   </div>
 </header>
 
-<main id="topo">
-
-  <!-- ================= HERO ================= -->
-  <div class="hero faixa">
-    <div class="centro">
-      <img class="marca" src="/logo-lp.png" alt="Downpipe">
-
-      <div class="selo"><span class="ponto"></span> Rede social automotiva</div>
-
-      <h1>A rede do seu carro <em>e dos seus encontros</em></h1>
-      <p class="chamada-sub">
-        Sua garagem, os encontros perto de você e as fotos de quem esteve lá.
-        Feito pra quem vive carro — e pra quem vive os encontros sem ter um.
-      </p>
-
-      <div class="acoes">
-        <button id="instalar" class="botao botao-principal oculto">INSTALAR O APP</button>
-        <a href="/app/" class="botao botao-secundario">ENTRAR NO DOWNPIPE</a>
+<main>
+  <section class="heroi">
+    <div class="foto" aria-hidden="true"></div>
+    <div class="veu" aria-hidden="true"></div>
+    <div class="miolo grade">
+      <div class="pilha" style="gap:28px">
+        <div class="rotulo">Campinas e região</div>
+        <h1 id="titulo">Tem encontro de carro perto de você</h1>
+        <p class="chamada">Veja no mapa, confirme com o carro que vai levar e ache depois as fotos que a galera tirou da sua nave. Sua garagem, seus encontros e suas fotos num lugar só.</p>
+        <div class="acoes">
+          <a class="botao botao-vermelho" href="/app/">COMEÇAR AGORA →</a>
+          <button id="instalar" class="botao botao-contorno oculto" type="button">INSTALAR O APP</button>
+          <a class="link-sublinhado" href="/encontros">Ver a agenda de encontros</a>
+        </div>
+        <div class="mono-12">GRÁTIS · ABRE NO NAVEGADOR · SEM LOJA</div>
       </div>
 
-      <div id="instrucoes" class="instrucoes oculto">
-        <h2 id="instrucoesTitulo"></h2>
-        <p id="instrucoesTexto"></p>
-        <ol id="instrucoesPassos"></ol>
-      </div>
-
-      <p class="aviso">Grátis. Abre no navegador, sem precisar de loja.</p>
-    </div>
-  </div>
-
-  <!-- ============ CARROSSEL DE ENCONTROS ============ -->
-  <div class="esteira" aria-hidden="true">
-    <div class="trilho" id="trilho"></div>
-  </div>
-
-  <!-- ================= PASSOS ================= -->
-  <section class="faixa">
-    <div class="centro">
-      <p class="rotulo revela">Como funciona</p>
-      <h2 class="titulo revela">Três coisas, e você já está dentro</h2>
-      <p class="linha revela">Sem cadastro longo, sem esperar aprovação de ninguém.</p>
-
-      <div class="passos">
-        <div class="passo revela">
-          <div class="n">01</div>
-          <h3>Monte sua garagem</h3>
-          <p>Escolha o carro pelo catálogo e registre o que já fez nele — com o que custou.</p>
+      <!-- Encontros de verdade, vindos da API. Enquanto carrega, três
+           linhas vazias; sem nenhum encontro marcado, o painel some. -->
+      <div id="encontros" class="painel">
+        <div class="cabeca">
+          <div class="mono" id="painelTitulo">PRÓXIMOS · PERTO DE CAMPINAS</div>
+          <div class="ao-vivo"><i></i>AO VIVO</div>
         </div>
-        <div class="passo revela">
-          <div class="n">02</div>
-          <h3>Ache um encontro</h3>
-          <p>Veja os encontros perto de você no mapa, confirme presença e diga qual carro vai levar.</p>
-          <!-- Link de verdade pra agenda: é por ele que o Google acha as
-               páginas de cidade, e quem só quer ver os encontros não precisa
-               criar conta pra isso. -->
-          <a class="link-agenda" href="/encontros">Ver a agenda de encontros →</a>
+        <div id="listaEncontros">
+          <div class="encontro esqueleto" aria-hidden="true"><div class="data"><div class="barra"></div></div><div class="meio"><div class="barra" style="width:70%"></div><div class="barra" style="width:45%"></div></div></div>
+          <div class="encontro esqueleto" aria-hidden="true"><div class="data"><div class="barra"></div></div><div class="meio"><div class="barra" style="width:60%"></div><div class="barra" style="width:40%"></div></div></div>
+          <div class="encontro esqueleto" aria-hidden="true"><div class="data"><div class="barra"></div></div><div class="meio"><div class="barra" style="width:75%"></div><div class="barra" style="width:50%"></div></div></div>
         </div>
-        <div class="passo revela">
-          <div class="n">03</div>
-          <h3>Registre o que rolou</h3>
-          <p>Suas fotos entram na página do encontro, junto com as de todo mundo que estava lá.</p>
-        </div>
+        <a class="rodape" href="/encontros">VER A AGENDA COMPLETA →</a>
       </div>
     </div>
   </section>
 
-  <!-- ================= RECURSOS ================= -->
-  <section class="faixa">
-    <div class="centro">
-      <p class="rotulo revela">O que tem dentro</p>
-      <h2 class="titulo revela">Feito pra quem realmente vai</h2>
-      <p class="linha revela">
-        Cada coisa aqui nasceu de uma dor de quem anda em encontro — não de uma
-        lista de recursos.
-      </p>
+  <section class="numeros" aria-label="Em números">
+    <div class="miolo">
+      <div class="pilha" style="gap:4px" id="numEncontros" hidden><div class="v"></div><div class="mono-12">ENCONTROS NA AGENDA</div></div>
+      <div class="pilha" style="gap:4px" id="numCidades" hidden><div class="v"></div><div class="mono-12">CIDADES COM ENCONTRO</div></div>
+      <div class="pilha" style="gap:4px"><div class="v">R$ 0</div><div class="mono-12">PRA USAR, SEMPRE</div></div>
+      <div class="pilha" style="gap:4px"><div class="v">0</div><div class="mono-12">LOJA PRA BAIXAR</div></div>
+    </div>
+  </section>
 
-      <div class="grade">
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 17h14M6.5 17V9l1.8-4h7.4l1.8 4v8"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>
-          <h3>Garagem com histórico</h3>
-          <p>Cada modificação com data e custo. Quem chega depois vê o caminho todo, não só o resultado.</p>
-        </div>
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-5.5-7-11a7 7 0 1 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          <h3>Encontros no mapa</h3>
-          <p>Local exato marcado pelo organizador, com a distância de onde você está. Nada de "é ali por perto".</p>
-        </div>
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h3l1.5-2h7L17 7h3v12H4z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <h3>As fotos do encontro</h3>
-          <p>Todo mundo que foi joga as fotos no mesmo lugar. O encontro vira memória coletiva, não 40 álbuns soltos.</p>
-        </div>
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6 9 17l-5-5"/></svg>
-          <h3>Marcação com consentimento</h3>
-          <p>Fotografou o carro de alguém? Marca. A foto sai na hora, e o vínculo só vale quando o dono aceita.</p>
-        </div>
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 11.5a3 3 0 1 0-1.6-5.5M18 20a5.5 5.5 0 0 0-2.2-4.4"/></svg>
-          <h3>Quem vai, e com o quê</h3>
-          <p>A lista de confirmados mostra o carro de cada um. Você já sabe o que vai estar lá antes de sair de casa.</p>
-        </div>
-        <div class="carta revela">
-          <svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 11 21 3l-8 18-2-7-8-3z"/></svg>
-          <h3>Como chegar, no seu app</h3>
-          <p>Abre no Waze, Google Maps ou Apple Maps — você escolhe. Sem endereço copiado errado.</p>
-        </div>
+  <section class="miolo secao pilha" style="gap:48px">
+    <div class="pilha" style="gap:16px;max-width:720px">
+      <div class="rotulo">Como funciona</div>
+      <h2>Três passos e você tá dentro</h2>
+    </div>
+    <div class="passos">
+      <div class="passo"><div class="n">01</div><h3>Monte sua garagem</h3><p>Escolha o carro pelo catálogo FIPE e registre o que já fez nele, com o que custou.</p></div>
+      <div class="passo"><div class="n">02</div><h3>Ache um encontro</h3><p>Veja no mapa o que tá perto, confirme presença e diga qual carro vai levar.</p></div>
+      <div class="passo"><div class="n">03</div><h3>Junte as fotos</h3><p>As fotos entram na página do encontro e as do seu carro vão pra sua garagem, com crédito.</p></div>
+    </div>
+  </section>
+
+  <section class="miolo duas" style="padding-bottom:clamp(72px,9vw,128px)">
+    <div class="comparar">
+      <div class="img" aria-hidden="true"></div>
+      <div class="antes" id="antes"><div class="img" id="antesImg" aria-hidden="true"></div></div>
+      <input type="range" min="5" max="95" value="50" id="divisor" aria-label="Arraste pra comparar antes e depois">
+      <div class="selo antes-s">ANTES</div>
+      <div class="selo depois-s">DEPOIS</div>
+      <div class="investido"><div class="mono-12" style="font-size:11px">INVESTIDO</div><div class="v">R$ 18.300</div></div>
+    </div>
+    <div class="pilha" style="gap:20px">
+      <div class="rotulo">Garagem</div>
+      <h2 style="font-size:clamp(40px,5vw,64px)">O caminho todo, não só o resultado</h2>
+      <p class="corpo">Cadastre o carro pelo catálogo FIPE e registre cada mod com data e valor. O investimento soma sozinho, o antes e depois fica lado a lado e a linha do tempo conta a história do projeto.</p>
+      <div class="lista">
+        <div><b>Downpipe 3" + remap stage 2</b><span>R$ 4.700 · jan</span></div>
+        <div><b>Coilover</b><span>R$ 6.400 · mai</span></div>
+        <div><b>Rodas 18"</b><span>R$ 7.200 · set</span></div>
       </div>
     </div>
   </section>
 
-  <!-- ================= TELAS ================= -->
-  <section class="faixa">
-    <div class="centro">
-      <p class="rotulo revela">Por dentro</p>
-      <h2 class="titulo revela">Como é usar</h2>
-      <p class="linha revela">Escuro por padrão, porque encontro bom é de noite.</p>
-
-      <div class="telas">
-        <!-- feed -->
-        <div class="tela-bloco revela">
-          <div class="celular">
-            <div class="topo-tela"><div class="entalhe"></div></div>
-            <div class="conteudo">
-              <div class="mini">
-                <div class="cabeca">
-                  <div class="bolinha"></div>
-                  <div><div class="quem">@fotografa</div><div class="carro">Honda Civic Si 2018</div></div>
-                </div>
-                <div class="foto"></div>
-                <div class="marca-carro"><span class="pt"></span> Encontro da Marginal</div>
-                <div class="acoes-mini"><span>♥ 128</span><span>💬 14</span></div>
-              </div>
-              <div class="mini">
-                <div class="cabeca">
-                  <div class="bolinha"></div>
-                  <div><div class="quem">@garagem_v8</div><div class="carro">Ford Mustang GT</div></div>
-                </div>
-                <div class="foto" style="height:70px"></div>
-              </div>
-            </div>
-          </div>
-          <h3>O feed</h3>
-          <p>Carros de gente real, com o encontro onde a foto foi tirada marcado embaixo.</p>
-        </div>
-
-        <!-- mapa -->
-        <div class="tela-bloco revela">
-          <div class="celular">
-            <div class="topo-tela"><div class="entalhe"></div></div>
-            <div class="conteudo" style="padding:0">
-              <div class="mapa">
-                <div class="rua" style="left:0;top:32%;width:100%;height:2px"></div>
-                <div class="rua" style="left:0;top:64%;width:100%;height:2px"></div>
-                <div class="rua" style="left:28%;top:0;width:2px;height:100%"></div>
-                <div class="rua" style="left:71%;top:0;width:2px;height:100%"></div>
-                <div class="rua" style="left:10%;top:12%;width:62%;height:2px;transform:rotate(29deg);transform-origin:left"></div>
-                <div class="pino" style="left:30%;top:26%">7</div>
-                <div class="pino vou" style="left:63%;top:40%">5</div>
-                <div class="pino" style="left:44%;top:58%">4</div>
-                <div class="pino vou" style="left:74%;top:74%">6</div>
-                <div class="pino" style="left:20%;top:80%">3</div>
-              </div>
-            </div>
-          </div>
-          <h3>Os encontros</h3>
-          <p>Cada pino é um encontro com quantos já confirmaram. Verde é onde você vai.</p>
-        </div>
-
-        <!-- evento -->
-        <div class="tela-bloco revela">
-          <div class="celular">
-            <div class="topo-tela"><div class="entalhe"></div></div>
-            <div class="conteudo">
-              <div class="mini">
-                <div class="mini-role">
-                  <div class="d"><div class="dd">05</div><div class="mm">SET</div></div>
-                  <div><div class="nn">Encontro JDM</div><div class="ii">Parque da cidade · 19h</div></div>
-                </div>
-                <div class="btn-mini">EU VOU</div>
-              </div>
-              <div class="mini">
-                <div class="quem" style="margin-bottom:7px">CARROS CONFIRMADOS</div>
-                <div class="mini-role" style="margin-bottom:6px">
-                  <div class="bolinha"></div>
-                  <div><div class="nn" style="font-size:9.5px">@jdm_diego</div><div class="ii">Nissan 350Z Track</div></div>
-                </div>
-                <div class="mini-role" style="margin-bottom:6px">
-                  <div class="bolinha"></div>
-                  <div><div class="nn" style="font-size:9.5px">@boxer_thiago</div><div class="ii">Subaru WRX STI</div></div>
-                </div>
-                <div class="mini-role">
-                  <div class="bolinha"></div>
-                  <div><div class="nn" style="font-size:9.5px">@mari_euro</div><div class="ii">BMW 320i M Sport</div></div>
-                </div>
-              </div>
-              <div class="btn-mini indo">✓ VOCÊ VAI</div>
-            </div>
-          </div>
-          <h3>O encontro</h3>
-          <p>Quem confirmou, qual carro cada um leva, e como chegar até lá.</p>
-        </div>
+  <section class="fotos-secao">
+    <div class="miolo secao pilha" style="gap:48px">
+      <div class="pilha" style="gap:16px;max-width:760px">
+        <div class="rotulo">Fotos</div>
+        <h2>A foto braba da sua nave estava no celular de alguém</h2>
+        <p class="corpo">Quem fotografou marca o seu carro. Você aceita, e a foto entra em “Fotos deste carro” com o crédito de quem tirou. Fotógrafo de evento: o seu @ vai junto em cada foto.</p>
+      </div>
+      <div class="fotos">
+        <figure style="background-image:url(/lp/foto-1.webp)"><figcaption>foto: @fotos.do.role</figcaption></figure>
+        <figure style="background-image:url(/lp/foto-2.webp)"><figcaption>foto: @quem.clicou</figcaption></figure>
+        <figure style="background-image:url(/lp/foto-3.webp)"><figcaption>foto: @camera.no.role</figcaption></figure>
+        <figure style="background-image:url(/lp/foto-4.webp)"><figcaption>foto: @seu.fotografo</figcaption></figure>
       </div>
     </div>
   </section>
 
-  <!-- ================= SEM CARRO ================= -->
-  <section class="faixa">
-    <div class="centro estreito">
-      <p class="rotulo revela">Sem carro</p>
-      <h2 class="titulo revela">Também é o seu lugar</h2>
-      <p class="linha revela" style="max-width:none">
-        Tem gente que vai em encontro pra fotografar, não pra expor. Aqui isso é
-        um perfil completo, não uma conta pela metade — e não existe "conta de
-        fotógrafo": um dia você tem carro, e continua sendo o mesmo perfil.
-      </p>
-      <p class="linha revela" style="max-width:none;margin-top:14px">
-        Quando você fotografa o carro de alguém e marca, a foto entra na página
-        daquele carro <b style="color:var(--texto)">com o seu crédito</b>. É o
-        seu trabalho aparecendo onde ele importa.
-      </p>
+  <section class="miolo secao duas">
+    <div class="pilha" style="gap:20px">
+      <div class="rotulo">Arte pronta</div>
+      <h2 style="font-size:clamp(40px,5vw,64px)">Seu carro pronto pro story em um toque</h2>
+      <p class="corpo">O app gera a arte do carro, do perfil ou da mod nova, com foto, potência, investimento e o seu @. Story, feed ou quadrado.</p>
+      <div class="formatos"><span>STORY 9:16</span><span>FEED 4:5</span><span>QUADRADO</span></div>
     </div>
-  </section>
-
-  <!-- ================= PERGUNTAS ================= -->
-  <section class="faixa">
-    <div class="centro estreito">
-      <p class="rotulo revela">Dúvidas</p>
-      <h2 class="titulo revela">O que costumam perguntar</h2>
-
-      <div class="perguntas revela">
-        <details class="pergunta">
-          <summary>Preciso baixar da loja?</summary>
-          <p class="resposta">Não. O Downpipe abre no navegador e você pode instalar na tela inicial — vira um ícone como qualquer outro app, sem passar por loja nenhuma.</p>
-        </details>
-        <details class="pergunta">
-          <summary>É grátis?</summary>
-          <p class="resposta">É. Sem cobrança, sem versão paga escondida.</p>
-        </details>
-        <details class="pergunta">
-          <summary>Preciso ter carro pra usar?</summary>
-          <p class="resposta">Não. Dá pra usar só pelos encontros e pelas fotos. Seu perfil fica completo do mesmo jeito, sem garagem vazia anunciada.</p>
-        </details>
-        <details class="pergunta">
-          <summary>Qualquer um pode marcar o meu carro numa foto?</summary>
-          <p class="resposta">Marcar sim, mas a marcação só vale depois que você aceita. Você recebe a notificação e decide. Se recusar, a foto continua existindo — ela é de quem tirou —, só não fica ligada ao seu carro.</p>
-        </details>
-        <details class="pergunta">
-          <summary>Quem pode criar um encontro?</summary>
-          <p class="resposta">Qualquer pessoa. Dá pra deixar o encontro aberto no app ou só por link, pra quem você mandar.</p>
-        </details>
-        <details class="pergunta">
-          <summary>Vocês mostram meu endereço?</summary>
-          <p class="resposta">O local marcado é o do encontro, escolhido por quem organiza. Seu perfil não expõe onde você mora.</p>
-        </details>
+    <div class="story" role="img" aria-label="Exemplo de arte de story gerada pelo app">
+      <div class="conteudo">
+        <div class="titulo">Golf GTI</div>
+        <div class="dados">
+          <div><b>230 cv</b><small>POTÊNCIA</small></div>
+          <div><b>R$ 18K</b><small>INVESTIDO</small></div>
+          <div><b>7</b><small>MODS</small></div>
+        </div>
+        <div class="pe"><span>@seu.perfil</span><img src="/logo-lp.png" alt="Downpipe" width="76" height="14"></div>
       </div>
     </div>
   </section>
 
-  <!-- ================= FECHO ================= -->
-  <section class="faixa fecho">
-    <div class="centro estreito">
-      <h2 class="titulo revela">O próximo encontro já tem gente confirmada</h2>
-      <p class="linha revela" style="margin:0 auto;max-width:26em">
-        Leva dois minutos pra entrar e ver quem vai estar lá.
-      </p>
-      <div class="acoes revela">
-        <button id="instalar2" class="botao botao-principal oculto">INSTALAR O APP</button>
-        <a href="/app/" class="botao botao-principal">COMEÇAR AGORA</a>
+  <section id="organizadores" class="org">
+    <div class="miolo secao duas">
+      <div class="pilha" style="gap:22px">
+        <div class="rotulo">Pra quem organiza</div>
+        <h2>Organiza encontro? Larga a prancheta</h2>
+        <p class="corpo" style="color:#fff">Publique com flyer, mapa e regras, e veja quem vai e com qual carro. Grátis, e você cria a conta só no fim.</p>
+        <div class="lista">
+          <div><span class="n">01</span><b>Público ou só por link, com flyer e pino no mapa</b></div>
+          <div><span class="n">02</span><b>Lista de quem vai, com o carro de cada um</b></div>
+          <div><span class="n">03</span><b>Chat do encontro com quem confirmou</b></div>
+          <div><span class="n">04</span><b>Lembrete no celular de quem vai, na véspera</b></div>
+        </div>
+        <div><a class="botao" href="/app/add-event">PUBLICAR MEU ENCONTRO →</a></div>
+      </div>
+      <div class="confirmados" role="img" aria-label="Exemplo da lista de confirmados de um encontro">
+        <div class="placar"><div style="display:flex;align-items:baseline;gap:10px"><b>42</b><span>confirmados</span></div><div class="mono-12" style="font-size:11px">SÁB · 19:00</div></div>
+        <div class="linha"><b>Golf GTI MK7</b><span>vai com o carro</span></div>
+        <div class="linha"><b>Civic Si</b><span>vai com o carro</span></div>
+        <div class="linha"><b>Opala 1979</b><span>vai com o carro</span></div>
       </div>
     </div>
   </section>
 
+  <section id="duvidas" class="miolo secao duvidas pilha" style="gap:40px">
+    <div class="pilha" style="gap:16px">
+      <div class="rotulo">Dúvidas</div>
+      <h2 style="font-size:clamp(40px,5vw,64px)">O que costumam perguntar</h2>
+    </div>
+    <div style="border-top:1px solid var(--linha-2)">
+      <details open><summary>Preciso baixar da loja?</summary><p>Não. O Downpipe abre no navegador e você pode colocar na tela inicial. Vira um ícone como qualquer outro app, sem passar por loja.</p></details>
+      <details><summary>É grátis?</summary><p>É. Sem cobrança, sem versão paga escondida.</p></details>
+      <details><summary>Preciso ter carro pra usar?</summary><p>Não. Dá pra usar só pelos encontros e pelas fotos. Seu perfil fica completo do mesmo jeito.</p></details>
+      <details><summary>Qualquer um pode marcar o meu carro numa foto?</summary><p>Marcar sim, mas a marcação só vale depois que você aceita. Se recusar, a foto continua sendo de quem tirou, só não fica ligada ao seu carro.</p></details>
+      <details><summary>Quem pode criar um encontro?</summary><p>Qualquer pessoa. Dá pra deixar aberto no app ou só por link. Também dá pra mandar um encontro que você viu no Instagram, que a gente confere antes de publicar.</p></details>
+      <details><summary>Vocês mostram meu endereço?</summary><p>Não. O local marcado é o do encontro, escolhido por quem organiza. Seu perfil não expõe onde você mora.</p></details>
+    </div>
+  </section>
+
+  <section class="fim" style="border-top:1px solid var(--linha)">
+    <div class="miolo secao pilha" style="gap:28px;align-items:flex-start">
+      <h2>O próximo encontro já tem gente confirmada</h2>
+      <a class="botao botao-vermelho" href="/app/">COMEÇAR AGORA →</a>
+      <div class="mono-12">GRÁTIS · ABRE NO NAVEGADOR · INSTALA NA TELA INICIAL</div>
+    </div>
+  </section>
 </main>
 
-<footer class="faixa">
-  <div class="centro">
-    <img src="/logo-lp.png" alt="Downpipe">
-    <p>Rede social automotiva · feito no Brasil</p>
-    <p class="legal">
+<footer style="border-top:1px solid var(--linha)">
+  <div class="miolo">
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <img src="/logo-lp.png" alt="Downpipe" width="118" height="22">
+      <div style="font-size:14px;color:var(--fraco)">Rede social automotiva · feito no Brasil</div>
+    </div>
+    <nav>
+      <a href="/encontros">Agenda</a>
       <a href="/privacidade">Privacidade</a>
       <a href="/termos">Termos de uso</a>
-    </p>
+    </nav>
   </div>
 </footer>
 
 <script>
 (function () {
   'use strict';
-  var ua = navigator.userAgent || '';
-  var promptInstalar = null;
 
-  // Quem já entrou não precisa da apresentação: vai direto pro app.
-  try {
-    if (localStorage.getItem('gearhead_session')) { location.replace('/app/'); return; }
-  } catch (e) { /* navegação privada: segue mostrando a landing */ }
-
-  /* ---------- carrossel: encontros de verdade, vindos da API ----------
+  /* ---------- encontros de verdade ----------
    * Nada aqui é escrito à mão. Uma landing que anuncia encontro que não
-   * existe queima a confiança no primeiro clique — se não houver encontro
-   * marcado, a faixa some inteira em vez de inventar. */
+   * existe queima a confiança no primeiro clique. Primeiro os que estão
+   * perto de Campinas (com a distância); sem nenhum perto, os próximos de
+   * qualquer lugar; sem nenhum, o painel some. */
+  var CAMPINAS = { lat: -22.9056, lng: -47.0608 };
   var MESES = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
-  var esteira = document.querySelector('.esteira');
-  var trilho = document.getElementById('trilho');
+  var SEMANA = ['dom','seg','ter','qua','qui','sex','sáb'];
+  var lista = document.getElementById('listaEncontros');
+  var painel = document.getElementById('encontros');
 
-  function sumirEsteira() { if (esteira && esteira.parentNode) esteira.parentNode.removeChild(esteira); }
+  function buscar(url) {
+    return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (j) {
+        var agora = Date.now();
+        return (j.data || []).filter(function (e) { return new Date(e.startsAt).getTime() > agora; });
+      });
+  }
 
-  function cartaoRole(ev) {
+  function linha(ev) {
     var d = new Date(ev.startsAt);
-    var el = document.createElement('div');
-    el.className = 'role';
-    el.innerHTML =
+    var hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+    var a = document.createElement('a');
+    a.className = 'encontro';
+    a.href = '/app/event/' + ev.id;
+    a.innerHTML =
       '<div class="data"><div class="dia"></div><div class="mes"></div></div>' +
-      '<div style="min-width:0"><div class="nome"></div><div class="info"><b></b> · <span></span></div></div>';
-    el.querySelector('.dia').textContent = String(d.getDate()).padStart(2, '0');
-    el.querySelector('.mes').textContent = MESES[d.getMonth()];
-    el.querySelector('.nome').textContent = ev.name;
+      '<div class="meio"><div class="nome"></div><div class="info"></div></div>' +
+      '<div class="lado"><div class="km"></div><div class="vao"></div></div>';
+    a.querySelector('.dia').textContent = String(d.getDate()).padStart(2, '0');
+    a.querySelector('.mes').textContent = MESES[d.getMonth()];
+    a.querySelector('.nome').textContent = ev.name;
+    a.querySelector('.info').textContent =
+      [SEMANA[d.getDay()] + ' · ' + hora, ev.entryNote || ev.city].filter(Boolean).join(' · ');
+    a.querySelector('.km').textContent = ev.distanceKm != null ? ev.distanceKm + ' km' : (ev.city || '');
     var n = ev.attendeesCount || 0;
-    el.querySelector('.info b').textContent = n === 1 ? '1 confirmado' : n + ' confirmados';
-    el.querySelector('.info span').textContent = ev.city || '';
-    return el;
+    a.querySelector('.vao').textContent = n === 1 ? '1 vai' : n + ' vão';
+    return a;
   }
 
-  fetch('/events?limit=20')
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (j) {
-      var agora = Date.now();
-      var lista = (j.data || []).filter(function (e) { return new Date(e.startsAt).getTime() > agora; });
-      if (!lista.length) { sumirEsteira(); return; }
+  /** "Esse fim de semana" só quando é verdade: algum perto entre hoje e domingo. */
+  function temNoFimDeSemana(eventos) {
+    var hoje = new Date();
+    var domingo = new Date(hoje);
+    domingo.setDate(hoje.getDate() + ((7 - hoje.getDay()) % 7));
+    domingo.setHours(23, 59, 59, 999);
+    return eventos.some(function (e) {
+      var d = new Date(e.startsAt);
+      return d <= domingo && (d.getDay() === 5 || d.getDay() === 6 || d.getDay() === 0);
+    });
+  }
 
-      // Com poucos encontros a faixa ficaria vazia: repete até encher a tela,
-      // e duplica o conjunto porque a animação anda -50% e precisa emendar.
-      var base = [];
-      while (base.length < 8) base = base.concat(lista);
-      for (var volta = 0; volta < 2; volta++) {
-        base.forEach(function (ev) { trilho.appendChild(cartaoRole(ev)); });
+  var perto = buscar('/events?limit=4&lat=' + CAMPINAS.lat + '&lng=' + CAMPINAS.lng + '&radiusKm=150');
+  var todos = buscar('/events?limit=50');
+
+  Promise.all([perto.catch(function () { return []; }), todos.catch(function () { return []; })])
+    .then(function (r) {
+      var proximos = r[0].sort(function (a, b) { return a.startsAt.localeCompare(b.startsAt); });
+      var geral = r[1];
+      var mostrar = proximos.length ? proximos : geral.slice(0, 4);
+
+      if (!mostrar.length) {
+        painel.parentNode.removeChild(painel);
+        document.getElementById('titulo').textContent = 'Os encontros de carro da região num lugar só';
+      } else {
+        if (!proximos.length) document.getElementById('painelTitulo').textContent = 'PRÓXIMOS ENCONTROS';
+        lista.innerHTML = '';
+        mostrar.slice(0, 4).forEach(function (ev) { lista.appendChild(linha(ev)); });
+        if (proximos.length && temNoFimDeSemana(proximos)) {
+          document.getElementById('titulo').textContent = 'Tem encontro perto de você esse fim de semana';
+        }
       }
-    })
-    .catch(sumirEsteira);
 
-  /* ---------- revelação no scroll ---------- */
-  var alvos = document.querySelectorAll('.revela');
-  if ('IntersectionObserver' in window) {
-    var obs = new IntersectionObserver(function (entradas) {
-      entradas.forEach(function (e, i) {
-        if (!e.isIntersecting) return;
-        // escalona os irmãos, pra grade não aparecer toda de uma vez
-        e.target.style.transitionDelay = (i * 70) + 'ms';
-        e.target.classList.add('visivel');
-        obs.unobserve(e.target);
-      });
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-    alvos.forEach(function (a) { obs.observe(a); });
-
-    // Rede de segurança: o conteúdo nasce invisível esperando o observer.
-    // Se ele falhar por qualquer motivo, a landing fica em branco — que é
-    // pior do que não ter animação nenhuma. Passados 2s, revela tudo.
-    setTimeout(function () {
-      alvos.forEach(function (a) { a.classList.add('visivel'); });
-    }, 2000);
-  } else {
-    alvos.forEach(function (a) { a.classList.add('visivel'); });
-  }
-
-  /* ---------- borda do cabeçalho ao rolar ---------- */
-  var cab = document.getElementById('cabecalho');
-  var aoRolar = function () { cab.classList.toggle('rolou', window.scrollY > 12); };
-  window.addEventListener('scroll', aoRolar, { passive: true });
-  aoRolar();
-
-  /* ---------- instalar ---------- */
-  window.addEventListener('beforeinstallprompt', function (e) {
-    e.preventDefault(); promptInstalar = e; mostrar();
-  });
-
-  function standalone() {
-    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-      || navigator.standalone === true;
-  }
-
-  function situacao() {
-    if (standalone()) return 'nenhuma';
-    // "; wv)" é o WebView do Android — o navegador do WhatsApp.
-    if (/FBAN|FBAV|Instagram|Line\//i.test(ua) || /; wv\)/i.test(ua)) return 'navegadorInterno';
-    if (/iPad|iPhone|iPod/.test(ua)) {
-      // Só o Safari de verdade instala. O navegador interno do WhatsApp no
-      // iPhone parece Safari mas não manda Version/ nem Safari/.
-      var safariReal = /Version\//.test(ua) && /Safari\//.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
-      return safariReal ? 'ios' : 'iosOutroNavegador';
-    }
-    if (promptInstalar) return 'instalando';
-    return /Android/i.test(ua) ? 'android' : 'desktop';
-  }
-
-  var conteudo = {
-    ios: { titulo: 'Coloque na tela inicial',
-      texto: 'Três toques e o Downpipe vira um ícone como qualquer outro app.',
-      passos: ['Toque em Compartilhar, na barra de baixo', 'Role e escolha "Adicionar à Tela de Início"', 'Confirme em "Adicionar"'] },
-    android: { titulo: 'Coloque na tela inicial',
-      texto: 'Pelo menu do navegador, o Downpipe vira um ícone como qualquer app.',
-      passos: ['Toque nos três pontinhos do navegador', 'Escolha "Instalar app" ou "Adicionar à tela inicial"', 'Confirme, e o ícone aparece junto dos seus apps'] }
-  };
-
-  function mostrar() {
-    var s = situacao();
-    if (s === 'nenhuma') return;
-    // Na página de apresentação, só ensina a instalar onde dá pra instalar
-    // agora. Quem chega pelo anúncio está no navegador do Instagram: pedir
-    // pra copiar o endereço e abrir em outro lugar, antes de a pessoa saber
-    // o que é o Downpipe, tomava o lugar do botão de entrar — e falava do
-    // WhatsApp pra quem veio do Instagram. Lá dentro do app, depois de usar,
-    // o convite de instalar continua.
-    if (s === 'navegadorInterno' || s === 'iosOutroNavegador' || s === 'desktop') return;
-
-    var botoes = [document.getElementById('instalar'), document.getElementById('instalar2')];
-    if (s === 'instalando') {
-      botoes.forEach(function (b) {
-        b.classList.remove('oculto');
-        b.onclick = function () {
-          promptInstalar.prompt();
-          promptInstalar.userChoice.then(function () { promptInstalar = null; });
-        };
-      });
-      return;
-    }
-
-    var c = conteudo[s];
-    document.getElementById('instrucoesTitulo').textContent = c.titulo;
-    document.getElementById('instrucoesTexto').textContent = c.texto;
-    var ol = document.getElementById('instrucoesPassos');
-    ol.innerHTML = '';
-    c.passos.forEach(function (p) {
-      var li = document.createElement('li');
-      li.textContent = p;
-      ol.appendChild(li);
+      // Números só aparecem quando existem: zero encontros na faixa seria
+      // propaganda contra.
+      if (geral.length) {
+        var cidades = {};
+        geral.forEach(function (e) { if (e.city) cidades[e.city.trim().toLowerCase()] = 1; });
+        var ne = document.getElementById('numEncontros');
+        ne.querySelector('.v').textContent = geral.length;
+        ne.hidden = false;
+        var nc = document.getElementById('numCidades');
+        nc.querySelector('.v').textContent = Object.keys(cidades).length;
+        nc.hidden = false;
+      }
     });
 
-    document.getElementById('instrucoes').classList.remove('oculto');
+  /* ---------- antes e depois ---------- */
+  var divisor = document.getElementById('divisor');
+  var antes = document.getElementById('antes');
+  var antesImg = document.getElementById('antesImg');
+  function dividir() {
+    var v = Number(divisor.value);
+    antes.style.width = v + '%';
+    // A foto de dentro mantém a largura da caixa toda, senão ela encolhe
+    // junto e o antes deixa de casar com o depois.
+    antesImg.style.width = (10000 / v) + '%';
   }
+  divisor.addEventListener('input', dividir);
+  dividir();
 
-  mostrar();
+  /* ---------- instalar ----------
+   * Só onde dá pra instalar com um toque (Chrome/Edge no Android e no
+   * computador). Instrução de "copie o endereço e abra em outro lugar" não
+   * entra aqui: quem chega pelo Instagram nem sabe ainda o que é o app. O
+   * convite completo mora dentro do app, pra quem já usou. */
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    var promptInstalar = e;
+    var botao = document.getElementById('instalar');
+    botao.classList.remove('oculto');
+    botao.onclick = function () {
+      promptInstalar.prompt();
+      promptInstalar.userChoice.then(function () { botao.classList.add('oculto'); });
+    };
+  });
 })();
 </script>
-
 </body>
 </html>
