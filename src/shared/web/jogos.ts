@@ -225,16 +225,16 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
     <strong>Nave do Dia</strong>
     <span>Adivinhe o carro do dia pelas pistas de marca, país, motor, tração, ano e potência.</span>
   </a>
-  <div class="jogo breve" aria-disabled="true">
-    <span class="mono">EM BREVE</span>
-    <strong>Mais jogos</strong>
-    <span>Tem mais vindo por aí.</span>
-  </div>
+  <a class="jogo" href="/jogos/mais-caro-ou-mais-barato">
+    <span class="mono">QUANTAS VEZES QUISER</span>
+    <strong>Mais Caro ou Mais Barato?</strong>
+    <span>Dois carros, um preço escondido: acerte qual vale mais na tabela FIPE e veja até onde vai sua sequência.</span>
+  </a>
 </div>`;
   return moldura({
     titulo: 'Jogos de carro online e grátis | Downpipe',
     descricao:
-      'Jogos de carro em português pra jogar no navegador: desafios diários como a Nave do Dia, de adivinhar o carro pelas pistas. Grátis e sem cadastro.',
+      'Jogos de carro em português pra jogar no navegador: a Nave do Dia, de adivinhar o carro pelas pistas, e o Mais Caro ou Mais Barato?, com a tabela FIPE. Grátis e sem cadastro.',
     canonica: `${origem}/jogos`,
     imagem: `${origem}/og-nave-do-dia.png`,
     miolo,
@@ -242,7 +242,80 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
       {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        itemListElement: [{ '@type': 'ListItem', position: 1, url: `${origem}/jogos/nave-do-dia`, name: 'Nave do Dia' }],
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, url: `${origem}/jogos/nave-do-dia`, name: 'Nave do Dia' },
+          { '@type': 'ListItem', position: 2, url: `${origem}/jogos/mais-caro-ou-mais-barato`, name: 'Mais Caro ou Mais Barato?' },
+        ],
+      },
+    ],
+  });
+}
+
+const PERGUNTAS_FIPE: [string, string][] = [
+  ['De onde vêm os preços?', 'Da Tabela FIPE, a referência de preço médio de carro no Brasil, pro ano e a versão mostrados. Atualizamos uma vez por mês, quando a tabela muda.'],
+  ['Precisa de conta pra jogar?', 'Não. Abre no navegador, no celular ou no computador. O seu recorde fica salvo no aparelho.'],
+  ['Fica mais difícil?', 'Fica. No começo os preços são bem diferentes; quanto maior a sequência, mais perto um do outro ficam os carros.'],
+  ['Que carros aparecem?', 'Dos populares zero quilômetro aos esportivos e importados, passando pelos usados e clássicos que a galera conhece: Gol GTI, Opala, Civic Si, Hilux, 911 e muitos outros.'],
+];
+
+/** A página do Mais Caro ou Mais Barato?, pra "jogo da tabela FIPE" e parecidos. */
+export function paginaDoMaisCaro(origem: string): string {
+  const url = `${origem}/jogos/mais-caro-ou-mais-barato`;
+  const jogar = `${origem}/app/mais-caro`;
+  const titulo = 'Mais Caro ou Mais Barato? · Jogo da tabela FIPE | Downpipe';
+  const descricao =
+    'Jogo de carros com a tabela FIPE: dois carros, um preço escondido. Acerte qual vale mais e veja até onde vai sua sequência. Grátis, sem cadastro, no celular ou no PC.';
+  const miolo = `
+<section class="heroi">
+  <div class="rotulo">Jogo · tabela FIPE</div>
+  <h1>Mais caro ou mais barato?</h1>
+  <p>Dois carros lado a lado. Um mostra o preço da tabela FIPE, o outro esconde. Você chuta se o escondido vale mais ou menos. Acertou, ele passa pro lado e entra outro. Errou, acabou: quantos seguidos você faz?</p>
+  <div class="acoes">
+    <a class="botao" href="${esc(jogar)}">JOGAR AGORA →</a>
+    <span class="mono">GRÁTIS · SEM CADASTRO · CELULAR OU PC</span>
+  </div>
+</section>
+
+<h2>Como jogar</h2>
+<div class="legenda">
+  <div><b>1. Olhe o preço</b>O carro da esquerda mostra quanto vale na tabela FIPE.</div>
+  <div><b>2. Chute</b>O da direita vale mais caro ou mais barato?</div>
+  <div><b>3. Siga a sequência</b>Cada acerto conta um. A diferença entre os preços diminui conforme você acerta.</div>
+</div>
+
+<h2>Perguntas</h2>
+<div>${PERGUNTAS_FIPE.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+
+<div class="acoes" style="margin-top:40px">
+  <a class="botao" href="${esc(jogar)}">JOGAR AGORA →</a>
+  <a href="/jogos">Ver os outros jogos</a>
+</div>`;
+
+  return moldura({
+    titulo,
+    descricao,
+    canonica: url,
+    imagem: `${origem}/og-mais-caro.png`,
+    miolo,
+    marcacao: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Mais Caro ou Mais Barato?',
+        url: jogar,
+        description: descricao,
+        applicationCategory: 'GameApplication',
+        genre: 'Quiz de carros',
+        operatingSystem: 'Web',
+        inLanguage: 'pt-BR',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
+        publisher: { '@type': 'Organization', name: 'Downpipe', url: origem },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: PERGUNTAS_FIPE.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
       },
     ],
   });

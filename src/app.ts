@@ -42,7 +42,7 @@ import {
   slugDaCidade,
 } from '@/shared/web/cidades';
 import { eventsRepository } from '@/modules/events/events.repository';
-import { numeroDaNaveDoDia, paginaDaNaveDoDia, paginaDosJogos } from '@/shared/web/jogos';
+import { numeroDaNaveDoDia, paginaDaNaveDoDia, paginaDoMaisCaro, paginaDosJogos } from '@/shared/web/jogos';
 
 export function createApp() {
   const app = express();
@@ -382,6 +382,11 @@ export function createApp() {
       res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDaNaveDoDia(origem));
     });
 
+    app.get('/jogos/mais-caro-ou-mais-barato', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('html').setHeader('Cache-Control', 'public, max-age=3600').send(paginaDoMaisCaro(origem));
+    });
+
     app.get('/robots.txt', (req, res) => {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
       res.type('text/plain').setHeader('Cache-Control', 'public, max-age=3600').send(robotsTxt(origem));
@@ -406,6 +411,7 @@ export function createApp() {
               { caminho: '/encontros' },
               { caminho: '/jogos' },
               { caminho: '/jogos/nave-do-dia' },
+              { caminho: '/jogos/mais-caro-ou-mais-barato' },
               ...cidades.map((c) => ({ caminho: `/encontros/${slugDaCidade(c.nome)}` })),
               { caminho: '/privacidade' },
               { caminho: '/termos' },
@@ -461,6 +467,24 @@ export function createApp() {
             imagem: `${origem}/og-nave-do-dia.png`,
           },
           `${origem}/app/nave-do-dia`,
+          `${origem}/og-banner.png`
+        )
+      );
+    });
+
+    let cascaDoMaisCaro: string | null = null;
+    app.get('/app/mais-caro', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      cascaDoMaisCaro ??= fs.readFileSync(path.join(dist, fs.existsSync(path.join(dist, 'mais-caro.html')) ? 'mais-caro.html' : 'index.html'), 'utf8');
+      res.type('html').send(
+        comPrevia(
+          cascaDoMaisCaro,
+          {
+            titulo: 'Mais Caro ou Mais Barato? · Jogo da tabela FIPE',
+            descricao: 'Dois carros, um preço escondido. Acerte qual vale mais na FIPE e veja até onde vai sua sequência.',
+            imagem: `${origem}/og-mais-caro.png`,
+          },
+          `${origem}/app/mais-caro`,
           `${origem}/og-banner.png`
         )
       );

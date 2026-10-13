@@ -22,3 +22,18 @@ describe('páginas dos jogos', () => {
     expect(paginaDosJogos('https://downpipe.com.br')).toContain('href="/jogos/nave-do-dia"');
   });
 });
+
+describe('página do Mais Caro ou Mais Barato?', () => {
+  it('tem título, botão de jogar e as marcações', async () => {
+    const { paginaDoMaisCaro } = await import('@/shared/web/jogos');
+    const html = paginaDoMaisCaro('https://downpipe.com.br');
+    expect(html).toContain('<title>Mais Caro ou Mais Barato? · Jogo da tabela FIPE | Downpipe</title>');
+    expect(html).toContain('href="https://downpipe.com.br/app/mais-caro"');
+    expect(html).toContain('"@type":"FAQPage"');
+  });
+
+  it('a vitrine já mostra os dois jogos', () => {
+    const html = paginaDosJogos('https://downpipe.com.br');
+    expect(html).toContain('href="/jogos/mais-caro-ou-mais-barato"');
+  });
+});
