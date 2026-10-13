@@ -21,6 +21,16 @@ describe('páginas dos jogos', () => {
   it('a vitrine leva pra página do jogo', () => {
     expect(paginaDosJogos('https://downpipe.com.br')).toContain('href="/jogos/nave-do-dia"');
   });
+
+  it('o modo Brasil tem página própria, ligada à vitrine e à Nave do Dia', async () => {
+    const { paginaDaNaveDoDiaBrasil } = await import('@/shared/web/jogos');
+    const html = paginaDaNaveDoDiaBrasil('https://downpipe.com.br', new Date('2026-10-20T15:00:00Z'));
+    expect(html).toContain('href="https://downpipe.com.br/app/nave-do-dia-brasil"');
+    expect(html).toContain('<link rel="canonical" href="https://downpipe.com.br/jogos/nave-do-dia-brasil">');
+    expect(html).toContain('#8');
+    expect(paginaDosJogos('https://downpipe.com.br')).toContain('href="/jogos/nave-do-dia-brasil"');
+    expect(paginaDaNaveDoDia('https://downpipe.com.br')).toContain('href="/jogos/nave-do-dia-brasil"');
+  });
 });
 
 describe('página do Mais Caro ou Mais Barato?', () => {

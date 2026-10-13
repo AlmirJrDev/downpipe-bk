@@ -163,7 +163,7 @@ ${exemplo}
 </div>
 
 <h2>Que carros aparecem</h2>
-<p>Carros que todo mundo que curte carro conhece de nome, de vários estilos e épocas: do Fusca e do Opala aos JDM dos anos 90, europeus de pista e muscle cars americanos.</p>
+<p>Mais de 200 carros que todo mundo que curte carro conhece de nome, de vários estilos e épocas: do Fusca e do Opala aos JDM dos anos 90, europeus de pista, muscle cars americanos, SUVs e picapes. Várias gerações da mesma marca, então acertar a marca não entrega a resposta. Quer só os que rodaram no Brasil? Tem a <a href="/jogos/nave-do-dia-brasil">Nave do Dia Brasil</a>.</p>
 <ul class="marcas">${['Toyota', 'Nissan', 'Honda', 'Mitsubishi', 'Subaru', 'Mazda', 'Volkswagen', 'BMW', 'Porsche', 'Audi', 'Mercedes-Benz', 'Ferrari', 'Lamborghini', 'Fiat', 'Peugeot', 'Renault', 'Mini', 'Chevrolet', 'Ford', 'Dodge']
     .map((m) => `<li>${m}</li>`)
     .join('')}</ul>
@@ -210,6 +210,99 @@ ${exemplo}
   });
 }
 
+const PERGUNTAS_BRASIL: [string, string][] = [
+  ['Que carros entram no modo Brasil?', 'Só carro que veio e rodou muito por aqui, nacional ou importado em volume: de Fusca, Opala e Chevette a Gol, Uno, Celta, Corolla, HB20, Hilux e Strada.'],
+  ['É o mesmo carro da Nave do Dia?', 'Não. Cada modo tem o seu carro do dia. Dá pra jogar os dois.'],
+  ['O país é onde o carro foi feito?', 'É o país da marca: o Gol é feito no Brasil, mas a Volkswagen é alemã, então aparece Alemanha. Gurgel, Puma e Troller são brasileiras.'],
+  ['Precisa de conta pra jogar?', 'Não. Abre no navegador, no celular ou no computador, e o progresso do dia fica salvo no aparelho.'],
+  ['Quando muda o carro?', 'Todo dia à meia-noite, horário de Brasília, igual pra todo mundo.'],
+];
+
+/** A Nave do Dia só com carro brasileiro: "jogo de adivinhar carro nacional". */
+export function paginaDaNaveDoDiaBrasil(origem: string, agora = new Date()): string {
+  const numero = numeroDaNaveDoDia(agora);
+  const url = `${origem}/jogos/nave-do-dia-brasil`;
+  const jogar = `${origem}/app/nave-do-dia-brasil`;
+  const titulo = 'Nave do Dia Brasil · Adivinhe o carro nacional do dia | Downpipe';
+  const descricao =
+    'Jogo diário de adivinhar carro só com os que rodaram no Brasil: Gol, Uno, Opala, Chevette, Corolla, Hilux e mais. Pistas de marca, motor, ano e potência. Grátis, sem cadastro.';
+
+  // Exemplo com carros que não são o de hoje (o #1 foi o Opala).
+  const exemplo = `
+<div class="tabela" role="img" aria-label="Exemplo de dois palpites, Fiat Uno Mille e Chevrolet Monza 2.0, com as pistas em verde, amarelo e vermelho">
+  <div class="linha-ex cab"><div class="nome">CARRO</div><div>MARCA</div><div>PAÍS</div><div>CARROCERIA</div><div>MOTOR</div><div>TRAÇÃO</div><div>CILINDROS</div><div>ANO</div><div>POTÊNCIA</div></div>
+  <div class="linha-ex"><div class="nome">Fiat Uno Mille</div><div class="r">Fiat</div><div class="r">Itália</div><div class="r">Hatch</div><div class="v">Aspirado</div><div class="r">Dianteira</div><div class="v">4</div><div class="r">1990<br>↓</div><div class="r">48 cv<br>↑</div></div>
+  <div class="linha-ex"><div class="nome">Chevrolet Monza 2.0</div><div class="v">Chevrolet</div><div class="v">EUA</div><div class="v">Sedã</div><div class="v">Aspirado</div><div class="r">Dianteira</div><div class="v">4</div><div class="r">1987<br>↓</div><div class="r">110 cv<br>↓</div></div>
+</div>`;
+
+  const miolo = `
+<section class="heroi">
+  <div class="rotulo">Jogo diário · #${numero} de hoje</div>
+  <h1>Nave do Dia Brasil: adivinhe o carro nacional de hoje</h1>
+  <p>A Nave do Dia só com carro que todo mundo já teve, andou ou viu na rua no Brasil. Um carro secreto por dia: você chuta e cada palpite mostra o que bate em marca, país, carroceria, motor, tração, cilindros, ano e potência.</p>
+  <div class="acoes">
+    <a class="botao" href="${esc(jogar)}">JOGAR O #${numero} →</a>
+    <span class="mono">GRÁTIS · SEM CADASTRO · CELULAR OU PC</span>
+  </div>
+</section>
+
+<h2>Como jogar</h2>
+<p>Digite o nome de um carro ou de uma marca e escolha na lista. Cada palpite vira uma linha de pistas:</p>
+${exemplo}
+<div class="legenda">
+  <div><b><span class="chip v"></span>Verde</b>Igual à nave do dia.</div>
+  <div><b><span class="chip a"></span>Amarelo</b>Perto: mesmo continente, turbo e biturbo, ano a até 5 anos, potência a até 15%.</div>
+  <div><b><span class="chip r"></span>Vermelho</b>Nada a ver. Nos números, a seta ↑↓ diz se a nave do dia é maior ou menor.</div>
+</div>
+
+<h2>Que carros aparecem</h2>
+<p>Os nacionais clássicos (Fusca, Brasília, Opala, Chevette, Corcel, Passat, Monza, Kadett), os populares que encheram as ruas (Gol, Uno, Palio, Celta, Corsa, Ka, Fiesta, HB20, Onix, Kwid), sedãs e SUVs de família, picapes como Hilux, S10, Strada e Toro, e os que só existiram aqui: Gurgel, Puma e Troller.</p>
+<ul class="marcas">${['Volkswagen', 'Chevrolet', 'Fiat', 'Ford', 'Toyota', 'Honda', 'Hyundai', 'Renault', 'Peugeot', 'Citroën', 'Nissan', 'Mitsubishi', 'Jeep', 'Dodge', 'Willys', 'Gurgel', 'Puma', 'Troller']
+    .map((m) => `<li>${m}</li>`)
+    .join('')}</ul>
+
+<h2>Perguntas</h2>
+<div>${PERGUNTAS_BRASIL.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+
+<div class="acoes" style="margin-top:40px">
+  <a class="botao" href="${esc(jogar)}">JOGAR AGORA →</a>
+  <a href="/jogos/nave-do-dia">Jogar a Nave do Dia com todos os carros</a>
+</div>`;
+
+  return moldura({
+    titulo,
+    descricao,
+    canonica: url,
+    imagem: `${origem}/og-nave-do-dia.png`,
+    miolo,
+    marcacao: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Nave do Dia Brasil',
+        url: jogar,
+        description: descricao,
+        applicationCategory: 'GameApplication',
+        genre: 'Quiz de carros',
+        operatingSystem: 'Web',
+        inLanguage: 'pt-BR',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
+        publisher: { '@type': 'Organization', name: 'Downpipe', url: origem },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: PERGUNTAS_BRASIL.map(([q, a]) => ({
+          '@type': 'Question',
+          name: q,
+          acceptedAnswer: { '@type': 'Answer', text: a },
+        })),
+      },
+    ],
+  });
+}
+
 /** A vitrine dos jogos. Jogo novo entra aqui com um cartão. */
 export function paginaDosJogos(origem: string, agora = new Date()): string {
   const numero = numeroDaNaveDoDia(agora);
@@ -224,6 +317,11 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
     <span class="mono">DIÁRIO · #${numero} DE HOJE</span>
     <strong>Nave do Dia</strong>
     <span>Adivinhe o carro do dia pelas pistas de marca, país, motor, tração, ano e potência.</span>
+  </a>
+  <a class="jogo" href="/jogos/nave-do-dia-brasil">
+    <span class="mono">DIÁRIO · #${numero} DE HOJE</span>
+    <strong>Nave do Dia Brasil</strong>
+    <span>O mesmo jogo, só com carro que rodou muito por aqui: Gol, Opala, Uno, Corolla, Hilux.</span>
   </a>
   <a class="jogo" href="/jogos/mais-caro-ou-mais-barato">
     <span class="mono">QUANTAS VEZES QUISER</span>
@@ -244,7 +342,8 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
         '@type': 'ItemList',
         itemListElement: [
           { '@type': 'ListItem', position: 1, url: `${origem}/jogos/nave-do-dia`, name: 'Nave do Dia' },
-          { '@type': 'ListItem', position: 2, url: `${origem}/jogos/mais-caro-ou-mais-barato`, name: 'Mais Caro ou Mais Barato?' },
+          { '@type': 'ListItem', position: 2, url: `${origem}/jogos/nave-do-dia-brasil`, name: 'Nave do Dia Brasil' },
+          { '@type': 'ListItem', position: 3, url: `${origem}/jogos/mais-caro-ou-mais-barato`, name: 'Mais Caro ou Mais Barato?' },
         ],
       },
     ],

@@ -42,7 +42,13 @@ import {
   slugDaCidade,
 } from '@/shared/web/cidades';
 import { eventsRepository } from '@/modules/events/events.repository';
-import { numeroDaNaveDoDia, paginaDaNaveDoDia, paginaDoMaisCaro, paginaDosJogos } from '@/shared/web/jogos';
+import {
+  numeroDaNaveDoDia,
+  paginaDaNaveDoDia,
+  paginaDaNaveDoDiaBrasil,
+  paginaDoMaisCaro,
+  paginaDosJogos,
+} from '@/shared/web/jogos';
 
 export function createApp() {
   const app = express();
@@ -381,6 +387,10 @@ export function createApp() {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
       res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDaNaveDoDia(origem));
     });
+    app.get('/jogos/nave-do-dia-brasil', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDaNaveDoDiaBrasil(origem));
+    });
 
     app.get('/jogos/mais-caro-ou-mais-barato', (req, res) => {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
@@ -411,6 +421,7 @@ export function createApp() {
               { caminho: '/encontros' },
               { caminho: '/jogos' },
               { caminho: '/jogos/nave-do-dia' },
+              { caminho: '/jogos/nave-do-dia-brasil' },
               { caminho: '/jogos/mais-caro-ou-mais-barato' },
               ...cidades.map((c) => ({ caminho: `/encontros/${slugDaCidade(c.nome)}` })),
               { caminho: '/privacidade' },
@@ -467,6 +478,27 @@ export function createApp() {
             imagem: `${origem}/og-nave-do-dia.png`,
           },
           `${origem}/app/nave-do-dia`,
+          `${origem}/og-banner.png`
+        )
+      );
+    });
+
+    let cascaDoJogoBrasil: string | null = null;
+    app.get('/app/nave-do-dia-brasil', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      cascaDoJogoBrasil ??= fs.readFileSync(
+        path.join(dist, fs.existsSync(path.join(dist, 'nave-do-dia-brasil.html')) ? 'nave-do-dia-brasil.html' : 'index.html'),
+        'utf8'
+      );
+      res.type('html').send(
+        comPrevia(
+          cascaDoJogoBrasil,
+          {
+            titulo: `Nave do Dia Brasil #${numeroDaNaveDoDia()} · Adivinhe o carro nacional de hoje`,
+            descricao: 'Só carro que rodou no Brasil: Gol, Uno, Opala, Corolla, Hilux. Um por dia, o mesmo pra todo mundo. Grátis, sem cadastro.',
+            imagem: `${origem}/og-nave-do-dia.png`,
+          },
+          `${origem}/app/nave-do-dia-brasil`,
           `${origem}/og-banner.png`
         )
       );
