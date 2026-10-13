@@ -186,6 +186,9 @@ function anotar(req: Request, caminho: string, busca: URLSearchParams, referrer:
  */
 export function contarPaginas(req: Request, res: Response, next: NextFunction) {
   if (req.method !== 'GET' || req.path.startsWith('/app')) return next();
+  // Só abertura de página: o navegador pede text/html. O fetch da landing
+  // pra /events voltava 304 sem tipo e entrava como "página /events".
+  if (!(req.headers.accept ?? '').includes('text/html')) return next();
   res.on('finish', () => {
     // 304 é quem voltou e o navegador já tinha a landing guardada: também
     // é visita, mas a resposta vem sem tipo — vale o caminho sem extensão.
