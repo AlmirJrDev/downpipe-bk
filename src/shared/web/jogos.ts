@@ -323,6 +323,11 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
     <strong>Nave do Dia Brasil</strong>
     <span>O mesmo jogo, só com carro que rodou muito por aqui: Gol, Opala, Uno, Corolla, Hilux.</span>
   </a>
+  <a class="jogo" href="/jogos/frankenstein">
+    <span class="mono">NOVO · DESAFIO #${numero}</span>
+    <strong>Frankenstein</strong>
+    <span>Monte uma nave com peça de tudo que é carro e encare 11 rachas no 402, do Fusca ao McLaren.</span>
+  </a>
   <a class="jogo" href="/jogos/mais-caro-ou-mais-barato">
     <span class="mono">QUANTAS VEZES QUISER</span>
     <strong>Mais Caro ou Mais Barato?</strong>
@@ -343,7 +348,8 @@ export function paginaDosJogos(origem: string, agora = new Date()): string {
         itemListElement: [
           { '@type': 'ListItem', position: 1, url: `${origem}/jogos/nave-do-dia`, name: 'Nave do Dia' },
           { '@type': 'ListItem', position: 2, url: `${origem}/jogos/nave-do-dia-brasil`, name: 'Nave do Dia Brasil' },
-          { '@type': 'ListItem', position: 3, url: `${origem}/jogos/mais-caro-ou-mais-barato`, name: 'Mais Caro ou Mais Barato?' },
+          { '@type': 'ListItem', position: 3, url: `${origem}/jogos/frankenstein`, name: 'Frankenstein' },
+          { '@type': 'ListItem', position: 4, url: `${origem}/jogos/mais-caro-ou-mais-barato`, name: 'Mais Caro ou Mais Barato?' },
         ],
       },
     ],
@@ -415,6 +421,78 @@ export function paginaDoMaisCaro(origem: string): string {
         '@context': 'https://schema.org',
         '@type': 'FAQPage',
         mainEntity: PERGUNTAS_FIPE.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+      },
+    ],
+  });
+}
+
+const PERGUNTAS_FRANKENSTEIN: [string, string][] = [
+  ['Como funciona a montagem?', 'Cada rolada sorteia um carro de verdade e você tira uma peça dele: motor, câmbio, tração, chassi ou pneus. Cinco roladas, cinco vagas. Dá pra trocar o carro sorteado três vezes.'],
+  ['Como sai o tempo do 402?', 'Da potência, do peso, do câmbio e de quanto a tração e os pneus seguram na largada. Motor grande pesa mais, tração dianteira patina com muita potência. Carros de série fazem perto do tempo real.'],
+  ['E a largada?', 'É com você: três luzes âmbar e depois o verde. Acelerou antes, queimou a largada e perdeu. O seu tempo de reação soma no tempo do racha.'],
+  ['Quantas fases tem?', 'Onze rachas, do Fusca 1300 ao McLaren 720S. Cada rival larga mais afiado que o anterior. Ganhou, passa pela oficina e pode trocar uma peça antes do próximo.'],
+  ['Precisa de conta pra jogar?', 'Não. Abre no navegador, no celular ou no computador. O desafio do dia é igual pra todo mundo e fica salvo no aparelho.'],
+];
+
+/** O Frankenstein: "jogo de montar carro", "jogo de arrancada". */
+export function paginaDoFrankenstein(origem: string, agora = new Date()): string {
+  const numero = numeroDaNaveDoDia(agora);
+  const url = `${origem}/jogos/frankenstein`;
+  const jogar = `${origem}/app/frankenstein`;
+  const titulo = 'Frankenstein · Jogo de montar carro e correr no 402 | Downpipe';
+  const descricao =
+    'Monte uma nave com peça de tudo que é carro, do motor do Opala ao chassi do Uno, e encare 11 rachas no 402 m, do Fusca ao McLaren. Grátis, sem cadastro, no celular ou no PC.';
+  const miolo = `
+<section class="heroi">
+  <div class="rotulo">Jogo diário · desafio #${numero} de hoje</div>
+  <h1>Frankenstein: monte a nave e encare o racha</h1>
+  <p>Cada rolada traz um carro de verdade e você tira uma peça dele. Motor de um, câmbio de outro, chassi de um terceiro. Com a nave montada, é largada no 402: onze rivais, do Fusca 1300 ao McLaren 720S. Até onde a sua aberração chega?</p>
+  <div class="acoes">
+    <a class="botao" href="${esc(jogar)}">JOGAR O #${numero} →</a>
+    <span class="mono">GRÁTIS · SEM CADASTRO · CELULAR OU PC</span>
+  </div>
+</section>
+
+<h2>Como jogar</h2>
+<div class="legenda">
+  <div><b>1. Role</b>Sai um carro doador, como um Opala SS 250-S ou um GT-R R34.</div>
+  <div><b>2. Monte</b>Escolha uma peça dele pra sua nave: motor, câmbio, tração, chassi ou pneus.</div>
+  <div><b>3. Largue</b>Espere o verde e acelere. Ganhou, vai pra oficina e encara o próximo rival.</div>
+</div>
+
+<h2>Perguntas</h2>
+<div>${PERGUNTAS_FRANKENSTEIN.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
+
+<div class="acoes" style="margin-top:40px">
+  <a class="botao" href="${esc(jogar)}">JOGAR AGORA →</a>
+  <a href="/jogos">Ver os outros jogos</a>
+</div>`;
+
+  return moldura({
+    titulo,
+    descricao,
+    canonica: url,
+    imagem: `${origem}/og-frankenstein.png`,
+    miolo,
+    marcacao: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Frankenstein',
+        url: jogar,
+        description: descricao,
+        applicationCategory: 'GameApplication',
+        genre: 'Jogo de carros',
+        operatingSystem: 'Web',
+        inLanguage: 'pt-BR',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
+        publisher: { '@type': 'Organization', name: 'Downpipe', url: origem },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: PERGUNTAS_FRANKENSTEIN.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
       },
     ],
   });

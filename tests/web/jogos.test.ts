@@ -42,6 +42,15 @@ describe('página do Mais Caro ou Mais Barato?', () => {
     expect(html).toContain('"@type":"FAQPage"');
   });
 
+  it('o Frankenstein tem página própria e entra na vitrine', async () => {
+    const { paginaDoFrankenstein } = await import('@/shared/web/jogos');
+    const html = paginaDoFrankenstein('https://downpipe.com.br', new Date('2026-10-20T15:00:00Z'));
+    expect(html).toContain('href="https://downpipe.com.br/app/frankenstein"');
+    expect(html).toContain('<link rel="canonical" href="https://downpipe.com.br/jogos/frankenstein">');
+    expect(html).toContain('#8');
+    expect(paginaDosJogos('https://downpipe.com.br')).toContain('href="/jogos/frankenstein"');
+  });
+
   it('a vitrine já mostra os dois jogos', () => {
     const html = paginaDosJogos('https://downpipe.com.br');
     expect(html).toContain('href="/jogos/mais-caro-ou-mais-barato"');

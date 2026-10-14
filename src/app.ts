@@ -46,6 +46,7 @@ import {
   numeroDaNaveDoDia,
   paginaDaNaveDoDia,
   paginaDaNaveDoDiaBrasil,
+  paginaDoFrankenstein,
   paginaDoMaisCaro,
   paginaDosJogos,
 } from '@/shared/web/jogos';
@@ -392,6 +393,11 @@ export function createApp() {
       res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDaNaveDoDiaBrasil(origem));
     });
 
+    app.get('/jogos/frankenstein', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      res.type('html').setHeader('Cache-Control', 'public, max-age=300').send(paginaDoFrankenstein(origem));
+    });
+
     app.get('/jogos/mais-caro-ou-mais-barato', (req, res) => {
       const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
       res.type('html').setHeader('Cache-Control', 'public, max-age=3600').send(paginaDoMaisCaro(origem));
@@ -422,6 +428,7 @@ export function createApp() {
               { caminho: '/jogos' },
               { caminho: '/jogos/nave-do-dia' },
               { caminho: '/jogos/nave-do-dia-brasil' },
+              { caminho: '/jogos/frankenstein' },
               { caminho: '/jogos/mais-caro-ou-mais-barato' },
               ...cidades.map((c) => ({ caminho: `/encontros/${slugDaCidade(c.nome)}` })),
               { caminho: '/privacidade' },
@@ -499,6 +506,27 @@ export function createApp() {
             imagem: `${origem}/og-nave-do-dia.png`,
           },
           `${origem}/app/nave-do-dia-brasil`,
+          `${origem}/og-banner.png`
+        )
+      );
+    });
+
+    let cascaDoFrankenstein: string | null = null;
+    app.get('/app/frankenstein', (req, res) => {
+      const origem = env.APP_URL ?? `${req.protocol}://${req.get('host')}`;
+      cascaDoFrankenstein ??= fs.readFileSync(
+        path.join(dist, fs.existsSync(path.join(dist, 'frankenstein.html')) ? 'frankenstein.html' : 'index.html'),
+        'utf8'
+      );
+      res.type('html').send(
+        comPrevia(
+          cascaDoFrankenstein,
+          {
+            titulo: `Frankenstein #${numeroDaNaveDoDia()} · Monte a nave e encare o racha`,
+            descricao: 'Motor de um carro, chassi de outro, câmbio de um terceiro. Monte a nave e suba 11 rachas no 402, do Fusca ao McLaren.',
+            imagem: `${origem}/og-frankenstein.png`,
+          },
+          `${origem}/app/frankenstein`,
           `${origem}/og-banner.png`
         )
       );
