@@ -14,8 +14,9 @@ import { STORAGE_BUCKETS, MAX_IMAGE_SIZE_BYTES } from '@/shared/storage/storage.
  * carregam assinatura com validade de dias. Guardar o endereço daria um rolê
  * com foto quebrada na semana seguinte, que é pior do que rolê sem foto.
  *
- * Nada aqui é automático. Quem revisa é que pede — e é quem olha o flyer e
- * decide se aquilo representa o encontro.
+ * A arte é puxada sozinha quando o rolê entra na fila com link de fonte
+ * (ver eventSuggestionsService): quem revisa já vê o flyer antes de
+ * publicar e troca ou tira se não representar o encontro.
  */
 
 /** Cabeçalho de quem busca prévia de link, que é exatamente o que é. */
@@ -78,6 +79,27 @@ export function ehPerfilDoInstagram(url: string): boolean {
   }
 }
 
+/**
+ * A arte inteira de um post do Instagram.
+ *
+ * A og:image do post vem recortada no quadrado do feed, 640 px — e é
+ * justamente em cima e embaixo do cartaz que ficam data, hora e endereço.
+ * O endereço /media/?size=l devolve a imagem original (até 1080 px de
+ * largura), sem recorte. Null quando o link não é de post.
+ */
+export function arteInteiraDoInstagram(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (!/(^|\.)instagram\.com$/i.test(u.hostname)) return null;
+    const achou = u.pathname.match(/^\/(?:[^/]+\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
+    if (!achou) return null;
+    const tipo = achou[1] === 'reels' ? 'reel' : achou[1];
+    return `https://www.instagram.com/${tipo}/${achou[2]}/media/?size=l`;
+  } catch {
+    return null;
+  }
+}
+
 /** Abaixo disso não é a arte de um post — é avatar ou ícone. */
 const MENOR_LADO_DE_ARTE = 400;
 
@@ -109,27 +131,42 @@ export const flyerService = {
       );
     }
 
-    let html: string;
-    try {
-      const pagina = await buscar(paginaUrl, 'text/html');
-      if (!pagina.ok) {
-        throw AppError.validation(`A fonte respondeu ${pagina.status}. Tente baixar a foto à mão.`);
+    // Post do Instagram: primeiro a arte inteira; se o Instagram mudar ou
+    // negar esse caminho, cai na prévia recortada, que é melhor que nada.
+    let imagem: Response | null = null;
+    const inteira = arteInteiraDoInstagram(paginaUrl);
+    if (inteira) {
+      try {
+        const r = await buscar(inteira, 'image/*');
+        if (r.ok && (r.headers.get('content-type') ?? '').startsWith('image/')) imagem = r;
+      } catch {
+        // segue pra og:image
       }
-      html = await pagina.text();
-    } catch (err) {
-      if (err instanceof AppError) throw err;
-      throw AppError.validation('Não deu pra abrir a fonte. Tente baixar a foto à mão.');
     }
 
-    const imagemUrl = imagemAnunciada(html);
-    if (!imagemUrl) {
-      // Acontece quando a página exige login pra mostrar qualquer coisa.
-      throw AppError.validation('Essa página não publica uma imagem de prévia. Suba a foto à mão.');
-    }
+    if (!imagem) {
+      let html: string;
+      try {
+        const pagina = await buscar(paginaUrl, 'text/html');
+        if (!pagina.ok) {
+          throw AppError.validation(`A fonte respondeu ${pagina.status}. Tente baixar a foto à mão.`);
+        }
+        html = await pagina.text();
+      } catch (err) {
+        if (err instanceof AppError) throw err;
+        throw AppError.validation('Não deu pra abrir a fonte. Tente baixar a foto à mão.');
+      }
 
-    const imagem = await buscar(imagemUrl, 'image/*');
-    if (!imagem.ok) {
-      throw AppError.validation('A imagem da fonte não respondeu. Tente de novo.');
+      const imagemUrl = imagemAnunciada(html);
+      if (!imagemUrl) {
+        // Acontece quando a página exige login pra mostrar qualquer coisa.
+        throw AppError.validation('Essa página não publica uma imagem de prévia. Suba a foto à mão.');
+      }
+
+      imagem = await buscar(imagemUrl, 'image/*');
+      if (!imagem.ok) {
+        throw AppError.validation('A imagem da fonte não respondeu. Tente de novo.');
+      }
     }
 
     const mimeType = (imagem.headers.get('content-type') ?? '').split(';')[0].trim();

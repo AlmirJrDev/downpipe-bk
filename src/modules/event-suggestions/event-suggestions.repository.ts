@@ -136,6 +136,13 @@ export const eventSuggestionsRepository = {
     if (error) throw error;
   },
 
+  /** Uma conta da equipe: dona da pasta das fotos puxadas sozinhas. */
+  async umaContaDaEquipe(): Promise<string | null> {
+    const { data, error } = await supabaseAdmin.from('admins').select('user_id').limit(1);
+    if (error) return null;
+    return (data?.[0] as { user_id: string } | undefined)?.user_id ?? null;
+  },
+
   async contarPendentes(): Promise<number> {
     const { count, error } = await supabaseAdmin
       .from('event_suggestions')

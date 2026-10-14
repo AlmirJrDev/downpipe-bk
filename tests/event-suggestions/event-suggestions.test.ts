@@ -8,7 +8,13 @@ vi.mock('@/modules/event-suggestions/event-suggestions.repository', () => ({
     findById: vi.fn(),
     marcar: vi.fn(),
     contarPendentes: vi.fn(),
+    umaContaDaEquipe: vi.fn(async () => 'admin-1'),
   },
+}));
+
+// Sem rede nos testes: por padrão a fonte não entrega foto.
+vi.mock('@/modules/event-suggestions/flyer.service', () => ({
+  flyerService: { copiarDaPagina: vi.fn(async () => { throw new Error('sem rede'); }) },
 }));
 
 vi.mock('@/modules/events/events.service', () => ({
@@ -28,6 +34,7 @@ import { eventSuggestionsRepository } from '@/modules/event-suggestions/event-su
 import { eventsService } from '@/modules/events/events.service';
 import { eventsRepository } from '@/modules/events/events.repository';
 import { createSuggestionSchema } from '@/modules/event-suggestions/event-suggestions.schema';
+import { flyerService } from '@/modules/event-suggestions/flyer.service';
 
 const ADMIN = 'admin-1';
 
@@ -235,6 +242,30 @@ describe('a arte do encontro', () => {
       'https://storage/flyer.jpg',
       'https://storage/mini.jpg'
     );
+  });
+
+  it('sem foto na fila, a aprovação puxa do post sozinha', async () => {
+    vi.mocked(eventSuggestionsRepository.findById).mockResolvedValue(sugestao());
+    vi.mocked(flyerService.copiarDaPagina).mockResolvedValueOnce('https://storage/puxada.jpg');
+
+    await eventSuggestionsService.aprovar('s1', ADMIN, {
+      startsAt: '2026-10-18T12:00:00.000Z',
+      location: 'x',
+      city: 'y',
+    });
+
+    expect(flyerService.copiarDaPagina).toHaveBeenCalledWith('https://exemplo.com/post', ADMIN);
+    expect(eventsRepository.updatePhoto).toHaveBeenCalledWith('e1', 'https://storage/puxada.jpg', 'https://storage/mini.jpg');
+  });
+
+  it('o que entra na fila pela web já chega com a arte do post', async () => {
+    vi.mocked(eventSuggestionsRepository.create).mockResolvedValue(sugestao());
+    vi.mocked(flyerService.copiarDaPagina).mockResolvedValueOnce('https://storage/puxada.jpg');
+
+    const r = await eventSuggestionsService.registrarDaWeb({ name: 'Encontro de Sumaré' } as never);
+
+    expect(eventSuggestionsRepository.salvarFoto).toHaveBeenCalledWith('s1', 'https://storage/puxada.jpg');
+    expect(r?.photoUrl).toBe('https://storage/puxada.jpg');
   });
 
   it('sem foto puxada, o encontro nasce sem foto e ninguém reclama', async () => {

@@ -39,6 +39,26 @@ function toPublic(row: SuggestionRow) {
   };
 }
 
+/**
+ * Puxa a arte do post da fonte sem ninguém pedir.
+ *
+ * Roda quando a sugestão entra na fila, pra quem revisa já ver o flyer, e de
+ * novo na aprovação se ainda faltar. Falhar não atrapalha nada: o rolê
+ * entra sem foto e ainda dá pra puxar ou subir à mão.
+ */
+async function fotoDaFonte(row: SuggestionRow | null, donoId?: string): Promise<string | null> {
+  if (!row?.source_url || row.photo_url) return row?.photo_url ?? null;
+  try {
+    const dono = donoId ?? (await eventSuggestionsRepository.umaContaDaEquipe());
+    if (!dono) return null;
+    const url = await flyerService.copiarDaPagina(row.source_url, dono);
+    await eventSuggestionsRepository.salvarFoto(row.id, url);
+    return url;
+  } catch {
+    return null;
+  }
+}
+
 export const eventSuggestionsService = {
   /**
    * Sugestão de quem usa o app.
@@ -48,14 +68,17 @@ export const eventSuggestionsService = {
    * é que o recado chegou.
    */
   async sugerir(input: CreateSuggestionInput, userId: string) {
-    await eventSuggestionsRepository.create(input, { source: 'usuario', suggestedBy: userId });
+    const criada = await eventSuggestionsRepository.create(input, { source: 'usuario', suggestedBy: userId });
+    // Sem await: quem sugeriu não espera o download do flyer.
+    void fotoDaFonte(criada);
     return { message: 'Valeu! A gente confere e publica.' };
   },
 
   /** Entrada das fontes de fora (busca na web, importação). */
   async registrarDaWeb(input: CreateSuggestionInput) {
     const criada = await eventSuggestionsRepository.create(input, { source: 'web' });
-    return criada ? toPublic(criada) : null;
+    if (!criada) return null;
+    return toPublic({ ...criada, photo_url: await fotoDaFonte(criada) });
   },
 
   async fila(status: 'pending' | 'approved' | 'rejected' = 'pending') {
@@ -68,11 +91,12 @@ export const eventSuggestionsService = {
   },
 
   /**
-   * Puxa a arte do post que serviu de fonte.
+   * Puxa (de novo) a arte do post que serviu de fonte — o botão da fila,
+   * pra quando a tentativa automática falhou ou a fonte foi trocada.
    *
-   * Fica separado da aprovação de propósito: quem revisa vê a imagem antes
-   * de publicar e decide se ela representa o encontro — flyer de outra
-   * edição, print de story, foto do ano passado acontecem.
+   * Quem revisa vê a imagem antes de publicar e decide se ela representa o
+   * encontro — flyer de outra edição, print de story, foto do ano passado
+   * acontecem.
    */
   async puxarFoto(id: string, adminId: string) {
     const sugestao = await eventSuggestionsRepository.findById(id);
@@ -139,11 +163,12 @@ export const eventSuggestionsService = {
       tippedBy: sugestao.suggested_by,
     } as never);
 
-    // A arte que quem revisou puxou do post vira a foto do rolê, com a
-    // miniatura do pino gerada a partir dela.
-    if (sugestao.photo_url) {
-      const miniatura = await miniaturaService.daUrl(sugestao.photo_url, adminId);
-      await eventsRepository.updatePhoto(evento.id, sugestao.photo_url, miniatura);
+    // A arte do post vira a foto do rolê, com a miniatura do pino gerada a
+    // partir dela. Se não veio na entrada da fila, tenta mais uma vez aqui.
+    const foto = sugestao.photo_url ?? (await fotoDaFonte(sugestao, adminId));
+    if (foto) {
+      const miniatura = await miniaturaService.daUrl(foto, adminId);
+      await eventsRepository.updatePhoto(evento.id, foto, miniatura);
     }
 
     await eventSuggestionsRepository.marcar(id, 'approved', adminId, evento.id);

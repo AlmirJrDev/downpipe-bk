@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { imagemAnunciada, ehPerfilDoInstagram } from '@/modules/event-suggestions/flyer.service';
+import {
+  arteInteiraDoInstagram,
+  imagemAnunciada,
+  ehPerfilDoInstagram,
+} from '@/modules/event-suggestions/flyer.service';
 
 describe('achar a arte anunciada pela página', () => {
   it('lê a og:image na ordem comum', () => {
@@ -47,5 +51,26 @@ describe('link de perfil não é link de post', () => {
     expect(ehPerfilDoInstagram('https://www.instagram.com/reel/Abc123/')).toBe(false);
     expect(ehPerfilDoInstagram('https://www.sympla.com.br/evento/x/1')).toBe(false);
     expect(ehPerfilDoInstagram('não é url')).toBe(false);
+  });
+});
+
+describe('a arte inteira do post do Instagram', () => {
+  /** A og:image vem recortada no quadrado; data e local do cartaz ficam de fora. */
+  it('post e reel apontam pra imagem original', () => {
+    expect(arteInteiraDoInstagram('https://instagram.com/p/DeRmY8SN0Gd')).toBe(
+      'https://www.instagram.com/p/DeRmY8SN0Gd/media/?size=l'
+    );
+    expect(arteInteiraDoInstagram('https://www.instagram.com/reels/Abc-12_x/?igsh=1')).toBe(
+      'https://www.instagram.com/reel/Abc-12_x/media/?size=l'
+    );
+    expect(arteInteiraDoInstagram('https://www.instagram.com/fulano/p/Xyz123/')).toBe(
+      'https://www.instagram.com/p/Xyz123/media/?size=l'
+    );
+  });
+
+  it('perfil e outros sites ficam com a og:image', () => {
+    expect(arteInteiraDoInstagram('https://www.instagram.com/automeet_br/')).toBeNull();
+    expect(arteInteiraDoInstagram('https://www.sympla.com.br/evento/x/1')).toBeNull();
+    expect(arteInteiraDoInstagram('não é url')).toBeNull();
   });
 });

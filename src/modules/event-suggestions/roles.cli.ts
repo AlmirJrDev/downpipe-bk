@@ -72,7 +72,7 @@ async function importar(arquivo: string) {
     const criada = await eventSuggestionsService.registrarDaWeb(entrada);
     if (criada) {
       novas += 1;
-      console.log(`+ ${entrada.name}`);
+      console.log(`+ ${entrada.name}${criada.photoUrl ? ' (com foto)' : entrada.sourceUrl ? ' (sem foto: puxe ou suba no app)' : ''}`);
       if (linkId) await linksDeEncontro.marcar(linkId, 'lancado', criada.id);
     } else {
       repetidas += 1;

@@ -400,7 +400,13 @@ export const eventsService = {
     // Quem cria o evento já está indo — poupa um toque óbvio e deixa a
     // lista de presença nunca zerada. Tem que vir ANTES da leitura, senão
     // a resposta do create sai com attendeesCount 0.
-    await eventsRepository.createAttendance(id, organizerId);
+    //
+    // Menos quando o rolê é dos outros: a equipe sobe encontro que achou
+    // por aí (com ou sem o @ de quem organiza) e não vai a todos eles. O
+    // "vai" automático punha a conta da equipe na lista de cada um.
+    const daEquipe = (await equipe()).has(organizerId);
+    const vai = !daEquipe && !input.organizerInstagram;
+    if (vai) await eventsRepository.createAttendance(id, organizerId);
 
     await resolveCoords(id, input.location, input.city, input);
 
@@ -408,7 +414,7 @@ export const eventsService = {
     void avisarSeContaNova(organizerId, { id, nome: input.name, cidade: input.city });
 
     const event = await findEventOrThrow(id);
-    return toPublicEvent(event, true);
+    return toPublicEvent(event, vai);
   },
 
   async update(id: string, userId: string, input: UpdateEventInput) {
