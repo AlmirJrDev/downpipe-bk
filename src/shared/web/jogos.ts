@@ -163,7 +163,7 @@ ${exemplo}
 </div>
 
 <h2>Que carros aparecem</h2>
-<p>Mais de 200 carros que todo mundo que curte carro conhece de nome, de vários estilos e épocas: do Fusca e do Opala aos JDM dos anos 90, europeus de pista, muscle cars americanos, SUVs e picapes. Várias gerações da mesma marca, então acertar a marca não entrega a resposta. Quer só os que rodaram no Brasil? Tem a <a href="/jogos/nave-do-dia-brasil">Nave do Dia Brasil</a>.</p>
+<p>Mais de 300 carros que todo mundo que curte carro conhece de nome, de vários estilos e épocas: do Fusca e do Opala aos JDM dos anos 90, europeus de pista, muscle cars americanos, SUVs e picapes. Várias gerações da mesma marca, então acertar a marca não entrega a resposta. Quer só os que rodaram no Brasil? Tem a <a href="/jogos/nave-do-dia-brasil">Nave do Dia Brasil</a>.</p>
 <ul class="marcas">${['Toyota', 'Nissan', 'Honda', 'Mitsubishi', 'Subaru', 'Mazda', 'Volkswagen', 'BMW', 'Porsche', 'Audi', 'Mercedes-Benz', 'Ferrari', 'Lamborghini', 'Fiat', 'Peugeot', 'Renault', 'Mini', 'Chevrolet', 'Ford', 'Dodge']
     .map((m) => `<li>${m}</li>`)
     .join('')}</ul>
