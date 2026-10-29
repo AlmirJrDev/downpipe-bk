@@ -425,6 +425,7 @@ export function createApp() {
             sitemapXml(origem, [
               { caminho: '/' },
               { caminho: '/encontros' },
+              { caminho: '/organizador' },
               { caminho: '/jogos' },
               { caminho: '/jogos/nave-do-dia' },
               { caminho: '/jogos/nave-do-dia-brasil' },
